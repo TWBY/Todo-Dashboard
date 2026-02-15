@@ -1,0 +1,95 @@
+import { readdir, readFile } from 'fs/promises'
+import { join } from 'path'
+import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
+import type { Project } from '@/lib/types'
+
+interface SkillInfo {
+  name: string
+  description: string
+  model?: string
+  category?: string
+}
+
+async function parseFrontmatter(filePath: string): Promise<{ description: string; model?: string; category?: string }> {
+  try {
+    const content = await readFile(filePath, 'utf-8')
+    let description = ''
+    let model: string | undefined
+    let category: string | undefined
+
+    // 嘗試從 frontmatter 取 description、model、category
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
+    if (fmMatch) {
+      const descMatch = fmMatch[1].match(/description:\s*(.+)/)
+      if (descMatch) description = descMatch[1].trim()
+      const modelMatch = fmMatch[1].match(/model:\s*(.+)/)
+      if (modelMatch) model = modelMatch[1].trim()
+      const catMatch = fmMatch[1].match(/category:\s*(.+)/)
+      if (catMatch) category = catMatch[1].trim()
+    }
+
+    // 沒有 description 時，取第一個 markdown 標題後的第一行非空文字
+    if (!description) {
+      const lines = content.split('\n')
+      let pastFrontmatter = false
+      let pastTitle = false
+      for (const line of lines) {
+        if (line.startsWith('---') && !pastFrontmatter) { pastFrontmatter = true; continue }
+        if (pastFrontmatter && line.startsWith('---')) { pastFrontmatter = false; continue }
+        if (pastFrontmatter) continue
+        if (line.startsWith('#')) { pastTitle = true; continue }
+        if (pastTitle && line.trim()) { description = line.trim(); break }
+      }
+    }
+
+    return { description, model, category }
+  } catch {
+    return { description: '' }
+  }
+}
+
+async function listSkills(dir: string, ext: string): Promise<SkillInfo[]> {
+  try {
+    const entries = await readdir(dir, { withFileTypes: true })
+    const results: SkillInfo[] = []
+    for (const entry of entries) {
+      if (ext === 'SKILL.md' && entry.isDirectory()) {
+        const skillFile = join(dir, entry.name, 'SKILL.md')
+        const { description, model, category } = await parseFrontmatter(skillFile)
+        results.push({ name: entry.name, description, model, category })
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        const name = entry.name.replace(/\.md$/, '')
+        const { description, model, category } = await parseFrontmatter(join(dir, entry.name))
+        results.push({ name, description, model, category })
+      }
+    }
+    return results.sort((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    return []
+  }
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const projectId = searchParams.get('projectId')
+
+  // 全域 skills
+  const homeDir = process.env.HOME || ''
+  const globalSkills = await listSkills(join(homeDir, '.claude', 'skills'), 'SKILL.md')
+
+  // 專案 commands
+  let projectCommands: SkillInfo[] = []
+  if (projectId) {
+    const brickverseProjects = await readJsonFile<Project>('projects.json')
+    const courseFiles = await readJsonFile<Project>('coursefiles.json')
+    const utilityTools = await readJsonFile<Project>('utility-tools.json')
+    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+    const project = projects.find(p => p.id === projectId)
+    if (project) {
+      const projectPath = project.devPath || project.path
+      projectCommands = await listSkills(join(projectPath, '.claude', 'commands'), '.md')
+    }
+  }
+
+  return Response.json({ globalSkills, projectCommands })
+}

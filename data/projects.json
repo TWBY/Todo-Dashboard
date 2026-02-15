@@ -1,0 +1,121 @@
+[
+  {
+    "id": "brickverse-web",
+    "productId": "BV-1001",
+    "name": "brickverse-web",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/brickverse-web",
+    "description": "Brickverse 主站，基於 Next.js 建構。包含首頁、品牌頁、導航列等核心頁面。所有子專案（Blog、Learning System）皆以此為入口串接。修改方式：進入 brickverse-web/ 目錄，頁面位於 app/ 下，元件位於 components/，導航設定在 lib/utils.ts。",
+    "techStack": [
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    "devPort": 3001,
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-04T00:00:00.000Z"
+  },
+  {
+    "id": "blogfront",
+    "productId": "BV-1002",
+    "name": "BlogFrontend",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/BlogFrontend",
+    "description": "Blog 前端應用，掛載於主站 /blog 路徑下。負責文章列表、文章內容頁、分類篩選等功能，透過 API 與 BlogBackend 串接取得資料。修改方式：進入 BlogFrontend/ 目錄，頁面在 app/ 下，API 呼叫邏輯在 lib/ 中，導航元件在 components/Navigation.tsx。",
+    "techStack": [
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    "devPort": 3005,
+    "devBasePath": "/blog",
+    "createdAt": "2026-01-29T00:00:00.000Z",
+    "updatedAt": "2026-02-04T00:00:00.000Z"
+  },
+  {
+    "id": "blogbackend",
+    "productId": "BV-1003",
+    "name": "BlogBackend",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/BlogBackend",
+    "description": "Blog 後端服務，負責與 Insforge 平台串接，提供文章資料的 API 端點供 BlogFrontend 使用。處理文章的 CRUD、分類管理和資料格式轉換。修改方式：進入 BlogBackend/ 目錄，API 路由在 app/api/ 下，Insforge 串接邏輯在 lib/ 中。",
+    "techStack": [],
+    "createdAt": "2026-01-30T00:00:00.000Z",
+    "updatedAt": "2026-02-09T05:54:28.285Z",
+    "devPort": 3013
+  },
+  {
+    "id": "brickverse-learn",
+    "productId": "BV-1004",
+    "name": "brickverse-learn",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/brickverse-learn",
+    "description": "學習平台系統，掛載於主站 /course 路徑下。預計提供課程瀏覽、課程內容呈現、學習進度追蹤等功能。目前尚在規劃階段，尚未開始開發。修改方式：進入 brickverse-learn/ 目錄，結構待建立。",
+    "techStack": [],
+    "devPort": 3004,
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-04T00:00:00.000Z"
+  },
+  {
+    "id": "brickverse-design",
+    "productId": "BV-1005",
+    "name": "brickverse-design",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/brickverse-design",
+    "description": "設計系統底層，定義所有 Brickverse 專案共用的設計規範，包含色彩、字型、間距、元件樣式等。所有前端專案以此為基底延伸。修改方式：進入 brickverse-design/ 目錄，設計 token 與全域樣式定義於其中。",
+    "techStack": [],
+    "devPort": 3002,
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-04T00:00:00.000Z"
+  },
+  {
+    "id": "classpost",
+    "productId": "BV-3001",
+    "name": "ClassPost",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/ClassPost",
+    "description": "課程發布系統，用於管理和發布課程內容到學習平台。處理課程的建立、編輯、排程發布等流程。修改方式：進入 ClassPost/ 目錄，發布邏輯與頁面在對應的 app/ 與 components/ 目錄中。",
+    "techStack": [],
+    "createdAt": "2026-02-03T00:00:00.000Z",
+    "updatedAt": "2026-02-10T13:57:05.954Z",
+    "devPort": 3016
+  },
+  {
+    "id": "dashboard",
+    "productId": "BV-3002",
+    "name": "Todo-Dashboard",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard",
+    "description": "Brickverse 專案管理儀表板，用於追蹤所有子專案的待辦事項與開發狀態。提供專案地圖（目錄樹）、架構關係圖、專案卡片等視圖。修改方式：進入 Todo-Dashboard/ 目錄，頁面在 app/ 下，元件在 components/，專案資料在 data/projects.json，待辦資料在 data/todos.json。",
+    "techStack": [
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    "devPort": 3000,
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-04T00:00:00.000Z"
+  },
+  {
+    "id": "gsc-dashboard",
+    "productId": "BV-3003",
+    "name": "GSC-Dashboard",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/gsc-dashboard",
+    "description": "Google Search Console 資料儀表板，用於串接 Google Search Console API 並視覺化呈現網站搜尋數據。包含關鍵字排名、點擊率、曝光數等核心指標。修改方式：進入 GSC-Dashboard/ 目錄（待建立），使用 Next.js + TypeScript 建構。",
+    "techStack": [
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS",
+      "Google Search Console API"
+    ],
+    "devPort": 3003,
+    "createdAt": "2026-02-05T00:00:00.000Z",
+    "updatedAt": "2026-02-05T00:00:00.000Z"
+  },
+  {
+    "id": "salekit",
+    "productId": "BV-4001",
+    "name": "SaleKit",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/SaleKit",
+    "description": "對外企業介紹工具，純 HTML/CSS/JS 專案。用於對外介紹 Brickverse 公司。",
+    "techStack": [
+      "Next.js",
+      "TypeScript"
+    ],
+    "createdAt": "2026-02-05T00:00:00.000Z",
+    "updatedAt": "2026-02-14T15:20:07.830Z"
+  }
+]

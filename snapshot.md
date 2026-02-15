@@ -1,0 +1,466 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e326]:
+      - generic [ref=e329]:
+        - generic [ref=e331]:
+          - button "新增想法" [ref=e332] [cursor=pointer]
+          - button "問問 AI" [ref=e333] [cursor=pointer]
+          - button "流水線" [ref=e334] [cursor=pointer]
+          - button "收合專案列表" [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+        - separator [ref=e338]
+        - generic [ref=e339]:
+          - generic [ref=e340]:
+            - generic [ref=e341]:
+              - heading "Dev Servers 2 / 12" [level=2] [ref=e342]:
+                - generic "點擊複製名稱" [ref=e343] [cursor=pointer]: Dev Servers
+                - generic [ref=e344]: 2 / 12
+              - button "Refresh" [ref=e346]
+            - generic [ref=e347]:
+              - generic [ref=e349]:
+                - generic [ref=e353]:
+                  - generic "點擊複製路徑" [ref=e354] [cursor=pointer]: BlogBackend
+                  - generic [ref=e355]: "13"
+                  - generic [ref=e356]: 41M
+                - generic [ref=e357]:
+                  - button "Open" [ref=e358]
+                  - button "Stop" [ref=e359]:
+                    - generic [ref=e360]: Stop
+                  - button "Chat" [ref=e361]
+                  - button "✕" [ref=e362]
+              - generic [ref=e364]:
+                - generic [ref=e368]:
+                  - generic "點擊複製路徑" [ref=e369] [cursor=pointer]: BlogFrontend
+                  - generic [ref=e370]: "05"
+                - generic [ref=e371]:
+                  - button "Start" [ref=e372]:
+                    - generic [ref=e373]: Start
+                  - button "Chat" [ref=e374]
+                  - button "✕" [ref=e375]
+              - generic [ref=e377]:
+                - generic [ref=e381]:
+                  - generic "點擊複製路徑" [ref=e382] [cursor=pointer]: brickverse-design
+                  - generic [ref=e383]: "02"
+                - generic [ref=e384]:
+                  - button "Start" [ref=e385]:
+                    - generic [ref=e386]: Start
+                  - button "Chat" [ref=e387]
+                  - button "✕" [ref=e388]
+              - generic [ref=e390]:
+                - generic [ref=e394]:
+                  - generic "點擊複製路徑" [ref=e395] [cursor=pointer]: brickverse-learn
+                  - generic [ref=e396]: "04"
+                - generic [ref=e397]:
+                  - button "Start" [ref=e398]:
+                    - generic [ref=e399]: Start
+                  - button "Chat" [ref=e400]
+                  - button "✕" [ref=e401]
+              - generic [ref=e403]:
+                - generic [ref=e407]:
+                  - generic "點擊複製路徑" [ref=e408] [cursor=pointer]: brickverse-web
+                  - generic [ref=e409]: "01"
+                - generic [ref=e410]:
+                  - button "Start" [ref=e411]:
+                    - generic [ref=e412]: Start
+                  - button "Chat" [ref=e413]
+                  - button "✕" [ref=e414]
+              - generic [ref=e416]:
+                - generic [ref=e420]:
+                  - generic "點擊複製路徑" [ref=e421] [cursor=pointer]: ClassPost
+                  - generic [ref=e422]: "16"
+                - generic [ref=e423]:
+                  - button "Start" [ref=e424]:
+                    - generic [ref=e425]: Start
+                  - button "Chat" [ref=e426]
+                  - button "✕" [ref=e427]
+              - generic [ref=e429]:
+                - generic [ref=e433]:
+                  - generic "點擊複製路徑" [ref=e434] [cursor=pointer]: GSC-Dashboard
+                  - generic [ref=e435]: "03"
+                - generic [ref=e436]:
+                  - button "Start" [ref=e437]:
+                    - generic [ref=e438]: Start
+                  - button "Chat" [ref=e439]
+                  - button "✕" [ref=e440]
+              - generic [ref=e442]:
+                - generic [ref=e446]:
+                  - generic "點擊複製路徑" [ref=e447] [cursor=pointer]: SaleKit
+                  - generic [ref=e448]: "08"
+                - generic [ref=e449]:
+                  - button "Start" [ref=e450]:
+                    - generic [ref=e451]: Start
+                  - button "Chat" [ref=e452]
+                  - button "✕" [ref=e453]
+              - generic [ref=e455]:
+                - generic [ref=e459]:
+                  - generic "點擊複製路徑" [ref=e460] [cursor=pointer]: ClaudeCodeLab
+                  - generic [ref=e461]: "12"
+                - generic [ref=e462]:
+                  - button "Start" [ref=e463]:
+                    - generic [ref=e464]: Start
+                  - button "Chat" [ref=e465]
+                  - button "✕" [ref=e466]
+              - generic [ref=e468]:
+                - generic [ref=e472]:
+                  - generic "點擊複製路徑" [ref=e473] [cursor=pointer]: ExcelFactory
+                  - generic [ref=e474]: "14"
+                - generic [ref=e475]:
+                  - button "Start" [ref=e476]:
+                    - generic [ref=e477]: Start
+                  - button "Chat" [ref=e478]
+                  - button "✕" [ref=e479]
+              - generic [ref=e481]:
+                - generic [ref=e485]:
+                  - generic "點擊複製路徑" [ref=e486] [cursor=pointer]: OnlineWorkshop
+                  - generic [ref=e487]: "17"
+                - generic [ref=e488]:
+                  - button "Start" [ref=e489]:
+                    - generic [ref=e490]: Start
+                  - button "Chat" [ref=e491]
+                  - button "✕" [ref=e492]
+              - generic [ref=e494]:
+                - generic [ref=e498]:
+                  - generic "點擊複製路徑" [ref=e499] [cursor=pointer]: OfflineWorkshop
+                  - generic [ref=e500]: "18"
+                - generic [ref=e501]:
+                  - button "Start" [ref=e502]:
+                    - generic [ref=e503]: Start
+                  - button "Chat" [ref=e504]
+                  - button "✕" [ref=e505]
+          - generic [ref=e507]:
+            - generic [ref=e508]:
+              - heading "Claude Usage" [level=2] [ref=e509]
+              - generic [ref=e510]:
+                - generic [ref=e511]: just now
+                - button "Refresh" [ref=e512]
+            - generic [ref=e513]:
+              - generic [ref=e515]:
+                - generic [ref=e516]:
+                  - generic [ref=e517]: Current session
+                  - generic [ref=e518]: 67% used
+                - generic [ref=e521]: Resets in 3 hr 24 min
+              - generic [ref=e522]:
+                - generic [ref=e523]: Weekly limits
+                - generic [ref=e524]:
+                  - generic [ref=e525]:
+                    - generic [ref=e526]: All models
+                    - generic [ref=e527]: 29% used
+                  - generic [ref=e530]: Resets Thu 10:59 AM
+                - generic [ref=e531]:
+                  - generic [ref=e532]:
+                    - generic [ref=e533]: Sonnet only
+                    - generic [ref=e534]: 12% used
+                  - generic [ref=e537]: Resets Tue 12:59 PM
+        - separator [ref=e538]
+        - generic [ref=e539]:
+          - generic [ref=e540]:
+            - heading "Brickverse Projects" [level=2] [ref=e542] [cursor=pointer]
+            - generic [ref=e543]:
+              - generic [ref=e545]:
+                - generic [ref=e546]: ├──
+                - generic "點擊複製路徑" [ref=e547] [cursor=pointer]: BlogBackend/
+                - generic [ref=e548]: "13"
+              - generic [ref=e550]:
+                - generic [ref=e551]: ├──
+                - generic "點擊複製路徑" [ref=e552] [cursor=pointer]: BlogFrontend/
+                - generic [ref=e553]: "05"
+              - generic [ref=e555]:
+                - generic [ref=e556]: ├──
+                - generic "點擊複製路徑" [ref=e557] [cursor=pointer]: brickverse-design/
+                - generic [ref=e558]: "02"
+              - generic [ref=e560]:
+                - generic [ref=e561]: ├──
+                - generic "點擊複製路徑" [ref=e562] [cursor=pointer]: brickverse-learn/
+                - generic [ref=e563]: "04"
+              - generic [ref=e565]:
+                - generic [ref=e566]: ├──
+                - generic "點擊複製路徑" [ref=e567] [cursor=pointer]: brickverse-web/
+                - generic [ref=e568]: "01"
+              - generic [ref=e570]:
+                - generic [ref=e571]: ├──
+                - generic "點擊複製路徑" [ref=e572] [cursor=pointer]: ClassPost/
+                - generic [ref=e573]: "16"
+              - generic [ref=e575]:
+                - generic [ref=e576]: ├──
+                - generic "點擊複製路徑" [ref=e577] [cursor=pointer]: GSC-Dashboard/
+                - generic [ref=e578]: "03"
+              - generic [ref=e580]:
+                - generic [ref=e581]: ├──
+                - generic "點擊複製路徑" [ref=e582] [cursor=pointer]: SaleKit/
+                - generic [ref=e583]: "08"
+              - generic [ref=e585]:
+                - generic [ref=e586]: └──
+                - generic "點擊複製路徑" [ref=e587] [cursor=pointer]: Todo-Dashboard/
+                - generic [ref=e588]: "00"
+          - generic [ref=e589]:
+            - heading "CourseFiles" [level=2] [ref=e591] [cursor=pointer]
+            - generic [ref=e592]:
+              - generic [ref=e593]:
+                - generic [ref=e594]:
+                  - generic [ref=e595]: ├──
+                  - generic "點擊複製路徑" [ref=e596] [cursor=pointer]: AICode100/
+                  - button "+" [ref=e597]
+                - generic [ref=e598]:
+                  - generic [ref=e599]:
+                    - generic [ref=e600]: │ ├──
+                    - generic "點擊複製路徑" [ref=e601] [cursor=pointer]: GeminilmageGen/
+                    - button "+" [ref=e602]
+                  - generic [ref=e603]:
+                    - generic [ref=e604]: │ └──
+                    - generic "點擊複製路徑" [ref=e605] [cursor=pointer]: ClassPresentation/
+                    - button "+" [ref=e606]
+              - generic [ref=e607]:
+                - generic [ref=e608]:
+                  - generic [ref=e609]: ├──
+                  - generic "點擊複製路徑" [ref=e610] [cursor=pointer]: AICode101/
+                  - button "+" [ref=e611]
+                - generic [ref=e612]:
+                  - generic [ref=e613]:
+                    - generic [ref=e614]: │ ├──
+                    - generic "點擊複製路徑" [ref=e615] [cursor=pointer]: Bonus/
+                    - button "+" [ref=e616]
+                  - generic [ref=e617]:
+                    - generic [ref=e618]: │ ├──
+                    - generic "點擊複製路徑" [ref=e619] [cursor=pointer]: ClassPersentation/
+                    - button "+" [ref=e620]
+                  - generic [ref=e621]:
+                    - generic [ref=e622]: │ ├──
+                    - generic "點擊複製路徑" [ref=e623] [cursor=pointer]: ClassQAGame/
+                    - button "+" [ref=e624]
+                  - generic [ref=e625]:
+                    - generic [ref=e626]: │ ├──
+                    - generic "點擊複製路徑" [ref=e627] [cursor=pointer]: ReactClassPresentation/
+                    - button "+" [ref=e628]
+                  - generic [ref=e629]:
+                    - generic [ref=e630]: │ ├──
+                    - generic "點擊複製路徑" [ref=e631] [cursor=pointer]: StudentStauts/
+                    - button "+" [ref=e632]
+                  - generic [ref=e633]:
+                    - generic [ref=e634]: │ ├──
+                    - generic "點擊複製路徑" [ref=e635] [cursor=pointer]: SupabaseExample/
+                    - button "+" [ref=e636]
+                  - generic [ref=e637]:
+                    - generic [ref=e638]: │ ├──
+                    - generic "點擊複製路徑" [ref=e639] [cursor=pointer]: dashborard/
+                    - button "+" [ref=e640]
+                  - generic [ref=e641]:
+                    - generic [ref=e642]: │ └──
+                    - generic "點擊複製路徑" [ref=e643] [cursor=pointer]: 典藏/
+                    - button "+" [ref=e644]
+              - generic [ref=e646]:
+                - generic [ref=e647]: ├──
+                - generic "點擊複製路徑" [ref=e648] [cursor=pointer]: CourseTemplate/
+                - button "+" [ref=e649]
+              - generic [ref=e650]:
+                - generic [ref=e651]:
+                  - generic [ref=e652]: └──
+                  - generic "點擊複製路徑" [ref=e653] [cursor=pointer]: HRWorkshop/
+                  - button "+" [ref=e654]
+                - generic [ref=e655]:
+                  - generic [ref=e656]:
+                    - generic [ref=e657]: ├──
+                    - generic "點擊複製路徑" [ref=e658] [cursor=pointer]: OnlineWorkshop/
+                    - generic [ref=e659]: "17"
+                  - generic [ref=e660]:
+                    - generic [ref=e661]: └──
+                    - generic "點擊複製路徑" [ref=e662] [cursor=pointer]: OfflineWorkshop/
+                    - generic [ref=e663]: "18"
+          - generic [ref=e664]:
+            - heading "UtilityTools" [level=2] [ref=e666] [cursor=pointer]
+            - generic [ref=e667]:
+              - generic [ref=e669]:
+                - generic [ref=e670]: ├──
+                - generic "點擊複製路徑" [ref=e671] [cursor=pointer]: ClaudeCodeLab/
+                - generic [ref=e672]: "12"
+              - generic [ref=e674]:
+                - generic [ref=e675]: ├──
+                - generic "點擊複製路徑" [ref=e676] [cursor=pointer]: DiskSense/
+                - button "+" [ref=e677]
+              - generic [ref=e679]:
+                - generic [ref=e680]: ├──
+                - generic "點擊複製路徑" [ref=e681] [cursor=pointer]: DownloadHTML/
+                - button "+" [ref=e682]
+              - generic [ref=e684]:
+                - generic [ref=e685]: ├──
+                - generic "點擊複製路徑" [ref=e686] [cursor=pointer]: Editer/
+                - button "+" [ref=e687]
+              - generic [ref=e689]:
+                - generic [ref=e690]: ├──
+                - generic "點擊複製路徑" [ref=e691] [cursor=pointer]: ExcelFactory/
+                - generic [ref=e692]: "14"
+              - generic [ref=e694]:
+                - generic [ref=e695]: ├──
+                - generic "點擊複製路徑" [ref=e696] [cursor=pointer]: GenerateImage/
+                - button "+" [ref=e697]
+              - generic [ref=e699]:
+                - generic [ref=e700]: ├──
+                - generic "點擊複製路徑" [ref=e701] [cursor=pointer]: MetaAdsLab/
+                - button "+" [ref=e702]
+              - generic [ref=e704]:
+                - generic [ref=e705]: ├──
+                - generic "點擊複製路徑" [ref=e706] [cursor=pointer]: OnlineTodoList/
+                - button "+" [ref=e707]
+              - generic [ref=e709]:
+                - generic [ref=e710]: ├──
+                - generic "點擊複製路徑" [ref=e711] [cursor=pointer]: Presentation2PDF/
+                - button "+" [ref=e712]
+              - generic [ref=e714]:
+                - generic [ref=e715]: ├──
+                - generic "點擊複製路徑" [ref=e716] [cursor=pointer]: PythonInteractiveLab/
+                - button "+" [ref=e717]
+              - generic [ref=e719]:
+                - generic [ref=e720]: ├──
+                - generic "點擊複製路徑" [ref=e721] [cursor=pointer]: SocialFormat/
+                - button "+" [ref=e722]
+              - generic [ref=e724]:
+                - generic [ref=e725]: └──
+                - generic "點擊複製路徑" [ref=e726] [cursor=pointer]: SubscriptionChecker/
+                - button "+" [ref=e727]
+        - separator [ref=e728]
+        - generic [ref=e729]:
+          - generic [ref=e730]:
+            - heading "Skill 架構" [level=2] [ref=e731]
+            - button "↻" [ref=e732] [cursor=pointer]:
+              - generic [ref=e733]: ↻
+          - generic [ref=e734]:
+            - generic [ref=e735]:
+              - generic [ref=e736]:
+                - generic [ref=e737]: Global Skill
+                - generic [ref=e738]: ~/.claude/skills/
+              - generic [ref=e739]:
+                - generic [ref=e740]:
+                  - generic [ref=e741]: 部署流程
+                  - generic "點擊複製指令" [ref=e742] [cursor=pointer]:
+                    - generic [ref=e743]:
+                      - generic [ref=e744]: /ship
+                      - generic [ref=e745]: "1. 執行 `git status` 確認有哪些變更"
+                    - generic [ref=e746]: haiku
+                  - generic "點擊複製指令" [ref=e747] [cursor=pointer]:
+                    - generic [ref=e748]:
+                      - generic [ref=e749]: /zeabur-debug
+                      - generic [ref=e750]: 分析 Zeabur 部署失敗的原因並嘗試修復
+                    - generic [ref=e751]: sonnet
+                  - generic "點擊複製指令" [ref=e752] [cursor=pointer]:
+                    - generic [ref=e753]:
+                      - generic [ref=e754]: /zeabur-setup
+                      - generic [ref=e755]: 設定當前專案的 Zeabur 部署資訊（只需提供 Service ID），自動查詢 Project ID 和 Environment ID，寫入專案 CLAUDE.md 供 /ship 和 /zeabur-debug 使用
+                    - generic [ref=e756]: haiku
+                  - generic [ref=e757]:
+                    - generic [ref=e758]: ↳ ship → zeabur-setup（無設定時）
+                    - generic [ref=e759]: ↳ ship → zeabur-debug（失敗時）
+                - generic [ref=e760]:
+                  - generic [ref=e761]: 程式碼品質
+                  - generic "點擊複製指令" [ref=e762] [cursor=pointer]:
+                    - generic [ref=e763]:
+                      - generic [ref=e764]: /audit
+                      - generic [ref=e765]: 完整程式碼審計流水線（健康檢測 → 安全掃描 → 自動修復）
+                    - generic [ref=e766]: sonnet
+                  - generic "點擊複製指令" [ref=e767] [cursor=pointer]:
+                    - generic [ref=e768]:
+                      - generic [ref=e769]: /code-health
+                      - generic [ref=e770]: 程式碼健康度檢測（重複、死程式碼、循環依賴）
+                    - generic [ref=e771]: sonnet
+                  - generic "點擊複製指令" [ref=e772] [cursor=pointer]:
+                    - generic [ref=e773]:
+                      - generic [ref=e774]: /refactor
+                      - generic [ref=e775]: 全自動程式碼重構與修復
+                    - generic [ref=e776]: opus
+                  - generic "點擊複製指令" [ref=e777] [cursor=pointer]:
+                    - generic [ref=e778]:
+                      - generic [ref=e779]: /security-review
+                      - generic [ref=e780]: 安全審查（自動化掃描 + AI 程式碼審查）
+                    - generic [ref=e781]: sonnet
+                  - generic [ref=e783]: ↳ audit → code-health → security-review → refactor（條件觸發）
+                - generic [ref=e784]:
+                  - generic [ref=e785]: 知識載入
+                  - generic "點擊複製指令" [ref=e786] [cursor=pointer]:
+                    - generic [ref=e787]:
+                      - generic [ref=e788]: /design-system
+                      - generic [ref=e789]: 請參照 Brickverse Design System 作為當前專案的設計規範基底。
+                    - generic [ref=e790]: haiku
+                - generic [ref=e791]:
+                  - generic [ref=e792]: Blog 編輯流水線
+                  - generic [ref=e794]: ↳ 11 個 Skill（intake → outline → ... → engagement → Insforge DB）
+                - generic [ref=e795]:
+                  - generic [ref=e796]: 開發除錯
+                  - generic "點擊複製指令" [ref=e797] [cursor=pointer]:
+                    - generic [ref=e798]:
+                      - generic [ref=e799]: /check-console
+                      - generic [ref=e800]: 透過 CDP 讀取 Arc 瀏覽器的 Console Error 並定位問題
+                    - generic [ref=e801]: sonnet
+                - generic [ref=e802]:
+                  - generic [ref=e803]: 工具
+                  - generic "點擊複製指令" [ref=e804] [cursor=pointer]:
+                    - generic [ref=e805]:
+                      - generic [ref=e806]: /insights-zh
+                      - generic [ref=e807]: 將 /insights 英文報告翻譯為繁體中文版
+                    - generic [ref=e808]: sonnet
+            - generic [ref=e809]:
+              - generic [ref=e810]:
+                - generic [ref=e811]: Project Skill
+                - generic [ref=e812]: <project>/.claude/skills/
+              - generic [ref=e813]:
+                - generic [ref=e814]:
+                  - generic [ref=e815]: Todo-Dashboard
+                  - generic "點擊複製指令" [ref=e816] [cursor=pointer]:
+                    - generic [ref=e817]:
+                      - generic [ref=e818]: /add-child
+                      - generic [ref=e819]: 新增子專案資料夾
+                    - generic [ref=e820]: haiku
+                  - generic "點擊複製指令" [ref=e821] [cursor=pointer]:
+                    - generic [ref=e822]:
+                      - generic [ref=e823]: /rescan
+                      - generic [ref=e824]: 重掃檔案系統同步 JSON
+                    - generic [ref=e825]: haiku
+                - generic [ref=e826]:
+                  - generic [ref=e827]: brickverse-web
+                  - generic "點擊複製指令" [ref=e828] [cursor=pointer]:
+                    - generic [ref=e829]:
+                      - generic [ref=e830]: /form-integration
+                      - generic [ref=e831]: 表單整合測試（真實 API）
+                    - generic [ref=e832]: haiku
+                  - generic "點擊複製指令" [ref=e833] [cursor=pointer]:
+                    - generic [ref=e834]:
+                      - generic [ref=e835]: /test-email
+                      - generic [ref=e836]: Email 測試工具
+                    - generic [ref=e837]: haiku
+                  - generic "點擊複製指令" [ref=e838] [cursor=pointer]:
+                    - generic [ref=e839]:
+                      - generic [ref=e840]: /insforge
+                      - generic [ref=e841]: 連接 InsForge 後台
+                    - generic [ref=e842]: haiku
+                  - generic "點擊複製指令" [ref=e843] [cursor=pointer]:
+                    - generic [ref=e844]:
+                      - generic [ref=e845]: /form-e2e
+                      - generic [ref=e846]: 表單 E2E 測試（Mock API）
+                    - generic [ref=e847]: haiku
+          - generic [ref=e848]:
+            - generic [ref=e849]:
+              - generic [ref=e850]: Built-in
+              - generic [ref=e851]: /keybindings-help
+            - generic [ref=e852]: 鍵盤快捷鍵設定
+        - separator [ref=e853]
+        - generic [ref=e854]:
+          - heading "架構關係" [level=2] [ref=e855]
+          - generic [ref=e857]:
+            - generic [ref=e858]:
+              - generic [ref=e859]: brickverse-web
+              - generic [ref=e860]: 主體
+            - generic [ref=e861]:
+              - img [ref=e862]
+              - img [ref=e864]
+            - generic [ref=e866]:
+              - generic [ref=e867]:
+                - generic [ref=e868]: BlogFrontend
+                - generic [ref=e869]: Blog · /blog
+              - generic [ref=e870]:
+                - generic [ref=e871]: brickverse-learn
+                - generic [ref=e872]: /course
+            - img [ref=e873]
+            - generic [ref=e876]:
+              - generic [ref=e877]: BlogBackend
+              - generic [ref=e878]: Blog 後端 · 串接 Insforge
+      - button "展開專案列表"
+  - button "Open Next.js Dev Tools" [ref=e321] [cursor=pointer]:
+    - img [ref=e322]
+  - alert [ref=e325]: Brickverse Dashboard

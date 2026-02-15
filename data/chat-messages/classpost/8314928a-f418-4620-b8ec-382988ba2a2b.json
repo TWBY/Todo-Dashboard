@@ -1,0 +1,24 @@
+[
+  {
+    "id": "a6feef0b-7cd0-4839-9e12-344ea2e620d3",
+    "role": "user",
+    "content": "fix-test-v1: say hello",
+    "timestamp": 1771086306781
+  },
+  {
+    "id": "6bb809d8-3a69-430e-ac6a-6cb5b6085d0d",
+    "role": "assistant",
+    "content": "Hello! 👋\n\nHow can I help you today?",
+    "timestamp": 1771086314085
+  },
+  {
+    "id": "54e8a986-ac92-49c1-addd-cb29014bb4f5",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": true
+    },
+    "timestamp": 1771086315407
+  }
+]

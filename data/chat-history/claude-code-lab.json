@@ -1,0 +1,26 @@
+[
+  {
+    "sessionId": "73dc271f-4076-4d68-8009-f59178279bc9",
+    "projectId": "claude-code-lab",
+    "title": "現在 Claude code  有新增一個官方的「Claude code in action」。 也就是官方的設計課程素",
+    "messageCount": 6,
+    "createdAt": 1770799859676,
+    "lastActiveAt": 1770801287163
+  },
+  {
+    "sessionId": "7b0aa13c-5d8e-497b-827f-3569174d9c78",
+    "projectId": "claude-code-lab",
+    "title": "關於題目的部分要修正，就是要以選擇題為主。只要有選擇題就好，不要有其他的題目。",
+    "messageCount": 3,
+    "createdAt": 1770800050517,
+    "lastActiveAt": 1770801122694
+  },
+  {
+    "sessionId": "5ff04ebd-ad61-4661-8f66-e96f9a8ba404",
+    "projectId": "claude-code-lab",
+    "title": "簡單介紹這個專案",
+    "messageCount": 1,
+    "createdAt": 1771082014429,
+    "lastActiveAt": 1771082014551
+  }
+]

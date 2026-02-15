@@ -1,0 +1,572 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "Brickverse" [ref=e6] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e7]:
+          - link "入門課程" [ref=e8] [cursor=pointer]:
+            - /url: /beginner
+          - link "進階課程" [ref=e9] [cursor=pointer]:
+            - /url: /advanced
+          - link "課程包班" [ref=e10] [cursor=pointer]:
+            - /url: /custom-course
+          - link "戰鬥營" [ref=e11] [cursor=pointer]:
+            - /url: /one-day-bootcamp
+          - link "線下小聚" [ref=e12] [cursor=pointer]:
+            - /url: /offline-meetup
+          - link "文章" [ref=e13] [cursor=pointer]:
+            - /url: https://brickverse.com.tw/blog
+    - main [ref=e14]:
+      - generic [ref=e17]:
+        - heading "10 歲小朋友也能上手" [level=1] [ref=e18]
+        - heading "零基礎友善，像聊天一樣簡單" [level=2] [ref=e19]
+        - button "報名課程" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 報名課程
+        - generic [ref=e26]: NT 1,299
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - paragraph [ref=e31]: 專為零基礎設計，連小朋友都能上手
+          - heading "用 AI 解決真實問題 ，而不是學語法" [level=2] [ref=e32]
+          - paragraph [ref=e33]: 跳過複雜的程式碼，精選三款最直覺的 AI 工具， 帶你從零開始，親手做出五個能解決真實問題的數位產品。
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - generic [ref=e36]: "3"
+              - generic [ref=e37]: 款 AI 工具
+            - generic [ref=e38]:
+              - generic [ref=e39]: "5"
+              - generic [ref=e40]: 個實戰場景
+            - generic [ref=e41]:
+              - generic [ref=e42]: "0"
+              - generic [ref=e43]: 程式基礎門檻
+          - generic [ref=e44]:
+            - generic [ref=e45]: Canva Code
+            - generic [ref=e46]: Google Gemini
+            - generic [ref=e47]: Google AI Studio
+          - paragraph [ref=e48]: 以下是你將親手完成的五個作品
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - heading "1. 互動遊戲行銷" [level=4] [ref=e51]
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - paragraph [ref=e54]: 社群發文按讚數永遠個位數、拿不到潛客名單？
+                - paragraph [ref=e55]: 我們用 Canva Code 快速做出抽獎、測驗、闖關小遊戲，讓粉絲主動玩、主動留資料，自動收集 Email／Line，直接變成你的客戶名單。
+              - generic [ref=e65]:
+                - generic [ref=e66]:
+                  - generic [ref=e69]:
+                    - generic [ref=e70]: Brickverse 粉絲頁
+                    - generic [ref=e71]: 2 小時前
+                  - generic [ref=e73]: 新品上市！歡迎到店選購～
+                  - generic [ref=e76]:
+                    - generic [ref=e77]:
+                      - generic [ref=e79]: 讚
+                      - generic [ref=e80]: "3"
+                    - generic [ref=e81]:
+                      - generic [ref=e83]: 留言
+                      - generic [ref=e84]: "0"
+                    - generic [ref=e85]:
+                      - generic [ref=e87]: 分享
+                      - generic [ref=e88]: "0"
+                - generic [ref=e89]: 按讚個位數、潛客名單 = 0
+          - generic [ref=e90]:
+            - heading "2. 業務資訊版" [level=4] [ref=e91]
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - paragraph [ref=e94]: 健身教練、美業從業者的課程資訊散亂，客戶詢問重複又費時？
+                - paragraph [ref=e95]: 用 Canva Code 輕鬆把課程介紹、價格表、上課時間、師資資歷變成一個美觀的互動網頁，讓客戶隨時隨地直接查看、預約，甚至嵌入表單收集諮詢，直接轉化成潛在客戶。
+              - generic [ref=e104]:
+                - generic:
+                  - generic: 課程多少錢？
+                - generic:
+                  - generic: 幾點上課？
+                - generic:
+                  - generic: 還有名額嗎？
+                - generic:
+                  - generic: 老師是誰？
+                - generic:
+                  - generic: 在哪裡上課？
+                - generic:
+                  - generic: 可以分期嗎？
+                - generic [ref=e105]: 客戶重複問，回覆到崩潰
+          - generic [ref=e106]:
+            - heading "3. 行政數據處理" [level=4] [ref=e107]
+            - generic [ref=e108]:
+              - generic [ref=e109]:
+                - paragraph [ref=e110]: 每天被 Excel 綁架，重複清理、轉格式、對帳做到崩潰？
+                - paragraph [ref=e111]: 用 Gemini 把重複步驟變成「一鍵執行」小工具，原本好幾小時的工作，幾分鐘就搞定。
+              - generic [ref=e121]:
+                - generic [ref=e122]:
+                  - generic [ref=e123]: 姓名
+                  - generic [ref=e124]: 應徵日期
+                  - generic [ref=e125]: 狀態
+                  - generic [ref=e126]: 筆試
+                - generic [ref=e127]:
+                  - generic [ref=e128]: 王小明
+                  - generic [ref=e129]: 2024/3/15
+                  - generic [ref=e130]: 已通過
+                  - generic [ref=e131]: "85"
+                - generic [ref=e132]:
+                  - generic [ref=e133]: chen mei
+                  - generic [ref=e134]: 3-20-2024
+                  - generic [ref=e135]: (空)
+                  - generic [ref=e136]: N/A
+                - generic [ref=e137]:
+                  - generic [ref=e138]: 李大華
+                  - generic [ref=e139]: 2024.03.22
+                  - generic [ref=e140]: 待審核
+                  - generic [ref=e141]: "72"
+                - generic [ref=e142]:
+                  - generic [ref=e143]: 林志玲
+                  - generic [ref=e144]: Mar 25
+                  - generic [ref=e145]: 已通過
+                  - generic [ref=e146]: "91"
+                - generic [ref=e147]:
+                  - generic [ref=e148]: (空)
+                  - generic [ref=e149]: 2024/3/28
+                  - generic [ref=e150]: 未通過
+                  - generic [ref=e151]: "45"
+          - generic [ref=e152]:
+            - heading "4. 社群貼文大師" [level=4] [ref=e153]
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - paragraph [ref=e156]: 每天為了社群貼文想破頭，又要寫文案又要找圖片，時間都不夠用？
+                - paragraph [ref=e157]: 我們用 Google AI Studio 打造一個「社群貼文大師」APP，只要撰寫一個主題，APP 會自動生成相對應的文案以及圖片，讓你輕鬆產出高品質的社群內容。
+              - generic [ref=e167]:
+                - generic [ref=e168]:
+                  - generic [ref=e174]: 社群貼文編輯器
+                  - generic [ref=e176]: 今天發什麼？
+                  - generic [ref=e181]:
+                    - generic [ref=e182]: 圖片
+                    - generic [ref=e183]: 表情
+                    - generic [ref=e184]: 標籤
+                - generic [ref=e185]: 沒靈感⋯每天發文好累
+          - generic [ref=e186]:
+            - heading "5. 貼身會議助理" [level=4] [ref=e187]
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - paragraph [ref=e190]: 開完會後還要花時間整理會議記錄、提取重點、列出行動項目，總是拖到最後才做？
+                - paragraph [ref=e191]: 我們用 Google AI Studio 打造一個「貼身會議助理」APP，只要上傳會議記錄的音檔，系統會自動提取文字，並且做會議總結與行動建議，讓你專注在會議本身，不用再為整理會議記錄煩惱。
+              - generic [ref=e201]:
+                - img [ref=e203]
+                - generic [ref=e248]:
+                  - generic [ref=e250]: 錄音中⋯
+                  - generic [ref=e251]: 00:00
+      - generic [ref=e254]:
+        - heading "學員專屬社群，技術問題不卡關" [level=2] [ref=e255]
+        - paragraph [ref=e256]: 課後加入我們的專屬社群，與同儕交流學習，獲得持續的技術支援與成長機會
+        - generic [ref=e257]:
+          - generic [ref=e258]:
+            - heading "即時技術支援" [level=3] [ref=e259]
+            - paragraph [ref=e260]: 遇到問題隨時在社群發問，獲得即時解答，讓學習不中斷
+          - generic [ref=e261]:
+            - heading "同儕交流學習" [level=3] [ref=e262]
+            - paragraph [ref=e263]: 與其他學員分享作品、交流心得，互相激勵成長，建立寶貴的人脈網絡
+          - generic [ref=e264]:
+            - heading "持續更新資源" [level=3] [ref=e265]
+            - paragraph [ref=e266]: 定期分享最新 AI 工具、技術趨勢與實用資源，讓您始終走在技術前沿
+        - generic [ref=e267]:
+          - img "學員專屬社群"
+          - generic [ref=e269]: 技術支援、共同成長、資源分享
+      - generic [ref=e271]:
+        - heading "各界回饋" [level=2] [ref=e272]
+        - generic [ref=e273]:
+          - generic [ref=e274]:
+            - generic [ref=e275]: Willy 的教學品質，是我第一次體驗就感覺到，「教學是他的專業」的程度
+            - link "— michelle_living_more" [ref=e277] [cursor=pointer]:
+              - /url: https://www.threads.com/@michelle_living_more/post/DGIwcLjSHBq?xmt=AQF05F74M8dth9NvWq1kB9aJsbQkS_1WYMbupIsaQIBJ8g
+          - generic [ref=e278]:
+            - generic [ref=e279]: Willy 對自己精心打磨的課程非常有信心，知道這門課足夠好，好到會讓人聽完之後，忍不住推薦別人也來上！
+            - link "— henryyang_tw" [ref=e281] [cursor=pointer]:
+              - /url: https://www.threads.com/@henryyang_tw/post/DKznYZFP_69?xmt=AQF0S0HJf8ZD3h2vEVur-0reIIGTPI8WmftERwSM7dOxZg
+          - generic [ref=e282]:
+            - generic [ref=e283]: 課程設計的很平衡。不會過度講技術細節，但又給了足夠的基礎，讓每個人都能真的開始動手做。
+            - link "— cab_late" [ref=e285] [cursor=pointer]:
+              - /url: https://www.threads.com/@cab_late/post/DNDYuwYyv6S?xmt=AQF0H23tnBf5CdB7GO-5nXLVGXSqw8TRNKi-U9vU6uWoFw
+          - generic [ref=e286]:
+            - generic [ref=e287]: Willy 非常擅長用白話引領大家進入 AI 程式碼世界，會逐步引領如何與 AI 溝通，寫出自己的第一個程式作品。
+            - link "— ai.layology.lab" [ref=e289] [cursor=pointer]:
+              - /url: https://www.threads.com/@ai.layology.lab/post/DKuDFz8BFAs?xmt=AQF0d-1BnvJWnCjbRdkGRE3GGB_8aoZUYZb6bJgs5yxG3Q
+          - generic [ref=e290]:
+            - generic [ref=e291]: 上了 Willy 的 AI Coding 課程，發現了另一種可能：原來日常很多雜事，使用 AI Coding 一下就解決了。
+            - link "— cat__soc" [ref=e293] [cursor=pointer]:
+              - /url: https://www.threads.com/@cat__soc/post/DILpqZiT_4e?xmt=AQF073JzR_-J2uuTOS43oP0LUH1IDcCYtq2ZYJ8EFpmetA
+          - generic [ref=e294]:
+            - generic [ref=e295]: Willy 教學方式，對於小白是非常友善，不會寫程式也不用有壓力，可以跟著 Willy 腳步一步步打造出屬於自己的 AI 網站！
+            - link "— ironv.careerlife" [ref=e297] [cursor=pointer]:
+              - /url: https://www.threads.com/@ironv.careerlife/post/DMVVZ7Dycpb?xmt=AQF0mlQ8iDyFF360ni73sRC0GULLRYNWcR3Ms54IN1NNfg
+      - generic [ref=e299]:
+        - heading "為什麼我能夠幫助你學會 Vibe Coding？" [level=2] [ref=e300]
+        - generic [ref=e301]:
+          - img "講師照片" [ref=e303]
+          - generic [ref=e305]:
+            - text: 嗨，我是柏燁。擁有超過
+            - strong [ref=e306]: 6 年
+            - text: 的程式教學經驗。過去，我專注於資訊證照輔導與頂尖選手培訓，曾擔任樂高程式競賽教練，帶領學員征戰 WRO 世界機器人奧林匹克競賽、亞洲機器人大賽等國際舞台並屢獲佳績。這段扎實的技術教學經驗，成為了我今日教學的基石。
+            - text: 現在，我將重心全心投入於
+            - strong [ref=e307]: Vibe Coding
+            - text: 教學。不同於傳統工程師培訓，我專注於引導
+            - strong [ref=e308]: 非工程背景的初學者
+            - text: 。我的目標是讓您能親手打造出大幅優化工作效率的數位工具，甚至是具有變現潛力的商業產品，真正將程式技能轉化為實際生產力。
+            - text: 在
+            - strong [ref=e309]: Vibe Coding
+            - text: 的實體教學領域，我已累積指導超過
+            - strong [ref=e310]: 300 位
+            - text: 學員，更有學員的實戰作品成功登上科技媒體專題報導。此外，我也曾受邀至
+            - strong [ref=e311]: 104 人力銀行
+            - text: 進行演講，並前往
+            - strong [ref=e312]: 淡江大學
+            - text: 、
+            - strong [ref=e313]: 台北大學
+            - text: 等單位授課與分享。
+            - text: 這些來自教學現場與產學界的雙重經驗，讓我能更精準地掌握市場趨勢，確保您在我的課程中學到的是真正能解決問題、創造價值的實戰技能。
+        - generic [ref=e315]:
+          - img "講師相關照片 1" [ref=e316]
+          - img "講師相關照片 2" [ref=e317]
+      - generic [ref=e320]:
+        - generic [ref=e321]:
+          - heading "課程包含內容價值" [level=2] [ref=e322]
+          - paragraph [ref=e323]: 學會這些技能，更能快速實現自己的想法
+        - generic [ref=e324]:
+          - generic [ref=e325]:
+            - generic [ref=e327]:
+              - heading "互動遊戲開發" [level=4] [ref=e328]
+              - generic [ref=e329]: NT 5,000-12,000
+            - paragraph [ref=e330]: 零基礎也能完成！課程中你將親手打造可上線的互動遊戲，就像和 AI 聊天一樣簡單。
+          - generic [ref=e331]:
+            - generic [ref=e333]:
+              - heading "業務資訊網頁" [level=4] [ref=e334]
+              - generic [ref=e335]: NT 3,000-8,000
+            - paragraph [ref=e336]: 輕鬆打造美觀的業務資訊頁面，讓客戶隨時查看課程資訊、價格表、上課時間。不需要懂程式碼，像做簡報一樣簡單。
+          - generic [ref=e337]:
+            - generic [ref=e339]:
+              - heading "資料清理工具" [level=4] [ref=e340]
+              - generic [ref=e341]: NT 3,000-8,000
+            - paragraph [ref=e342]: 學會開發實用的資料清理工具，讓原本需要數小時的工作變成幾分鐘完成。就像教 AI 幫你做事一樣簡單。
+          - generic [ref=e343]:
+            - generic [ref=e345]:
+              - heading "社群貼文大師" [level=4] [ref=e346]
+              - generic [ref=e347]: NT 600-1,800 / 月
+            - paragraph [ref=e348]: 打造專屬的社群貼文生成 APP，只要輸入主題就能自動生成文案和圖片，讓你輕鬆產出高品質的社群內容，節省大量時間。
+          - generic [ref=e349]:
+            - generic [ref=e351]:
+              - heading "貼身會議助理" [level=4] [ref=e352]
+              - generic [ref=e353]: NT 200-1,000 / 月
+            - paragraph [ref=e354]: 開發智能會議助理 APP，上傳會議音檔就能自動提取文字、生成會議總結與行動建議，讓你專注在會議本身，不用再為整理會議記錄煩惱。
+          - generic [ref=e355]:
+            - generic [ref=e357]:
+              - heading "專屬學習社群" [level=4] [ref=e358]
+              - generic [ref=e359]: 無價
+            - paragraph [ref=e360]: 終身加入學員社群，持續交流與成長。與志同道合的夥伴一起學習，隨時交流技術與創業經驗。零基礎也不怕，大家互相幫助！
+          - generic [ref=e361]:
+            - generic [ref=e363]:
+              - heading "自主開發產品能力" [level=4] [ref=e364]
+              - generic [ref=e365]: 無價
+            - paragraph [ref=e366]: 掌握從想法到產品的完整開發流程，具備獨立開發各種數位產品的能力。不需要程式背景，像聊天一樣簡單就能學會。
+        - generic [ref=e367]:
+          - paragraph [ref=e368]: 課程內容總價值
+          - paragraph [ref=e369]: NT 11,800+
+        - generic [ref=e370]:
+          - paragraph [ref=e371]:
+            - generic [ref=e372]: 課程售價
+            - generic [ref=e373]: NT 1,299
+          - paragraph [ref=e374]: 刮開領取折扣碼
+          - button "AC149" [ref=e376]
+        - generic [ref=e381]:
+          - img [ref=e383]
+          - generic [ref=e386]: 課程保證
+          - heading "範例沒做出來，保證免費重修" [level=2] [ref=e387]
+          - paragraph [ref=e388]:
+            - text: 我們對教學品質有信心，
+            - strong [ref=e389]: 只要有任何一個範例沒有實作出來
+            - text: ，我們保證讓你免費重修一次
+      - generic [ref=e392]:
+        - generic [ref=e393]: 選擇您要參加的場次，點擊報名
+        - link "台北 地點：小樹屋紅豆杉 (台北市大同區) 日期：3/07 (六) 時間：14:00-17:00" [ref=e395] [cursor=pointer]:
+          - /url: https://portaly.cc/willyRuan/product/QsrBkr4PiScS6xPg7RBB
+          - generic [ref=e396]:
+            - generic [ref=e397]: 台北
+            - generic [ref=e398]:
+              - text: 地點：
+              - generic [ref=e399]: 小樹屋紅豆杉 (台北市大同區)
+              - text: 日期：3/07 (六)
+              - text: 時間：
+              - generic [ref=e400]: 14:00-17:00
+      - generic [ref=e403]:
+        - heading "不確定入門課是否適合？" [level=2] [ref=e404]
+        - paragraph [ref=e405]: 清楚了解兩個課程的差異，選擇最適合你的學習路徑
+        - table [ref=e407]:
+          - rowgroup [ref=e408]:
+            - row "入門課程 進階課程" [ref=e409]:
+              - columnheader [ref=e410]
+              - columnheader "入門課程" [ref=e411]
+              - columnheader "進階課程" [ref=e412]
+          - rowgroup [ref=e413]:
+            - row "課程時數 3 小時 6 小時" [ref=e414]:
+              - cell "課程時數" [ref=e415]
+              - cell "3 小時" [ref=e416]
+              - cell "6 小時" [ref=e417]
+            - row "課程價格 NT 1,299 NT 3,980" [ref=e418]:
+              - cell "課程價格" [ref=e419]
+              - cell "NT 1,299" [ref=e420]
+              - cell "NT 3,980" [ref=e421]
+            - row "建議程度 零基礎友善，需會電腦基本操作 日常有在使用 AI 的習慣，如 AI 寫文案、生圖" [ref=e422]:
+              - cell "建議程度" [ref=e423]
+              - cell "零基礎友善，需會電腦基本操作" [ref=e424]
+              - cell "日常有在使用 AI 的習慣，如 AI 寫文案、生圖" [ref=e425]
+            - row "預期成果 個人化小型應用 商用級產品，可承接商業專案" [ref=e426]:
+              - cell "預期成果" [ref=e427]
+              - cell "個人化小型應用" [ref=e428]
+              - cell "商用級產品，可承接商業專案" [ref=e429]
+            - row "開發工具 Canva Code、Gemini、Google AI Studio Cursor、Antigravity" [ref=e430]:
+              - cell "開發工具" [ref=e431]
+              - cell "Canva Code、Gemini、Google AI Studio" [ref=e432]
+              - cell "Cursor、Antigravity" [ref=e433]
+            - row "UI/UX 設計 • ✓" [ref=e434]:
+              - cell "UI/UX 設計" [ref=e435]
+              - cell "•" [ref=e436]
+              - cell "✓" [ref=e437]
+            - row "SEO 優化 • ✓" [ref=e438]:
+              - cell "SEO 優化" [ref=e439]
+              - cell "•" [ref=e440]
+              - cell "✓" [ref=e441]
+            - row "資安設定 • ✓" [ref=e442]:
+              - cell "資安設定" [ref=e443]
+              - cell "•" [ref=e444]
+              - cell "✓" [ref=e445]
+            - row "Zeabur 部署 • ✓" [ref=e446]:
+              - cell "Zeabur 部署" [ref=e447]
+              - cell "•" [ref=e448]
+              - cell "✓" [ref=e449]
+            - row "資料庫存數據 • ✓" [ref=e450]:
+              - cell "資料庫存數據" [ref=e451]
+              - cell "•" [ref=e452]
+              - cell "✓" [ref=e453]
+            - row "登入系統 • ✓" [ref=e454]:
+              - cell "登入系統" [ref=e455]
+              - cell "•" [ref=e456]
+              - cell "✓" [ref=e457]
+            - row "網站公開上線 ✓ ✓" [ref=e458]:
+              - cell "網站公開上線" [ref=e459]
+              - cell "✓" [ref=e460]
+              - cell "✓" [ref=e461]
+        - generic [ref=e462]:
+          - link "了解進階課程" [ref=e463] [cursor=pointer]:
+            - /url: /advanced
+          - link "包班課程" [ref=e464] [cursor=pointer]:
+            - /url: /custom-course
+      - generic [ref=e466]:
+        - heading "常見問題" [level=2] [ref=e467]
+        - generic [ref=e468]:
+          - generic [ref=e469]: 課程基礎
+          - generic [ref=e470]:
+            - button "我完全沒有程式背景可以學嗎？" [ref=e471] [cursor=pointer]:
+              - heading "我完全沒有程式背景可以學嗎？" [level=4] [ref=e472]
+              - img [ref=e474]
+            - generic [ref=e476]:
+              - text: 當然可以！這門課專為
+              - strong [ref=e477]: 零基礎
+              - text: 學員設計。
+              - text: 你只需要像和 ChatGPT 聊天一樣描述需求，就能開始學習程式開發。課程會從最基礎的概念開始教起，
+              - strong [ref=e478]: 沒有任何 AI 經驗也沒問題
+              - text: 。就像玩積木一樣簡單，你一定也可以！
+          - generic [ref=e479]:
+            - button "真的連 10 歲小朋友也能學會嗎？" [ref=e480] [cursor=pointer]:
+              - heading "真的連 10 歲小朋友也能學會嗎？" [level=4] [ref=e481]
+              - img [ref=e483]
+            - generic [ref=e485]:
+              - text: 是的！這門課的設計理念就是讓完全零基礎的人也能輕鬆上手。
+              - text: 我們使用最簡單的工具（Canva Code、Google Gemini、Google AI Studio），你只需要像聊天一樣告訴 AI 你想要什麼，它就會幫你做出來。不需要懂複雜的程式碼，就像做簡報、玩積木一樣簡單。
+              - text: 如果 10 歲小朋友都能完成，你一定也可以！
+          - generic [ref=e486]:
+            - button "什麼樣的人最適合這門課？" [ref=e487] [cursor=pointer]:
+              - heading "什麼樣的人最適合這門課？" [level=4] [ref=e488]
+              - img [ref=e490]
+            - generic [ref=e492]:
+              - text: 如果你對
+              - strong [ref=e493]: Vibe Coding
+              - text: 有興趣，或是想透過 Vibe Coding 做產品、優化自身的工作效率，這門課最適合你！
+              - text: 課程設計讓
+              - strong [ref=e494]: 完全沒有經驗
+              - text: 的人也能輕鬆上手，建立對 Vibe Coding 的信心。適合想要透過 AI 工具提升工作效率、打造實用產品的初學者，你一定也可以！
+          - generic [ref=e495]:
+            - button "課程時長是多少？" [ref=e496] [cursor=pointer]:
+              - heading "課程時長是多少？" [level=4] [ref=e497]
+              - img [ref=e499]
+            - generic [ref=e501]:
+              - text: 課程時長為
+              - strong [ref=e502]: 3 小時
+              - text: ，採實體面對面教學。
+              - text: 在這 3 小時內，你將學會使用三款 AI 工具，並完成多個實用的數位作品。課程節奏緊湊但不會太快，講師會根據學員進度調整。
+          - generic [ref=e503]:
+            - button "為什麼選擇這三款工具？" [ref=e504] [cursor=pointer]:
+              - heading "為什麼選擇這三款工具？" [level=4] [ref=e505]
+              - img [ref=e507]
+            - generic [ref=e509]:
+              - text: 我們精挑細選出三款
+              - strong [ref=e510]: 最具生產力、且上手最直覺
+              - text: 的工具：
+              - text: •
+              - strong [ref=e511]: Canva Code
+              - text: "- 快速製作互動遊戲和業務資訊網頁"
+              - text: •
+              - strong [ref=e512]: Google Gemini
+              - text: "- 處理數據清理等重複性工作"
+              - text: •
+              - strong [ref=e513]: Google AI Studio
+              - text: "- 打造智能應用程式"
+              - text: 這三款工具能讓你跳過複雜的語法學習，直接進入「解決問題」的核心。
+        - generic [ref=e514]:
+          - generic [ref=e515]: 學習內容
+          - generic [ref=e516]:
+            - button "這門課會學到什麼？" [ref=e517] [cursor=pointer]:
+              - heading "這門課會學到什麼？" [level=4] [ref=e518]
+              - img [ref=e520]
+            - generic [ref=e522]:
+              - text: 課程包含
+              - strong [ref=e523]: 5 個精心設計的實用場景
+              - text: ：
+              - text: •
+              - strong [ref=e524]: 互動遊戲行銷
+              - text: "- 用 Canva Code 製作抽獎、測驗、闖關小遊戲，收集客戶名單"
+              - text: •
+              - strong [ref=e525]: 業務資訊版
+              - text: "- 用 Canva Code 打造美觀的課程資訊、價格表互動網頁"
+              - text: •
+              - strong [ref=e526]: 行政數據處理
+              - text: "- 用 Gemini 把重複的 Excel 工作變成「一鍵執行」"
+              - text: •
+              - strong [ref=e527]: 社群貼文大師
+              - text: "- 用 Google AI Studio 自動生成文案和圖片"
+              - text: •
+              - strong [ref=e528]: 貼身會議助理
+              - text: "- 用 Google AI Studio 自動提取會議記錄並做總結"
+              - text: 每個場景都解決真實世界的問題！
+          - generic [ref=e529]:
+            - button "這門課和進階課程有什麼差別？" [ref=e530] [cursor=pointer]:
+              - heading "這門課和進階課程有什麼差別？" [level=4] [ref=e531]
+              - img [ref=e533]
+            - generic [ref=e535]:
+              - text: 入門課程使用
+              - strong [ref=e536]: Canva Code、Gemini、Google AI Studio
+              - text: ，專注於讓零基礎的人輕鬆做出實用小工具。
+              - text: 進階課程使用
+              - strong [ref=e537]: Cursor
+              - text: ，專注於打造
+              - strong [ref=e538]: 商用級產品
+              - text: ，包含：
+              - text: • 專業官網與活動網站
+              - text: • 數據 Dashboard
+              - text: • 後台管理系統（儲存/會員）
+              - text: • SEO、資安等進階功能
+              - text: 建議先上入門課程建立基礎，再進階學習打造商業產品。
+        - generic [ref=e539]:
+          - generic [ref=e540]: 學習支援
+          - generic [ref=e541]:
+            - button "課後遇到問題有支援嗎？" [ref=e542] [cursor=pointer]:
+              - heading "課後遇到問題有支援嗎？" [level=4] [ref=e543]
+              - img [ref=e545]
+            - generic [ref=e547]:
+              - text: 有！課後可以在
+              - strong [ref=e548]: 學員專屬 Discord 群組
+              - text: 隨時提問。
+              - text: 課程結束不是學習終點，而是開始。你能在社群中持續得到協助和交流機會。零基礎也不怕，大家互相幫助！
+          - generic [ref=e549]:
+            - button "如果課程中沒做出來怎麼辦？有保證嗎？" [ref=e550] [cursor=pointer]:
+              - heading "如果課程中沒做出來怎麼辦？有保證嗎？" [level=4] [ref=e551]
+              - img [ref=e553]
+            - generic [ref=e555]:
+              - text: 有！我們提供
+              - strong [ref=e556]: 「範例沒做出來，保證免費重修」
+              - text: 的保證。
+              - text: 如果你在課程結束時沒有完成任何一個範例作品，可以免費參加下一期相同課程。
+        - generic [ref=e557]:
+          - generic [ref=e558]: 購買資訊
+          - generic [ref=e559]:
+            - button "課程有最低開班人數限制嗎？" [ref=e560] [cursor=pointer]:
+              - heading "課程有最低開班人數限制嗎？" [level=4] [ref=e561]
+              - img [ref=e563]
+            - generic [ref=e565]:
+              - text: 是的，課程設有
+              - strong [ref=e566]: 最低 4 人開班
+              - text: 的規定。
+              - text: 如果屆時報名人數未達 4 人，我們會進行
+              - strong [ref=e567]: 全額退費
+              - text: ，並提前通知所有已報名的學員。
+          - generic [ref=e568]:
+            - button "如果上課前臨時有事，是否可退款？" [ref=e569] [cursor=pointer]:
+              - heading "如果上課前臨時有事，是否可退款？" [level=4] [ref=e570]
+              - img [ref=e572]
+            - generic [ref=e575]:
+              - paragraph [ref=e576]:
+                - strong [ref=e577]: 以下開課前天數對應可退費比例：
+              - generic [ref=e578]:
+                - generic [ref=e579]:
+                  - generic [ref=e580]: 30 天前
+                  - generic [ref=e581]: 100%
+                  - generic [ref=e582]: 全額退費
+                - generic [ref=e583]:
+                  - generic [ref=e584]: 14-30 天
+                  - generic [ref=e585]: 80%
+                  - generic [ref=e586]: 退 80%
+                - generic [ref=e587]:
+                  - generic [ref=e588]: 7-13 天
+                  - generic [ref=e589]: 50%
+                  - generic [ref=e590]: 退 50%
+                - generic [ref=e591]:
+                  - generic [ref=e592]: 1-6 天
+                  - generic [ref=e593]: 10%
+                  - generic [ref=e594]: 退 10%
+                - generic [ref=e595]:
+                  - generic [ref=e596]: 活動當日
+                  - generic [ref=e597]: 無
+                  - generic [ref=e598]: 無法退費
+              - paragraph [ref=e599]: ※ 退費金額將於申請後 7-14 個工作天內退還
+  - contentinfo [ref=e600]:
+    - generic [ref=e601]:
+      - link "品牌故事" [ref=e602] [cursor=pointer]:
+        - /url: /brand-story
+      - generic [ref=e603]: 合作信箱：boye@brickverse.com.tw
+      - generic [ref=e604]:
+        - link "官方 LINE" [ref=e605] [cursor=pointer]:
+          - /url: http://go.brickverse.com.tw/OfficeLINEAccount
+        - link "學生系統" [ref=e606] [cursor=pointer]:
+          - /url: https://brickverse.com.tw/course
+      - generic [ref=e607]: © 2026 Brickverse. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e613] [cursor=pointer]:
+    - img [ref=e614]
+  - alert [ref=e617]
+  - navigation:
+    - generic:
+      - generic: 入門 AI 寫程式
+      - generic:
+        - button: 探索
+        - link:
+          - /url: http://go.brickverse.com.tw/OfficeLINEAccount
+          - text: 諮詢
+        - button: 報名
+    - generic:
+      - generic:
+        - button:
+          - img
+      - generic:
+        - link:
+          - /url: /
+          - text: 首頁
+        - link:
+          - /url: /beginner
+          - text: 入門課程
+        - link:
+          - /url: /advanced
+          - text: 進階課程
+        - link:
+          - /url: /custom-course
+          - text: 課程包班
+        - link:
+          - /url: /one-day-bootcamp
+          - text: 戰鬥營
+        - link:
+          - /url: /offline-meetup
+          - text: 線下小聚
+        - link:
+          - /url: https://brickverse.com.tw/blog
+          - text: 文章

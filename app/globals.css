@@ -1,0 +1,397 @@
+@import 'tailwindcss';
+
+:root {
+  /* 主色調 */
+  --primary-blue: #ffffff;
+  --primary-blue-light: #cccccc;
+  --primary-blue-dark: #ffffff;
+
+  /* 輔助顏色 */
+  --accent-yellow: #facc15;
+  --accent-yellow-light: #fde047;
+  --accent-yellow-dark: #eab308;
+
+  /* 背景色（純黑） */
+  --background-primary: #000000;
+  --background-secondary: #000000;
+  --background-tertiary: #111111;
+
+  /* 文字色 */
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --text-tertiary: #666666;
+
+  /* 邊框 */
+  --border-color: #222222;
+
+  /* 圓角 */
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-xl: 20px;
+
+  /* 陰影 */
+  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-blue: none;
+  --shadow-yellow: none;
+
+  /* 字體 */
+  --font-family: var(--font-noto-sans-tc), 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', Arial, sans-serif;
+
+  /* 字體大小 (Perfect Fourth 1.333 ratio, base 16px) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.3125rem;    /* 21px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.75rem;     /* 28px */
+  --text-4xl: 2.375rem;    /* 38px */
+  --text-5xl: 3.125rem;    /* 50px */
+  --text-6xl: 4.1875rem;   /* 67px */
+
+  /* 字重 */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* 行高 - 語義化 Token */
+  --leading-compact: 1.3;   /* 單行元素：按鈕、標籤、徽章 */
+  --leading-heading: 1.4;   /* 標題 */
+  --leading-caption: 1.625; /* 小字註解 */
+  --leading-body: 1.75;     /* 內文段落 */
+
+  /* 字距 - 語義化 Token */
+  --tracking-default: 0em;    /* 標準 CJK */
+  --tracking-fine: 0.02em;    /* 小字微調 */
+  --tracking-ui: 0.06em;      /* UI 元素：按鈕、標籤 */
+  --tracking-display: 0.08em; /* 裝飾性標題 */
+
+  /* Dashboard 專用 */
+
+  --status-active: #22c55e;
+  --status-paused: #f59e0b;
+  --status-completed: #6b7280;
+  --status-planned: #8b5cf6;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #22c55e;
+}
+
+body {
+  font-family: var(--font-family);
+  font-weight: 400;
+  color: var(--text-primary);
+  background-color: var(--background-secondary);
+  line-height: 1.6;
+}
+
+/* 暗色調表單元素 */
+input, select, textarea {
+  color: var(--text-primary);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+option {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+}
+
+/* Fade-in 動畫 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-animation > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-animation > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-animation > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-animation > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-animation > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-animation > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-animation > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-animation > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-animation > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-animation > *:nth-child(9) { animation-delay: 400ms; }
+
+/* Spinner 旋轉動畫 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Port 狀態脈衝動畫 - 啟動中 */
+@keyframes port-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7);
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+    box-shadow: 0 0 12px 4px rgba(250, 204, 21, 0.5);
+  }
+}
+
+.animate-port-pulse {
+  animation: port-pulse 1s ease-in-out infinite;
+}
+
+/* Port 運行中的呼吸發光效果 */
+@keyframes port-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(110, 231, 183, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(110, 231, 183, 0.8), 0 0 24px rgba(110, 231, 183, 0.4);
+  }
+}
+
+.animate-port-glow {
+  animation: port-glow 2s ease-in-out infinite;
+}
+
+/* Memory 警告脈衝（critical 狀態） */
+@keyframes memory-warning-pulse {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.animate-memory-warning {
+  animation: memory-warning-pulse 2s ease-in-out infinite;
+}
+
+/* 狀態變化時的縮放動畫 */
+@keyframes status-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-status-pop {
+  animation: status-pop 0.4s ease-out forwards;
+}
+
+/* 自訂滾動條樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-primary);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  border: 2px solid var(--background-primary);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Firefox 滾動條樣式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) var(--background-primary);
+}
+
+/* 面板分隔線 hover 效果 */
+.divider-handle .divider-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  pointer-events: none;
+}
+
+.divider-handle .divider-line {
+  width: 1px;
+  border-radius: 9999px;
+  background-color: rgba(255,255,255,0.1);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.divider-handle:hover .divider-bg {
+  opacity: 1;
+}
+
+.divider-handle:hover .divider-line {
+  width: 4px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+/* 浮動決策面板進入動畫 */
+@keyframes overlay-appear {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.action-overlay-enter {
+  animation: overlay-appear 0.25s ease-out;
+}
+
+/* Todo in_progress shimmer 單向掃光動畫 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes todo-breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.todo-shimmer {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 15%,
+    #cccccc 50%,
+    currentColor 85%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.todo-shimmer-dot {
+  animation: todo-breathe 3s ease-in-out infinite;
+}
+
+/* 面板等待審批呼吸動畫 */
+@keyframes panel-breathe {
+  0%, 100% { border-color: rgba(250, 204, 21, 0.25); }
+  50% { border-color: rgba(250, 204, 21, 1); }
+}
+
+.panel-breathing {
+  animation: panel-breathe 2.5s ease-in-out infinite;
+}
+
+/* 綠色面板呼吸動畫（Blog Chat） */
+@keyframes panel-breathe-green {
+  0%, 100% { border-color: rgba(34, 197, 94, 0.25); }
+  50% { border-color: rgba(34, 197, 94, 1); }
+}
+
+.panel-breathing-green {
+  animation: panel-breathe-green 2.5s ease-in-out infinite;
+}
+
+/* 清除對話淡出動畫 */
+.chat-clearing {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+
+/* 工具操作淡入淡出 */
+@keyframes toolCrossfade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tool-crossfade {
+  animation: toolCrossfade 0.3s ease-in-out;
+}
+
+/* 速記待辦彈窗進場動畫 */
+@keyframes quick-todo-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.quick-todo-modal {
+  animation: quick-todo-enter 0.2s ease-out;
+}
+
+/* === 右側面板群佈局（純 CSS，不受 GSAP 干擾） === */
+.right-panel-group {
+  display: grid;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  flex: 1 1 0%;
+  transition: opacity 0.2s ease;
+}
+.right-panel-group[data-state="hidden"] {
+  flex: 0 0 0px;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Chat 面板格子 */
+.chat-panel-cell {
+  height: 100%;
+  padding: 1rem 1rem 1rem 0.5rem;
+  overflow: hidden;
+  min-width: 0;
+  transition: opacity 0.2s ease;
+}
+.chat-panel-cell[data-exiting="true"] {
+  opacity: 0;
+}

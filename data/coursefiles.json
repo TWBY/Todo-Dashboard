@@ -1,0 +1,118 @@
+[
+  {
+    "id": "aicode100",
+    "productId": "BV-2001",
+    "name": "AICode100",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/CourseFiles/AICode100",
+    "description": "AICode100 課程的教學檔案集合。",
+    "techStack": [
+      "Next.js",
+      "React",
+      "TypeScript"
+    ],
+    "children": [
+      {
+        "name": "GeminilmageGen",
+        "description": "Gemini 生圖教學簡報"
+      },
+      {
+        "name": "ClassPresentation",
+        "description": "課程簡報"
+      }
+    ],
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-08T15:40:18.166Z"
+  },
+  {
+    "id": "aicode101",
+    "productId": "BV-2002",
+    "name": "AICode101",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/CourseFiles/AICode101",
+    "description": "AICode101 進階課程的教學檔案集合。",
+    "techStack": [],
+    "children": [
+      {
+        "name": "Bonus",
+        "description": "加碼內容簡報"
+      },
+      {
+        "name": "ClassPersentation",
+        "description": "進階課程簡報"
+      },
+      {
+        "name": "ClassQAGame",
+        "description": "課堂問答遊戲"
+      },
+      {
+        "name": "ReactClassPresentation",
+        "description": "React 版課程簡報"
+      },
+      {
+        "name": "StudentStauts",
+        "description": "學生狀態 Dashboard"
+      },
+      {
+        "name": "SupabaseExample",
+        "description": "Supabase 範例"
+      },
+      {
+        "name": "dashborard",
+        "description": "數據分析儀表板"
+      },
+      {
+        "name": "典藏",
+        "description": "歷史版本與素材"
+      }
+    ],
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "updatedAt": "2026-02-08T15:26:33.893Z"
+  },
+  {
+    "id": "hr-workshop",
+    "productId": "BV-2003",
+    "name": "HRWorkshop",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/CourseFiles/HRWorkshop",
+    "description": "",
+    "techStack": [],
+    "children": [
+      {
+        "name": "OnlineWorkshop",
+        "description": "線上工作坊"
+      },
+      {
+        "name": "OfflineWorkshop",
+        "description": "線下工作坊"
+      }
+    ],
+    "createdAt": "2026-02-09T00:00:00.000Z",
+    "updatedAt": "2026-02-13T08:33:02.677Z"
+  },
+  {
+    "id": "course-template",
+    "productId": "BV-2004",
+    "name": "CourseTemplate",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/CourseFiles/CourseTemplate",
+    "description": "課程簡報公版框架，開新課只需填 config、寫 Chapter、放素材。",
+    "techStack": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Reveal.js"
+    ],
+    "children": [],
+    "createdAt": "2026-02-12T00:00:00.000Z",
+    "updatedAt": "2026-02-11T16:18:21.181Z"
+  },
+  {
+    "id": "course-hub",
+    "productId": "BV-2005",
+    "name": "CourseHub",
+    "path": "/Users/ruanbaiye/Documents/Brickverse/CourseFiles/CourseHub",
+    "description": "課程內容總結與編輯中心，統整所有課程資訊。",
+    "techStack": [],
+    "children": [],
+    "createdAt": "2026-02-14T00:00:00.000Z",
+    "updatedAt": "2026-02-14T15:19:59.849Z",
+    "devPort": 3019
+  }
+]

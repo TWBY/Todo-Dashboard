@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-02-14T14:17:40.676Z",
+  "type": "uncaughtException",
+  "message": "Invalid state: Controller is already closed",
+  "stack": "TypeError: Invalid state: Controller is already closed\n    at ReadableStreamDefaultController.enqueue (node:internal/webstreams/readablestream:1077:13)\n    at ChildProcess.<anonymous> (/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/.next/server/chunks/[root-of-the-server]__90d02ebd._.js:11:7)\n    at ChildProcess.emit (node:events:507:28)\n    at maybeClose (node:internal/child_process:1101:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)\n    at Process.callbackTrampoline (node:internal/async_hooks:130:17)",
+  "extra": {
+    "name": "TypeError",
+    "pid": 47808,
+    "memoryUsage": {
+      "rss": 80822272,
+      "heapTotal": 36749312,
+      "heapUsed": 26645440,
+      "external": 3781912,
+      "arrayBuffers": 177883
+    },
+    "uptime": 648.594120583
+  }
+}

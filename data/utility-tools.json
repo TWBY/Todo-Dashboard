@@ -1,0 +1,154 @@
+[
+  {
+    "id": "claude-code-lab",
+    "productId": "UT-0019",
+    "name": "ClaudeCodeLab",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/ClaudeCodeLab",
+    "description": "Claude Code 互動學習平台，透過互動式練習學會 MCP、Skills、Hooks 等所有 Claude Code 功能。",
+    "techStack": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    "createdAt": "2026-02-06T00:00:00.000Z",
+    "updatedAt": "2026-02-14T15:20:04.312Z"
+  },
+  {
+    "id": "download-html",
+    "productId": "UT-0004",
+    "name": "DownloadHTML",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/DownloadHTML",
+    "description": "HTML 下載工具。",
+    "techStack": [],
+    "createdAt": "2025-11-07T00:00:00.000Z",
+    "updatedAt": "2025-11-07T00:00:00.000Z"
+  },
+  {
+    "id": "editer",
+    "productId": "UT-0005",
+    "name": "Editer",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/Editer",
+    "description": "編輯器工具。",
+    "techStack": [],
+    "createdAt": "2025-11-27T00:00:00.000Z",
+    "updatedAt": "2025-11-27T00:00:00.000Z"
+  },
+  {
+    "id": "generate-image",
+    "productId": "UT-0007",
+    "name": "GenerateImage",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/GenerateImage",
+    "description": "圖片生成工具。",
+    "techStack": [],
+    "createdAt": "2025-10-28T00:00:00.000Z",
+    "updatedAt": "2026-02-13T03:27:29.925Z"
+  },
+  {
+    "id": "meta-ads-lab",
+    "productId": "UT-0020",
+    "name": "MetaAdsLab",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/MetaAdsLab",
+    "description": "",
+    "techStack": [],
+    "createdAt": "2026-02-09T00:00:00.000Z",
+    "updatedAt": "2026-02-11T06:28:17.068Z"
+  },
+  {
+    "id": "online-todo-list",
+    "productId": "UT-0011",
+    "name": "OnlineTodoList",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/OnlineTodoList",
+    "description": "線上待辦事項清單工具。",
+    "techStack": [],
+    "createdAt": "2026-01-23T00:00:00.000Z",
+    "updatedAt": "2026-01-23T00:00:00.000Z"
+  },
+  {
+    "id": "presentation-to-pdf",
+    "productId": "UT-0012",
+    "name": "Presentation2PDF",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/Presentation2PDF",
+    "description": "簡報轉 PDF 工具。",
+    "techStack": [],
+    "createdAt": "2025-11-23T00:00:00.000Z",
+    "updatedAt": "2025-11-23T00:00:00.000Z"
+  },
+  {
+    "id": "python-interactive-lab",
+    "productId": "UT-0018",
+    "name": "PythonInteractiveLab",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/PythonInteractiveLab",
+    "devPath": "/Users/ruanbaiye/Documents/UtilityTools/PythonInteractiveLab/frontend",
+    "description": "Python 互動作業學習系統，線上版的 Python 互動前後端系統，支援即時執行與作業批改。",
+    "techStack": [
+      "Python",
+      "FastAPI",
+      "Next.js",
+      "TypeScript"
+    ],
+    "createdAt": "2026-02-06T00:00:00.000Z",
+    "updatedAt": "2026-02-08T15:17:49.643Z"
+  },
+  {
+    "id": "social-format",
+    "productId": "UT-0013",
+    "name": "SocialFormat",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/SocialFormat",
+    "description": "社群媒體格式化工具。",
+    "techStack": [],
+    "createdAt": "2025-09-14T00:00:00.000Z",
+    "updatedAt": "2025-09-14T00:00:00.000Z"
+  },
+  {
+    "id": "subscription-checker",
+    "productId": "UT-0014",
+    "name": "SubscriptionChecker",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/SubscriptionChecker",
+    "description": "訂閱狀態檢查工具。",
+    "techStack": [],
+    "createdAt": "2025-09-14T00:00:00.000Z",
+    "updatedAt": "2025-09-14T00:00:00.000Z"
+  },
+  {
+    "id": "disk-sense",
+    "productId": "UT-0021",
+    "name": "DiskSense",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/DiskSense",
+    "description": "macOS 磁碟空間管理工具，自動偵測重複檔案與大容量檔案，協助清理硬碟空間。",
+    "techStack": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    "createdAt": "2026-02-10T00:00:00.000Z",
+    "updatedAt": "2026-02-10T13:56:58.103Z"
+  },
+  {
+    "id": "excel-factory",
+    "productId": "UT-0022",
+    "name": "ExcelFactory",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/ExcelFactory",
+    "description": "Excel 資料生成工廠。",
+    "techStack": [],
+    "createdAt": "2026-02-11T00:00:00.000Z",
+    "updatedAt": "2026-02-11T13:55:15.832Z",
+    "devPort": 3014
+  },
+  {
+    "id": "cover-maker",
+    "productId": "UT-0023",
+    "name": "CoverMaker",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/CoverMaker",
+    "description": "文章封面生成器，透過 Remotion 以程式碼生成帶有標題與插圖的靜態封面圖片。",
+    "techStack": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Remotion"
+    ],
+    "createdAt": "2026-02-14T00:00:00.000Z",
+    "updatedAt": "2026-02-14T00:00:00.000Z"
+  }
+]

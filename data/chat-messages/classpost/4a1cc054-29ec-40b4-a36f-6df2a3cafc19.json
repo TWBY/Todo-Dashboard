@@ -1,0 +1,24 @@
+[
+  {
+    "id": "663b19fa-eda1-4319-b3e7-f21480fe697a",
+    "role": "user",
+    "content": "測試第一條訊息",
+    "timestamp": 1771080542686
+  },
+  {
+    "id": "ac1b802e-bc5d-4cee-aa4e-2626a70f6fe4",
+    "role": "assistant",
+    "content": "收到！有什麼我可以幫你的嗎？",
+    "timestamp": 1771080552699
+  },
+  {
+    "id": "c5be8feb-4486-4aa5-a507-bde23df34818",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": true
+    },
+    "timestamp": 1771080554171
+  }
+]

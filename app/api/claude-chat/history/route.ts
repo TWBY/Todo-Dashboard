@@ -1,0 +1,74 @@
+import { readChatHistory, writeChatHistory } from '@/lib/data'
+import type { ChatSessionRecord } from '@/lib/claude-chat-types'
+
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return new Response(JSON.stringify({ error: 'Missing projectId' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const records = await readChatHistory(projectId)
+  const cutoff = Date.now() - TWO_DAYS_MS
+  const recent = records
+    .filter(r => r.lastActiveAt >= cutoff)
+    .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
+
+  return new Response(JSON.stringify({ sessions: recent }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+export async function POST(request: Request) {
+  try {
+    const { projectId, sessionId, title, messageCount } = await request.json()
+
+    if (!projectId || !sessionId) {
+      return new Response(JSON.stringify({ error: 'Missing projectId or sessionId' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const records = await readChatHistory(projectId)
+    const now = Date.now()
+
+    // Clean up records older than 30 days
+    const cleanCutoff = now - THIRTY_DAYS_MS
+    const cleaned = records.filter(r => r.lastActiveAt >= cleanCutoff)
+
+    const existing = cleaned.find(r => r.sessionId === sessionId)
+    if (existing) {
+      existing.lastActiveAt = now
+      if (messageCount !== undefined) existing.messageCount = messageCount
+      if (title && !existing.title) existing.title = title
+    } else {
+      cleaned.push({
+        sessionId,
+        projectId,
+        title: title || 'Untitled',
+        messageCount: messageCount || 1,
+        createdAt: now,
+        lastActiveAt: now,
+      } satisfies ChatSessionRecord)
+    }
+
+    await writeChatHistory(projectId, cleaned)
+
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+  } catch {
+    return new Response(JSON.stringify({ error: 'Failed to save history' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+}

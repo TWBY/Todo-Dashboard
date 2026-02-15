@@ -1,0 +1,24 @@
+[
+  {
+    "id": "63a7efc9-0459-4a5c-a00f-4f8fd94d4619",
+    "role": "user",
+    "content": "test",
+    "timestamp": 1771082401984
+  },
+  {
+    "id": "cca205b2-c70f-414c-b44e-94b9dcae2148",
+    "role": "assistant",
+    "content": "\n\nI see you're testing. I'm here and ready to help! What would you like to work on in the ClassPost project?",
+    "timestamp": 1771082412978
+  },
+  {
+    "id": "cf5948a2-39a5-4624-9a24-753f2420b9e9",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": true
+    },
+    "timestamp": 1771082414384
+  }
+]

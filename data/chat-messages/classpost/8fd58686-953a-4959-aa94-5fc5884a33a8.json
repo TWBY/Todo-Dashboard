@@ -1,0 +1,24 @@
+[
+  {
+    "id": "0840f5ec-72ec-439b-a86d-57bef5a837be",
+    "role": "user",
+    "content": "hi there",
+    "timestamp": 1771083896956
+  },
+  {
+    "id": "e098ac16-2251-469f-bae2-682490c01e50",
+    "role": "assistant",
+    "content": "Hi! How can I help you today?",
+    "timestamp": 1771083915801
+  },
+  {
+    "id": "c6f6ea99-b7ed-43a8-9a0c-40f8cee1b3df",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": true
+    },
+    "timestamp": 1771083917566
+  }
+]

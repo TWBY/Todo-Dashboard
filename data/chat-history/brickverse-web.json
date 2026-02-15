@@ -1,0 +1,34 @@
+[
+  {
+    "sessionId": "3e2199c3-cbf7-4be1-815b-4457778f1a26",
+    "projectId": "brickverse-web",
+    "title": "Untitled",
+    "messageCount": 3,
+    "createdAt": 1770791406532,
+    "lastActiveAt": 1770791406532
+  },
+  {
+    "sessionId": "2facfb22-72a7-4b96-bb1b-706d2bfeef6e",
+    "projectId": "brickverse-web",
+    "title": "/ship",
+    "messageCount": 1,
+    "createdAt": 1770983417528,
+    "lastActiveAt": 1770983489955
+  },
+  {
+    "sessionId": "1fa6d085-257b-4b80-9145-32ac3d4220fc",
+    "projectId": "brickverse-web",
+    "title": "/ship",
+    "messageCount": 1,
+    "createdAt": 1770983423264,
+    "lastActiveAt": 1770983423264
+  },
+  {
+    "sessionId": "75cb3d81-42e3-4056-8271-3584fefbf36f",
+    "projectId": "brickverse-web",
+    "title": "簡單",
+    "messageCount": 1,
+    "createdAt": 1771086794510,
+    "lastActiveAt": 1771086797259
+  }
+]

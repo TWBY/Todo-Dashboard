@@ -1,0 +1,26 @@
+[
+  {
+    "sessionId": "56180563-6e05-4376-8dbc-0d7a92928e58",
+    "projectId": "hr-workshop::OnlineWorkshop",
+    "title": "幫我檢查 meta tag ，我要檢查 title 跟 descrition 是否正確",
+    "messageCount": 6,
+    "createdAt": 1770788189433,
+    "lastActiveAt": 1770788665684
+  },
+  {
+    "sessionId": "746ff591-fc1c-49de-8e56-78d6256de7c5",
+    "projectId": "hr-workshop::OnlineWorkshop",
+    "title": "現在畫面上只有課程說明，我需要使用 Remotion 才作為範例的動畫",
+    "messageCount": 1,
+    "createdAt": 1770954111219,
+    "lastActiveAt": 1770954147778
+  },
+  {
+    "sessionId": "ad5a9b1b-843e-4dea-b0ee-4dab9ca6d683",
+    "projectId": "hr-workshop::OnlineWorkshop",
+    "title": "現在只有課程的文字說明，我需要使用 Remotion 才做範例動畫，讓用戶可以清楚了解",
+    "messageCount": 1,
+    "createdAt": 1770954167342,
+    "lastActiveAt": 1770954167482
+  }
+]
