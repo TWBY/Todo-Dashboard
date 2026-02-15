@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Noto_Sans_TC } from 'next/font/google';
 import './globals.css';
 import Providers from '@/components/Providers';
+import EnvironmentIndicator from '@/components/EnvironmentIndicator';
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ['latin'],
@@ -12,8 +13,8 @@ const notoSansTC = Noto_Sans_TC({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Brickverse To Do Dashboard',
-    template: '%s - Brickverse To Do Dashboard',
+    default: 'Dashboard',
+    template: '%s - Dashboard',
   },
   description: 'Brickverse 專案待辦監控中心',
 };
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-TW" className={notoSansTC.variable} suppressHydrationWarning>
       <body className={notoSansTC.className} suppressHydrationWarning>
+        <EnvironmentIndicator />
         <main className="min-h-screen">
           <Providers>{children}</Providers>
         </main>

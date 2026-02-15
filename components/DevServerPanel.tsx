@@ -20,6 +20,7 @@ interface PortStatus {
 
 interface DevServerPanelProps {
   projects: Project[];
+  onUpdate?: (project: Project, category: 'projects' | 'courseFiles' | 'utilityTools') => void;
 }
 
 interface Toast {
@@ -27,7 +28,7 @@ interface Toast {
   type: 'success' | 'error';
 }
 
-export default function DevServerPanel({ projects }: DevServerPanelProps) {
+export default function DevServerPanel({ projects, onUpdate }: DevServerPanelProps) {
   const [statuses, setStatuses] = useState<PortStatus[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -43,6 +44,12 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   const { addPanel } = useChatPanels();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
+  const [currentPort, setCurrentPort] = useState<number>(0);
+
+  // 偵測當前瀏覽器 port
+  useEffect(() => {
+    setCurrentPort(parseInt(window.location.port) || 80);
+  }, []);
 
   // ResizeObserver: 偵測按鈕區寬度，切換 compact 模式
   useEffect(() => {
@@ -164,11 +171,11 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
     const controller = new AbortController();
     fetchStatuses(controller.signal);
     checkProdStatus();
-    // Refresh every 10 seconds
+    // Refresh every 15 seconds
     const interval = setInterval(() => {
       fetchStatuses(controller.signal);
       checkProdStatus();
-    }, 10000);
+    }, 15000);
     return () => {
       controller.abort();
       clearInterval(interval);
@@ -272,7 +279,20 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
       });
       if (res.ok) {
         showToast(`已移除 ${project.displayName || project.name}`, 'success');
-        router.refresh();
+
+        // Optimistic update: notify parent to remove devPort from state
+        if (onUpdate) {
+          // Determine category from project path
+          const category = project.path.includes('/CourseFiles/')
+            ? 'courseFiles'
+            : project.path.includes('/UtilityTools/')
+              ? 'utilityTools'
+              : 'projects';
+
+          // Create updated project with devPort removed
+          const updatedProject = { ...project, devPort: undefined };
+          onUpdate(updatedProject, category);
+        }
       } else {
         showToast('移除失敗', 'error');
         setRemovingIds(prev => { const next = new Set(prev); next.delete(project.id); return next; });
@@ -283,7 +303,14 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
     }
   };
 
-  const projectsWithPort = projects.filter(p => p.devPort);
+  const projectsWithPort = projects
+    .filter(p => p.devPort)
+    .sort((a, b) => {
+      // 排隊邏輯：先加入的在前，後加入的在後
+      const aTime = a.devAddedAt || a.updatedAt || '';
+      const bTime = b.devAddedAt || b.updatedAt || '';
+      return aTime.localeCompare(bTime);
+    });
 
   const getStatus = (projectId: string): PortStatus | undefined => {
     return statuses.find(s => s.projectId === projectId);
@@ -382,7 +409,8 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
 3. 執行 npm version <判斷結果> --no-git-tag-version
 4. 執行 npm run build
 5. Build 成功後執行 git add package.json package-lock.json 然後 git commit -m "release: vX.Y.Z — 一行功能摘要"
-6. 回報新版本號和本次變更摘要`, initialMode: 'edit', model: 'haiku' })}
+6. 回報新版本號和本次變更摘要
+7. 最後用 AskUserQuestion 工具詢問「是否需要備份到 GitHub？」，提供兩個選項：(a) 備份 (b) 不用。如果選擇備份則執行 git push。如果選擇「不用」，你必須立即停止，不要再輸出任何文字、不要總結、不要呼叫任何工具，直接結束。`, initialMode: 'edit', model: 'haiku' })}
             className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
               backgroundColor: '#332815',
@@ -417,25 +445,46 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
       </div>
 
       {isInitialLoad ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <span className="text-base">載入中</span>
-            <PulsingDots color="var(--text-secondary)" />
-          </div>
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="py-2.5 px-3 rounded-[var(--radius-medium)] animate-pulse"
+              style={{ backgroundColor: 'var(--background-secondary)' }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="h-4 rounded" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + i * 30}px` }} />
+                  <div className="h-4 w-8 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-7 w-12 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                  <div className="h-7 w-12 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                  <div className="h-7 w-6 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="space-y-2">
-          {projectsWithPort.map(project => {
+        <div>
+          {projectsWithPort.map((project, index) => {
             const status = getStatus(project.id);
             const isRunning = status?.isRunning || false;
             const isLoading = loading[project.id] || false;
             const isRecentlyStarted = recentlyStarted[project.id] || false;
             const isRemoving = removingIds.has(project.id);
+            const isSelf = project.devPort === currentPort;
 
             return (
               <div
                 key={project.id}
-                className={`py-2.5 px-3 rounded-[var(--radius-medium)] transition-all duration-500 ${
+                className="grid transition-[grid-template-rows] duration-500"
+                style={{ gridTemplateRows: isRemoving ? '0fr' : '1fr' }}
+              >
+              <div className={`overflow-hidden min-h-0${index > 0 ? ' pt-2' : ''}`}>
+              <div
+                className={`py-2.5 px-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
                   isRemoving ? 'opacity-0 scale-95 -translate-x-4' :
                   isLoading ? 'ring-2 ring-yellow-500/30' :
                   isRecentlyStarted ? 'ring-2 ring-green-500/30' : ''
@@ -509,24 +558,30 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
                     <span className="hidden @[420px]:inline">Open</span>
                   </button>
                   <button
-                    onClick={() => handleAction(project.id, isRunning ? 'stop' : 'start')}
-                    disabled={isLoading}
+                    onClick={isSelf && isRunning ? undefined : () => handleAction(project.id, isRunning ? 'stop' : 'start')}
+                    disabled={isLoading || (isSelf && isRunning)}
                     className="px-2.5 py-1.5 rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2 justify-center hover:shadow-md hover:scale-[1.02]"
                     style={{
-                      backgroundColor: isLoading ? '#333333' : isRunning ? '#3d1515' : '#15332a',
-                      color: isLoading ? '#999999' : isRunning ? '#ef4444' : '#10b981',
+                      backgroundColor: isLoading ? '#333333' : isSelf && isRunning ? '#1a1a2e' : isRunning ? '#3d1515' : '#15332a',
+                      color: isLoading ? '#999999' : isSelf && isRunning ? '#7c7cff' : isRunning ? '#ef4444' : '#10b981',
                       fontSize: 'var(--text-sm)',
                       fontWeight: 'var(--font-weight-semibold)',
                       lineHeight: 'var(--leading-compact)',
                       letterSpacing: 'var(--tracking-ui)',
-                      border: isLoading ? '1px solid #444444' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+                      border: isLoading ? '1px solid #444444' : isSelf && isRunning ? '1px solid #3a3a5c' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
                     }}
+                    title={isSelf && isRunning ? '無法停止自己' : isRunning ? '停止' : '啟動'}
                   >
                     {isLoading ? (
                       <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
+                    ) : isSelf && isRunning ? (
+                      <>
+                        <span className="@[420px]:hidden">P</span>
+                        <span className="hidden @[420px]:inline">pro</span>
+                      </>
                     ) : isRunning ? (
                       <>
                         <span className="@[420px]:hidden">S</span>
@@ -571,6 +626,8 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
                     ✕
                   </button>
                 </div>
+              </div>
+              </div>
               </div>
               </div>
             );

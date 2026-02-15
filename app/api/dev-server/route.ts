@@ -9,9 +9,9 @@ import type { Project } from '@/lib/types';
 
 const execAsyncRaw = promisify(exec);
 
-/** execAsync with a default 5-second timeout to prevent lsof/ps from hanging the API */
+/** execAsync with a default 8-second timeout to prevent lsof/ps from hanging the API */
 function execAsync(cmd: string, opts?: { timeout?: number }) {
-  return execAsyncRaw(cmd, { timeout: opts?.timeout ?? 5000 });
+  return execAsyncRaw(cmd, { timeout: opts?.timeout ?? 8000 });
 }
 
 const DASHBOARD_PORT = 3000;
@@ -365,24 +365,9 @@ export async function POST(request: Request) {
       });
 
     } else if (action === 'stop') {
-      // Prevent stopping the Dashboard itself
-      if (project.devPort === DASHBOARD_PORT) {
-        return NextResponse.json(
-          { error: '無法停止 Dashboard 自己 (port 3000)' },
-          { status: 403 }
-        );
-      }
-
       const portInfo = await checkPort(project.devPort);
       if (!portInfo.isRunning) {
-        return NextResponse.json({ error: 'Server is not running' }, { status: 400 });
-      }
-
-      // Safety: never kill our own process
-      if (portInfo.pid === process.pid) {
-        return NextResponse.json(
-          { error: '無法停止 Dashboard 自己的 process' },
-          { status: 403 }
+        return NextResponse.json({ error: 'Server is not running' }, { status: 400 }
         );
       }
 
