@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/lib/types';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -41,6 +41,19 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   const [prodLoading, setProdLoading] = useState(false);
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
+  const [compact, setCompact] = useState(false);
+  const headerBtnsRef = useRef<HTMLDivElement>(null);
+
+  // ResizeObserver: 偵測按鈕區寬度，切換 compact 模式
+  useEffect(() => {
+    const el = headerBtnsRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setCompact(entry.contentRect.width < 350);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -67,11 +80,15 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   const handleProdStart = useCallback(async () => {
     setProdLoading(true);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const res = await fetch('/api/dev-server', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'dashboard', action: 'start-production' }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (res.ok) {
         setProdRunning(true);
@@ -79,8 +96,13 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
       } else {
         showToast(data.error || '啟動 Production 失敗', 'error');
       }
-    } catch {
-      showToast('Production 啟動請求失敗', 'error');
+    } catch (error) {
+      showToast(
+        error instanceof Error && error.name === 'AbortError'
+          ? '啟動逾時（API 無回應超過 15 秒）'
+          : 'Production 啟動請求失敗',
+        'error',
+      );
     } finally {
       setProdLoading(false);
     }
@@ -89,11 +111,15 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   const handleProdStop = useCallback(async () => {
     setProdLoading(true);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const res = await fetch('/api/dev-server', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'dashboard', action: 'stop-production' }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (res.ok) {
         setProdRunning(false);
@@ -101,8 +127,13 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
       } else {
         showToast(data.error || '停止 Production 失敗', 'error');
       }
-    } catch {
-      showToast('Production 停止請求失敗', 'error');
+    } catch (error) {
+      showToast(
+        error instanceof Error && error.name === 'AbortError'
+          ? '停止逾時（API 無回應超過 10 秒）'
+          : 'Production 停止請求失敗',
+        'error',
+      );
     } finally {
       setProdLoading(false);
     }
@@ -275,7 +306,7 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-4">
+      <div ref={headerBtnsRef} className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <span
             className="cursor-pointer hover:opacity-70 transition-opacity"
@@ -300,10 +331,10 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             </span>
           )}
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 relative">
           <button
             onClick={handleProdOpen}
-            className={`px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
+            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center ${
               prodRunning && !prodLoading ? '' : 'hidden'
             }`}
             style={{
@@ -317,12 +348,12 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             }}
             title="開啟 Production 版本 (localhost:4000)"
           >
-            Open
+            {compact ? 'O' : 'Open'}
           </button>
           <button
             onClick={prodRunning ? handleProdStop : handleProdStart}
             disabled={prodLoading}
-            className="px-2.5 py-1 rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02]"
+            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
               backgroundColor: prodLoading ? '#333333' : prodRunning ? '#3d1515' : '#15332a',
               color: prodLoading ? '#999999' : prodRunning ? '#ef4444' : '#10b981',
@@ -334,11 +365,25 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             }}
             title={prodRunning ? '停止 Production server' : '啟動 Production server'}
           >
-            {prodLoading ? '...' : prodRunning ? 'Stop' : 'Start'}
+            {prodLoading ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                {!compact && <span className="ml-1">{prodRunning ? '停止中' : '啟動中'}</span>}
+              </>
+            ) : compact ? (prodRunning ? 'S' : 'S') : (prodRunning ? 'Stop' : 'Start')}
           </button>
           <button
-            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: '打包', initialMode: 'edit', model: 'haiku' })}
-            className="px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: `直接依序執行以下打包流程，不要詢問確認：
+1. 執行 git log --oneline 查看自上次 release commit 以來的變更
+2. 根據 commit 內容判斷版本升級幅度（major/minor/patch）
+3. 執行 npm version <判斷結果> --no-git-tag-version
+4. 執行 npm run build
+5. Build 成功後執行 git add package.json package-lock.json 然後 git commit -m "release: vX.Y.Z — 一行功能摘要"
+6. 回報新版本號和本次變更摘要`, initialMode: 'edit', model: 'haiku' })}
+            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
               backgroundColor: '#332815',
               color: '#f59e0b',
@@ -350,7 +395,23 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             }}
             title="打包 Dashboard (npm run build)"
           >
-            Build
+            {compact ? 'B' : 'Build'}
+          </button>
+          <button
+            onClick={() => router.push('/changelog')}
+            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
+            style={{
+              backgroundColor: '#1f1533',
+              color: '#a78bfa',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              lineHeight: 'var(--leading-compact)',
+              letterSpacing: 'var(--tracking-ui)',
+              border: '1px solid #3b2663',
+            }}
+            title="版本歷史"
+          >
+            {compact ? 'L' : 'Log'}
           </button>
         </div>
       </div>

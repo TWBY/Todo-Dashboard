@@ -123,8 +123,72 @@
     "sessionId": "dd4b646f-67d6-4b01-b78a-b95be5f8d1a6",
     "projectId": "dashboard",
     "title": "打包",
-    "messageCount": 2,
+    "messageCount": 5,
     "createdAt": 1771136252645,
-    "lastActiveAt": 1771136363969
+    "lastActiveAt": 1771136440339
+  },
+  {
+    "sessionId": "9b09e7fa-a885-4a75-9b99-4655b4fc6602",
+    "projectId": "dashboard",
+    "title": "打包",
+    "messageCount": 1,
+    "createdAt": 1771136517538,
+    "lastActiveAt": 1771136565366
+  },
+  {
+    "sessionId": "e1d5736d-3fef-4709-9948-fcef82d76f5e",
+    "projectId": "dashboard",
+    "title": "打包",
+    "messageCount": 1,
+    "createdAt": 1771136649508,
+    "lastActiveAt": 1771136680974
+  },
+  {
+    "sessionId": "9c28e565-1cc1-4559-9118-c45aef3adf95",
+    "projectId": "dashboard",
+    "title": "打包",
+    "messageCount": 1,
+    "createdAt": 1771137463368,
+    "lastActiveAt": 1771137463368
+  },
+  {
+    "sessionId": "dfb0eba0-efd7-4d65-8a2e-a6f33a1716be",
+    "projectId": "dashboard",
+    "title": "打包",
+    "messageCount": 1,
+    "createdAt": 1771137727091,
+    "lastActiveAt": 1771137809356
+  },
+  {
+    "sessionId": "86fce9a6-7e84-40b8-93ca-e0710bb822d5",
+    "projectId": "dashboard",
+    "title": "打包",
+    "messageCount": 1,
+    "createdAt": 1771137926656,
+    "lastActiveAt": 1771137926656
+  },
+  {
+    "sessionId": "19125967-edb3-410d-a1e3-a113b905aafb",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771138145930,
+    "lastActiveAt": 1771138215891
+  },
+  {
+    "sessionId": "559e606a-ce2a-44f4-98f3-4c88db94e997",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771138920117,
+    "lastActiveAt": 1771138963316
+  },
+  {
+    "sessionId": "ec513622-30ec-4f1a-b77a-128bfc57e623",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771140158621,
+    "lastActiveAt": 1771140201626
   }
 ]
