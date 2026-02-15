@@ -469,8 +469,68 @@ export async function POST(request: Request) {
       await logEvent(`Restart requested for ${project.name} (port ${port})`);
       return NextResponse.json({ success: true, message: `正在重啟 ${project.name} (port ${port})` });
 
+    } else if (action === 'start-production') {
+      // 啟動 Production server (next start -p 4000)
+      const PROD_PORT = 4000;
+      const prodPortInfo = await checkPort(PROD_PORT);
+
+      if (prodPortInfo.isRunning) {
+        return NextResponse.json({ success: true, message: `Production server 已在 port ${PROD_PORT} 運行`, alreadyRunning: true });
+      }
+
+      const projectPath = process.cwd();
+      const child = spawn('sh', ['-c', `cd "${projectPath}" && npx next start -p ${PROD_PORT}`], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+
+      // Poll 等待 server 就緒（每 500ms 檢查，最多 8 秒）
+      let ready = false;
+      for (let i = 0; i < 16; i++) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const info = await checkPort(PROD_PORT);
+        if (info.isRunning) { ready = true; break; }
+      }
+
+      await logEvent(`Production server ${ready ? 'started' : 'starting'} on port ${PROD_PORT}`);
+      return NextResponse.json({
+        success: true,
+        message: ready ? `Production server 已啟動 (port ${PROD_PORT})` : `Production server 啟動中 (port ${PROD_PORT})...`,
+        isRunning: ready,
+      });
+
+    } else if (action === 'stop-production') {
+      // 停止 Production server (port 4000)
+      const PROD_PORT = 4000;
+      const prodPortInfo = await checkPort(PROD_PORT);
+
+      if (!prodPortInfo.isRunning) {
+        return NextResponse.json({ error: 'Production server 未在運行' }, { status: 400 });
+      }
+
+      try {
+        await execAsync(`kill ${prodPortInfo.pid}`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await logEvent(`Production server stopped (port ${PROD_PORT}, pid ${prodPortInfo.pid})`);
+        return NextResponse.json({ success: true, message: `Production server 已停止` });
+      } catch (error) {
+        await logEvent(`KILL_FAILED production port=${PROD_PORT} error=${error instanceof Error ? error.message : String(error)}`);
+        return NextResponse.json({ error: '無法停止 Production server' }, { status: 500 });
+      }
+
+    } else if (action === 'check-production') {
+      // 檢查 Production server 狀態
+      const PROD_PORT = 4000;
+      const prodPortInfo = await checkPort(PROD_PORT);
+      return NextResponse.json({
+        isRunning: prodPortInfo.isRunning,
+        pid: prodPortInfo.pid,
+        port: PROD_PORT,
+      });
+
     } else {
-      return NextResponse.json({ error: 'Invalid action. Use "start", "stop", "restart", "open-cursor", or "open-browser"' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid action. Use "start", "stop", "restart", "open-cursor", "open-browser", "start-production", "stop-production", or "check-production"' }, { status: 400 });
     }
 
   } catch (error) {

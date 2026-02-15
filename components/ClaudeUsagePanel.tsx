@@ -75,6 +75,7 @@ function UsageBar({ label, bucket }: { label: string; bucket: UsageBucket }) {
 
 export default function ClaudeUsagePanel() {
   const [data, setData] = useState<ClaudeUsageLimits | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const [, setTick] = useState(0);
@@ -88,9 +89,11 @@ export default function ClaudeUsagePanel() {
       }
       const json = await res.json();
       setData(json.data);
+      setError(null);
       setLastFetched(new Date());
-    } catch {
-      // 靜默處理，dev:watch 會自動重啟 server
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -180,6 +183,12 @@ export default function ClaudeUsagePanel() {
             )}
           </div>
 
+        </div>
+      ) : error ? (
+        <div className="py-4 px-3 rounded-[var(--radius-medium)]" style={{ backgroundColor: 'var(--background-secondary)' }}>
+          <p className="text-sm text-center" style={{ color: '#ef4444' }}>
+            {error}
+          </p>
         </div>
       ) : (
         <p className="text-base text-center py-4" style={{ color: 'var(--text-tertiary)' }}>

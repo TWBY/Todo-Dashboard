@@ -12,7 +12,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-06T00:00:00.000Z",
-    "updatedAt": "2026-02-14T15:20:04.312Z"
+    "updatedAt": "2026-02-15T05:24:55.816Z"
   },
   {
     "id": "download-html",
@@ -22,7 +22,7 @@
     "description": "HTML 下載工具。",
     "techStack": [],
     "createdAt": "2025-11-07T00:00:00.000Z",
-    "updatedAt": "2025-11-07T00:00:00.000Z"
+    "updatedAt": "2026-02-15T05:24:27.180Z"
   },
   {
     "id": "editer",
@@ -42,7 +42,8 @@
     "description": "圖片生成工具。",
     "techStack": [],
     "createdAt": "2025-10-28T00:00:00.000Z",
-    "updatedAt": "2026-02-13T03:27:29.925Z"
+    "updatedAt": "2026-02-15T05:53:48.583Z",
+    "devPort": 3012
   },
   {
     "id": "meta-ads-lab",
@@ -62,7 +63,7 @@
     "description": "線上待辦事項清單工具。",
     "techStack": [],
     "createdAt": "2026-01-23T00:00:00.000Z",
-    "updatedAt": "2026-01-23T00:00:00.000Z"
+    "updatedAt": "2026-02-15T04:54:21.519Z"
   },
   {
     "id": "presentation-to-pdf",
@@ -123,7 +124,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-10T00:00:00.000Z",
-    "updatedAt": "2026-02-10T13:56:58.103Z"
+    "updatedAt": "2026-02-15T05:24:29.005Z"
   },
   {
     "id": "excel-factory",
@@ -133,8 +134,7 @@
     "description": "Excel 資料生成工廠。",
     "techStack": [],
     "createdAt": "2026-02-11T00:00:00.000Z",
-    "updatedAt": "2026-02-11T13:55:15.832Z",
-    "devPort": 3014
+    "updatedAt": "2026-02-15T05:25:12.077Z"
   },
   {
     "id": "cover-maker",
@@ -149,6 +149,6 @@
       "Remotion"
     ],
     "createdAt": "2026-02-14T00:00:00.000Z",
-    "updatedAt": "2026-02-14T00:00:00.000Z"
+    "updatedAt": "2026-02-15T05:53:45.891Z"
   }
 ]

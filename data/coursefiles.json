@@ -32,40 +32,16 @@
     "techStack": [],
     "children": [
       {
-        "name": "Bonus",
-        "description": "加碼內容簡報"
-      },
-      {
-        "name": "ClassPersentation",
-        "description": "進階課程簡報"
-      },
-      {
-        "name": "ClassQAGame",
-        "description": "課堂問答遊戲"
-      },
-      {
-        "name": "ReactClassPresentation",
+        "name": "ClassPresentation",
         "description": "React 版課程簡報"
       },
       {
         "name": "StudentStauts",
         "description": "學生狀態 Dashboard"
-      },
-      {
-        "name": "SupabaseExample",
-        "description": "Supabase 範例"
-      },
-      {
-        "name": "dashborard",
-        "description": "數據分析儀表板"
-      },
-      {
-        "name": "典藏",
-        "description": "歷史版本與素材"
       }
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-08T15:26:33.893Z"
+    "updatedAt": "2026-02-15T05:26:36.000Z"
   },
   {
     "id": "hr-workshop",

@@ -14,6 +14,7 @@ export interface ChatPanelState {
   ideaMode?: boolean
   scratchItemId?: string
   initialMessage?: string
+  initialMode?: 'plan' | 'edit' | 'ask'
 }
 
 interface AddPanelOpts {
@@ -22,6 +23,7 @@ interface AddPanelOpts {
   ideaMode?: boolean
   scratchItemId?: string
   initialMessage?: string
+  initialMode?: 'plan' | 'edit' | 'ask'
 }
 
 /** 持久化時排除一次性欄位 */

@@ -412,6 +412,7 @@ interface ChatContentProps {
   ideaMode?: boolean
   resumeSessionId?: string
   initialMessage?: string
+  initialMode?: 'plan' | 'edit' | 'ask'
   onSessionIdChange?: (sessionId: string) => void
   onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number }) => void
   onPanelStatusChange?: (status: PanelStatus) => void
@@ -421,7 +422,7 @@ interface SkillInfo { name: string; description: string }
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, ideaMode, resumeSessionId, initialMessage, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, ideaMode, resumeSessionId, initialMessage, initialMode, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   const [input, setInput] = useState('')
   const [isComposing, setIsComposing] = useState(false)
   const [mode, setMode] = useState<ChatMode>(emailMode || ideaMode ? 'ask' : 'plan')
@@ -466,7 +467,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   useEffect(() => {
     if (hasAutoSentRef.current || !initialMessage || !initialMessage.trim()) return
     hasAutoSentRef.current = true
-    sendMessage(initialMessage, 'plan')
+    sendMessage(initialMessage, initialMode ?? 'plan')
   }, [initialMessage, sendMessage])
 
   // 計算 displayMessages：確保 initialMessage 在 messages 為空時也能顯示

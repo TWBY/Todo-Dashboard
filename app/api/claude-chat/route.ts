@@ -58,9 +58,10 @@ export async function POST(request: Request) {
 
     const claudePath = '/Users/ruanbaiye/.local/bin/claude'
     // 清除 Claude Code 環境變數，避免嵌套檢測導致子進程阻塞
+    // 同時移除 NODE_ENV（dev server 設為 development，但 next build 需要自行設定 production）
     const cleanEnv: Record<string, string> = {}
     for (const [key, value] of Object.entries(process.env)) {
-      if (value && !key.startsWith('CLAUDE') && !key.startsWith('CURSOR_SPAWN')) {
+      if (value && !key.startsWith('CLAUDE') && !key.startsWith('CURSOR_SPAWN') && key !== 'NODE_ENV') {
         cleanEnv[key] = value
       }
     }

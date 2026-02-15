@@ -44,8 +44,8 @@ echo "【關閉方式】直接關掉這個 Terminal 視窗即可"
 echo "==============================="
 echo ""
 
-# 2 秒後自動開啟瀏覽器
-(sleep 2 && open http://localhost:$PORT) &
+# 2 秒後自動開啟瀏覽器（使用 Dia）
+(sleep 2 && open -a "Dia" http://localhost:$PORT) &
 
 # 啟動 production server
 npx next start -p $PORT

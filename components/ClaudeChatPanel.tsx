@@ -15,11 +15,12 @@ interface ClaudeChatPanelProps {
   ideaMode?: boolean
   sessionId?: string
   initialMessage?: string
+  initialMode?: 'plan' | 'edit' | 'ask'
   theme?: 'default' | 'green'
   onClose?: () => void
 }
 
-export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, ideaMode, sessionId, initialMessage, theme = 'default', onClose }: ClaudeChatPanelProps) {
+export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, ideaMode, sessionId, initialMessage, initialMode, theme = 'default', onClose }: ClaudeChatPanelProps) {
   const { duplicatePanel, updatePanelSession } = useChatPanels()
   const [chatKey, setChatKey] = useState(0)
   const [isClearing, setIsClearing] = useState(false)
@@ -130,6 +131,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           ideaMode={ideaMode}
           resumeSessionId={clearedSession || ideaMode ? undefined : sessionId}
           initialMessage={initialMessage}
+          initialMode={initialMode}
           onSessionIdChange={handleSessionChange}
           onSessionMetaChange={setTokenMeta}
           onPanelStatusChange={setPanelStatus}

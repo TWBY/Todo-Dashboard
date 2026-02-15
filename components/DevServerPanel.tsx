@@ -7,6 +7,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import PulsingDots from '@/components/PulsingDots';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { formatPort } from '@/lib/format';
+import pkg from '@/package.json';
 
 interface PortStatus {
   projectId: string;
@@ -37,11 +38,78 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const { copy, isCopied } = useCopyToClipboard();
   const router = useRouter();
+  const [prodLoading, setProdLoading] = useState(false);
+  const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
 
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  // 檢查 Production server 狀態
+  const checkProdStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: 'dashboard', action: 'check-production' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProdRunning(data.isRunning);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleProdStart = useCallback(async () => {
+    setProdLoading(true);
+    try {
+      const res = await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: 'dashboard', action: 'start-production' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProdRunning(true);
+        showToast(data.message || 'Production 已啟動', 'success');
+      } else {
+        showToast(data.error || '啟動 Production 失敗', 'error');
+      }
+    } catch {
+      showToast('Production 啟動請求失敗', 'error');
+    } finally {
+      setProdLoading(false);
+    }
+  }, [showToast]);
+
+  const handleProdStop = useCallback(async () => {
+    setProdLoading(true);
+    try {
+      const res = await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: 'dashboard', action: 'stop-production' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProdRunning(false);
+        showToast(data.message || 'Production 已停止', 'success');
+      } else {
+        showToast(data.error || '停止 Production 失敗', 'error');
+      }
+    } catch {
+      showToast('Production 停止請求失敗', 'error');
+    } finally {
+      setProdLoading(false);
+    }
+  }, [showToast]);
+
+  const handleProdOpen = useCallback(() => {
+    window.open('http://localhost:4000', '_blank');
   }, []);
 
   const fetchStatuses = useCallback(async (signal?: AbortSignal) => {
@@ -64,13 +132,24 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
   useEffect(() => {
     const controller = new AbortController();
     fetchStatuses(controller.signal);
+    checkProdStatus();
     // Refresh every 10 seconds
-    const interval = setInterval(() => fetchStatuses(controller.signal), 10000);
+    const interval = setInterval(() => {
+      fetchStatuses(controller.signal);
+      checkProdStatus();
+    }, 10000);
     return () => {
       controller.abort();
       clearInterval(interval);
     };
-  }, [fetchStatuses]);
+  }, [fetchStatuses, checkProdStatus]);
+
+  // Auto-refresh when projects list changes (e.g., new project added to dev server)
+  useEffect(() => {
+    if (!isInitialLoad) {
+      fetchStatuses();
+    }
+  }, [projects, isInitialLoad, fetchStatuses]);
 
   const handleAction = async (projectId: string, action: 'start' | 'stop') => {
     setLoading(prev => ({ ...prev, [projectId]: true }));
@@ -214,6 +293,12 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
           >
             {statuses.filter(s => s.isRunning).length} / {projectsWithPort.length}
           </span>
+          <span
+            className="text-xs px-1.5 py-0.5 rounded-full"
+            style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
+          >
+            v{pkg.version}
+          </span>
           {isUpdating && (
             <span className="text-sm px-2 py-0.5 rounded-full animate-pulse"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#999999' }}>
@@ -223,20 +308,55 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
         </h2>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => fetchStatuses()}
-            disabled={isRefreshing}
-            className="px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md disabled:opacity-60"
+            onClick={handleProdOpen}
+            className={`px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
+              prodRunning && !prodLoading ? '' : 'hidden'
+            }`}
             style={{
-              backgroundColor: 'var(--background-tertiary)',
-              color: 'var(--text-secondary)',
+              backgroundColor: '#222222',
+              color: '#cccccc',
               fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-medium)',
+              fontWeight: 'var(--font-weight-semibold)',
               lineHeight: 'var(--leading-compact)',
               letterSpacing: 'var(--tracking-ui)',
-              boxShadow: 'var(--shadow-light)',
+              border: '1px solid #333333',
             }}
+            title="開啟 Production 版本 (localhost:4000)"
           >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            Open
+          </button>
+          <button
+            onClick={prodRunning ? handleProdStop : handleProdStart}
+            disabled={prodLoading}
+            className="px-2.5 py-1 rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02]"
+            style={{
+              backgroundColor: prodLoading ? '#333333' : prodRunning ? '#3d1515' : '#15332a',
+              color: prodLoading ? '#999999' : prodRunning ? '#ef4444' : '#10b981',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              lineHeight: 'var(--leading-compact)',
+              letterSpacing: 'var(--tracking-ui)',
+              border: prodLoading ? '1px solid #444444' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+            }}
+            title={prodRunning ? '停止 Production server' : '啟動 Production server'}
+          >
+            {prodLoading ? '...' : prodRunning ? 'Stop' : 'Start'}
+          </button>
+          <button
+            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: '打包', initialMode: 'edit' })}
+            className="px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+            style={{
+              backgroundColor: '#332815',
+              color: '#f59e0b',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              lineHeight: 'var(--leading-compact)',
+              letterSpacing: 'var(--tracking-ui)',
+              border: '1px solid #4a3520',
+            }}
+            title="打包 Dashboard (npm run build)"
+          >
+            Build
           </button>
         </div>
       </div>
@@ -257,46 +377,6 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             const isRecentlyStarted = recentlyStarted[project.id] || false;
             const isRemoving = removingIds.has(project.id);
 
-            // 決定狀態指示器的樣式和動畫
-            const getIndicatorStyle = () => {
-              if (isLoading) {
-                // 載入中：黃色脈衝
-                return {
-                  className: 'w-3 h-3 rounded-full flex-shrink-0 animate-port-pulse',
-                  style: {
-                    backgroundColor: '#facc15',
-                  }
-                };
-              }
-              if (isRunning && isRecentlyStarted) {
-                // 剛啟動成功：綠色 pop 動畫 + 呼吸發光
-                return {
-                  className: 'w-3 h-3 rounded-full flex-shrink-0 animate-status-pop animate-port-glow',
-                  style: {
-                    backgroundColor: '#6ee7b7',
-                  }
-                };
-              }
-              if (isRunning) {
-                // 運行中：綠色呼吸發光
-                return {
-                  className: 'w-3 h-3 rounded-full flex-shrink-0 animate-port-glow',
-                  style: {
-                    backgroundColor: '#6ee7b7',
-                  }
-                };
-              }
-              // 未運行：灰色
-              return {
-                className: 'w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all duration-300',
-                style: {
-                  backgroundColor: '#6b7280',
-                }
-              };
-            };
-
-            const indicator = getIndicatorStyle();
-
             return (
               <div
                 key={project.id}
@@ -309,10 +389,6 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
               >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span
-                    className={indicator.className}
-                    style={indicator.style}
-                  />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span

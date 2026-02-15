@@ -37373,3 +37373,10 @@
 [2026-02-15T02:36:10.744Z] [frontend-error] isSelf is not defined
 [2026-02-15T02:36:10.746Z] [frontend-error] isSelf is not defined
 [2026-02-15T02:36:10.749Z] [frontend-error] isSelf is not defined
+[2026-02-15T05:09:45.469Z] [frontend-error] Cannot access 'showToast' before initialization
+[2026-02-15T05:09:45.472Z] [frontend-error] Cannot access 'showToast' before initialization
+[2026-02-15T05:18:30.613Z] [frontend-error] handleOpenProduction is not defined
+[2026-02-15T05:18:30.618Z] [frontend-error] handleOpenProduction is not defined
+[2026-02-15T05:18:37.513Z] [frontend-error] handleOpenProduction is not defined
+[2026-02-15T05:18:38.737Z] [frontend-error] handleOpenProduction is not defined
+[2026-02-15T05:18:38.740Z] [frontend-error] handleOpenProduction is not defined
