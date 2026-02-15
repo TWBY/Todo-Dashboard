@@ -12,7 +12,7 @@ interface ClaudeChatPanelProps {
   isFixed?: boolean
   planOnly?: boolean
   emailMode?: boolean
-  ideaMode?: boolean
+  model?: string
   sessionId?: string
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
@@ -20,7 +20,7 @@ interface ClaudeChatPanelProps {
   onClose?: () => void
 }
 
-export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, ideaMode, sessionId, initialMessage, initialMode, theme = 'default', onClose }: ClaudeChatPanelProps) {
+export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, model, sessionId, initialMessage, initialMode, theme = 'default', onClose }: ClaudeChatPanelProps) {
   const { duplicatePanel, updatePanelSession } = useChatPanels()
   const [chatKey, setChatKey] = useState(0)
   const [isClearing, setIsClearing] = useState(false)
@@ -55,8 +55,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
     setIsClearing(false)
   }, [isClearing])
 
-  // ideaMode 使用綠色主題
-  const effectiveTheme = ideaMode ? 'green' : theme
+  const effectiveTheme = theme
 
   return (
     <div
@@ -128,8 +127,8 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           projectName={projectName}
           planOnly={planOnly}
           emailMode={emailMode}
-          ideaMode={ideaMode}
-          resumeSessionId={clearedSession || ideaMode ? undefined : sessionId}
+          model={model}
+          resumeSessionId={clearedSession ? undefined : sessionId}
           initialMessage={initialMessage}
           initialMode={initialMode}
           onSessionIdChange={handleSessionChange}

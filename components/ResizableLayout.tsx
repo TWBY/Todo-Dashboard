@@ -382,7 +382,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
   }, [rightPct, leftCollapsed])
 
   // 所有面板：僅動態面板
-  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, ideaMode: p.ideaMode, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId }))
+  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, model: p.model, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId }))
 
   // Chat 面板退場：設定 exitingIds，CSS transition 處理淡出，onTransitionEnd 移除
   const handlePanelClose = useCallback((panelId: string) => {
@@ -516,7 +516,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
               isFixed={panel.isFixed}
               planOnly={panel.planOnly}
               emailMode={panel.emailMode}
-              ideaMode={panel.ideaMode}
+              model={panel.model}
               sessionId={panel.sessionId}
               initialMessage={panel.initialMessage}
               initialMode={panel.initialMode}

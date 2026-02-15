@@ -68,8 +68,7 @@ interface UseClaudeChatReturn {
 }
 
 interface UseClaudeChatConfig {
-  ideaMode?: boolean
-  model?: 'sonnet' | 'opus'
+  model?: string
 }
 
 // --- 串流事件處理器（主迴圈 & 重試共用） ---
@@ -476,7 +475,6 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           message: fullMessage,
           sessionId: currentSessionId,
           mode: mode || 'plan',
-          ideaMode: config?.ideaMode || false,
           model: modelOverride || config?.model || undefined,
         }),
         signal: controller.signal,
@@ -580,7 +578,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
         })
       }
     }
-  }, [projectId, config?.ideaMode, config?.model, setSessionId])
+  }, [projectId, config?.model, setSessionId])
 
   // 回答 AskUserQuestion
   const answerQuestion = useCallback((answers: Record<string, string>) => {

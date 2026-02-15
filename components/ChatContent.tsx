@@ -409,7 +409,7 @@ interface ChatContentProps {
   compact?: boolean
   planOnly?: boolean
   emailMode?: boolean
-  ideaMode?: boolean
+  model?: string
   resumeSessionId?: string
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
@@ -422,10 +422,10 @@ interface SkillInfo { name: string; description: string }
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, ideaMode, resumeSessionId, initialMessage, initialMode, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   const [input, setInput] = useState('')
   const [isComposing, setIsComposing] = useState(false)
-  const [mode, setMode] = useState<ChatMode>(emailMode || ideaMode ? 'ask' : 'plan')
+  const [mode, setMode] = useState<ChatMode>(emailMode ? 'ask' : 'plan')
   const [images, setImages] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [showImagePicker, setShowImagePicker] = useState(false)
@@ -434,8 +434,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [projectCommands, setProjectCommands] = useState<SkillInfo[]>([])
   const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
   const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
-  const [ideaSaved, setIdeaSaved] = useState(false)
-  const [savedPlan, setSavedPlan] = useState('')
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -443,8 +441,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const skillMenuRef = useRef<HTMLDivElement>(null)
 
   // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
-  const effectiveModel = ideaMode ? undefined : (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
-  const { messages, todos, isStreaming, streamStatus, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error } = useClaudeChat(projectId, { ideaMode, model: effectiveModel })
+  const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
+  const { messages, todos, isStreaming, streamStatus, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error } = useClaudeChat(projectId, { model: effectiveModel })
   const { addPanel } = useChatPanels()
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
@@ -667,7 +665,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
     // Auto 模式：先用 Haiku 分類決定模型
     let resolvedModel: 'sonnet' | 'opus' | undefined
-    if (modelChoice === 'auto' && !ideaMode) {
+    if (modelChoice === 'auto' && !modelProp) {
       try {
         const res = await fetch('/api/claude-chat/classify', {
           method: 'POST',
@@ -722,26 +720,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       messageToSend = emailSystemPrompt + messageToSend
     }
 
-    // ideaMode 且是第一則訊息：加上系統指示前綴
-    if (ideaMode && messages.filter(m => m.role === 'user').length === 0) {
-      const systemPrompt = `[系統指示] 你是需求釐清助手（櫃台小姐）。職責：理解需求、判斷專案、整理格式。
-
-**嚴格限制**：
-- 只讀取 projects.json、coursefiles.json、utility-tools.json 判斷專案
-- 不要讀取任何程式碼檔案（.ts/.tsx/.js/.css 等）
-- 不要使用 Glob/Grep 搜尋程式碼
-- 不要產生實作計畫或寫程式碼
-
-**輸出格式**：
-\`<!-- PROJECTS: 專案ID -->\`
-# 需求標題
-- 需求細節
-
-使用者的想法：
-`
-      messageToSend = systemPrompt + messageToSend
-    }
-
     sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel)
     setInput('')
     setImages([])
@@ -765,66 +743,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     sendMessage(`/${name}`, 'edit')
     setMode('edit')
   }
-
-  const handleSaveIdea = useCallback(async () => {
-    const assistantMsgs = messages.filter(m => m.role === 'assistant' && m.content)
-    if (assistantMsgs.length === 0) return
-
-    const plan = assistantMsgs[assistantMsgs.length - 1].content
-    const h1Match = plan.match(/^#\s+(.+)$/m)
-    const content = h1Match ? h1Match[1].trim() : plan.slice(0, 50)
-
-    try {
-      await fetch('/api/scratch-pad', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, plan, chatSessionId: sessionId }),
-      })
-      window.dispatchEvent(new Event('scratchpad-refresh'))
-      setIdeaSaved(true)
-      setSavedPlan(plan)
-    } catch (err) {
-      console.error('Failed to save idea:', err)
-    }
-  }, [messages, sessionId])
-
-  const handleExecuteIdea = useCallback(() => {
-    if (!savedPlan) return
-
-    // 解析專案列表
-    const projectsMatch = savedPlan.match(/<!--\s*PROJECTS:\s*([^-]+?)\s*-->/)
-    let projectIds: string[] = []
-
-    if (projectsMatch) {
-      projectIds = projectsMatch[1].split(',').map(id => id.trim()).filter(Boolean)
-    }
-
-    // Fallback 到 dashboard
-    if (projectIds.length === 0) {
-      projectIds = ['dashboard']
-    }
-
-    // 讀取專案資訊（簡化版：直接用 ID 和 displayName）
-    const projectMap: Record<string, string> = {
-      'dashboard': 'Todo-Dashboard',
-      'Todo-Dashboard': 'Todo-Dashboard',
-      'BlogFrontend': 'BlogFrontend',
-      'brickverse-design': 'Brickverse Design',
-      'OnlineWorkshop': 'Online Workshop',
-      'OfflineWorkshop': 'Offline Workshop',
-    }
-
-    // 構建完整需求訊息
-    const h1Match = savedPlan.match(/^#\s+(.+)$/m)
-    const content = h1Match ? h1Match[1].trim() : '未命名需求'
-    const requirementMsg = `# 需求：${content}\n\n${savedPlan}`
-
-    // 為每個專案開啟 Chat 面板
-    for (const pid of projectIds) {
-      const pname = projectMap[pid] || pid
-      addPanel(pid, pname, { initialMessage: requirementMsg })
-    }
-  }, [savedPlan, addPanel])
 
   const selectMode = (m: ChatMode) => {
     if (isStreaming) return
@@ -930,11 +848,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                         // emailMode: 隱藏系統指示前綴
                         if (emailMode && msg.content.startsWith('[系統指示]')) {
                           const match = msg.content.match(/以下是用戶貼上的內容：\s*\n(.+)/s)
-                          return match ? match[1] : msg.content
-                        }
-                        // ideaMode: 隱藏系統指示前綴
-                        if (ideaMode && msg.content.startsWith('[系統指示]')) {
-                          const match = msg.content.match(/使用者的想法：\s*\n(.+)/s)
                           return match ? match[1] : msg.content
                         }
                         return msg.content
@@ -1131,20 +1044,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           <QuestionDialog questions={pendingQuestions.questions} onAnswer={answerQuestion} />
         </ActionOverlay>
       )}
-      {ideaMode && !isStreaming && messages.filter(m => m.role === 'assistant').length > 0 && (
-        <ActionOverlay>
-          <button
-            onClick={ideaSaved ? handleExecuteIdea : handleSaveIdea}
-            className="w-full py-2 rounded text-base font-medium transition-all duration-200"
-            style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              color: '#34d399',
-            }}
-          >
-            {ideaSaved ? '執行' : '回存'}
-          </button>
-        </ActionOverlay>
-      )}
 
       {/* Error Display */}
       {error && (
@@ -1263,13 +1162,13 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         <div className="flex items-center px-3 py-2">
           {/* Left group: P E A + Skills + ContentsRate */}
           <div className="flex items-center gap-1 flex-1 min-w-0">
-            {(planOnly || emailMode || ideaMode) ? (
+            {(planOnly || emailMode) ? (
               <span
                 className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center"
                 style={{ backgroundColor: '#222222', color: '#ffffff', border: '1px solid #333333' }}
-                title={emailMode ? "Email mode (locked)" : ideaMode ? "Idea mode (locked)" : "Plan mode (locked)"}
+                title={emailMode ? "Email mode (locked)" : "Plan mode (locked)"}
               >
-                {emailMode || ideaMode ? 'A' : 'P'}
+                {emailMode ? 'A' : 'P'}
               </span>
             ) : MODE_CYCLE.map(m => {
               const isActive = mode === m
@@ -1292,7 +1191,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             })}
 
             {/* Model Switcher: [S][A][O] */}
-            {!planOnly && !emailMode && !ideaMode && (
+            {!planOnly && !emailMode && (
               <>
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>
                 {(['sonnet', 'auto', 'opus'] as const).map(m => {
@@ -1321,7 +1220,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               </>
             )}
 
-            {!planOnly && !emailMode && !ideaMode && projectCommands.length > 0 && (
+            {!planOnly && !emailMode && projectCommands.length > 0 && (
               <button
                 onClick={() => setSkillMenu(prev => prev === 'project' ? null : 'project')}
                 disabled={isStreaming}
@@ -1339,7 +1238,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 /
               </button>
             )}
-            {!planOnly && !emailMode && !ideaMode && (
+            {!planOnly && !emailMode && (
               <button
                 onClick={() => setSkillMenu(prev => prev === 'global' ? null : 'global')}
                 disabled={isStreaming}
@@ -1357,7 +1256,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               </button>
             )}
 
-            {!planOnly && !emailMode && !ideaMode && (
+            {!planOnly && !emailMode && (
               <button
                 onClick={() => runSkill('ship')}
                 disabled={isStreaming}
@@ -1375,7 +1274,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               </button>
             )}
 
-            {!planOnly && !emailMode && !ideaMode && (
+            {!planOnly && !emailMode && (
               <button
                 onClick={() => setShowImagePicker(true)}
                 disabled={isStreaming}

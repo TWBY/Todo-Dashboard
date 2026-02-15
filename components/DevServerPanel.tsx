@@ -288,12 +288,6 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             <span className="text-sm text-green-500">已複製！</span>
           )}
           <span
-            className="text-sm px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
-          >
-            {statuses.filter(s => s.isRunning).length} / {projectsWithPort.length}
-          </span>
-          <span
             className="text-xs px-1.5 py-0.5 rounded-full"
             style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
           >
@@ -343,7 +337,7 @@ export default function DevServerPanel({ projects }: DevServerPanelProps) {
             {prodLoading ? '...' : prodRunning ? 'Stop' : 'Start'}
           </button>
           <button
-            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: '打包', initialMode: 'edit' })}
+            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: '打包', initialMode: 'edit', model: 'haiku' })}
             className="px-2.5 py-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
             style={{
               backgroundColor: '#332815',

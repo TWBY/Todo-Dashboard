@@ -6,7 +6,7 @@ export const maxDuration = 300
 
 export async function POST(request: Request) {
   try {
-    const { projectId, message, sessionId, mode, ideaMode, model } = await request.json()
+    const { projectId, message, sessionId, mode, model } = await request.json()
 
     if (!projectId || !message) {
       return new Response(JSON.stringify({ error: 'Missing projectId or message' }), {
@@ -40,8 +40,7 @@ export async function POST(request: Request) {
       '--permission-mode', mode === 'edit' ? 'acceptEdits' : 'plan',
     ]
 
-    // ideaMode：使用最便宜的模型 (haiku)
-    if (ideaMode) {
+    if (model === 'haiku') {
       args.push('--model', 'haiku')
     } else if (model === 'opus') {
       args.push('--model', 'opus')
