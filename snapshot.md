@@ -1,466 +1,1471 @@
 - generic [active] [ref=e1]:
-  - main [ref=e2]:
-    - generic [ref=e326]:
-      - generic [ref=e329]:
-        - generic [ref=e331]:
-          - button "新增想法" [ref=e332] [cursor=pointer]
-          - button "問問 AI" [ref=e333] [cursor=pointer]
-          - button "流水線" [ref=e334] [cursor=pointer]
-          - button "收合專案列表" [ref=e335] [cursor=pointer]:
-            - img [ref=e336]
-        - separator [ref=e338]
-        - generic [ref=e339]:
-          - generic [ref=e340]:
-            - generic [ref=e341]:
-              - heading "Dev Servers 2 / 12" [level=2] [ref=e342]:
-                - generic "點擊複製名稱" [ref=e343] [cursor=pointer]: Dev Servers
-                - generic [ref=e344]: 2 / 12
-              - button "Refresh" [ref=e346]
-            - generic [ref=e347]:
-              - generic [ref=e349]:
-                - generic [ref=e353]:
-                  - generic "點擊複製路徑" [ref=e354] [cursor=pointer]: BlogBackend
-                  - generic [ref=e355]: "13"
-                  - generic [ref=e356]: 41M
-                - generic [ref=e357]:
-                  - button "Open" [ref=e358]
-                  - button "Stop" [ref=e359]:
-                    - generic [ref=e360]: Stop
-                  - button "Chat" [ref=e361]
-                  - button "✕" [ref=e362]
-              - generic [ref=e364]:
-                - generic [ref=e368]:
-                  - generic "點擊複製路徑" [ref=e369] [cursor=pointer]: BlogFrontend
-                  - generic [ref=e370]: "05"
-                - generic [ref=e371]:
-                  - button "Start" [ref=e372]:
-                    - generic [ref=e373]: Start
-                  - button "Chat" [ref=e374]
-                  - button "✕" [ref=e375]
-              - generic [ref=e377]:
-                - generic [ref=e381]:
-                  - generic "點擊複製路徑" [ref=e382] [cursor=pointer]: brickverse-design
-                  - generic [ref=e383]: "02"
-                - generic [ref=e384]:
-                  - button "Start" [ref=e385]:
-                    - generic [ref=e386]: Start
-                  - button "Chat" [ref=e387]
-                  - button "✕" [ref=e388]
-              - generic [ref=e390]:
-                - generic [ref=e394]:
-                  - generic "點擊複製路徑" [ref=e395] [cursor=pointer]: brickverse-learn
-                  - generic [ref=e396]: "04"
-                - generic [ref=e397]:
-                  - button "Start" [ref=e398]:
-                    - generic [ref=e399]: Start
-                  - button "Chat" [ref=e400]
-                  - button "✕" [ref=e401]
-              - generic [ref=e403]:
-                - generic [ref=e407]:
-                  - generic "點擊複製路徑" [ref=e408] [cursor=pointer]: brickverse-web
-                  - generic [ref=e409]: "01"
-                - generic [ref=e410]:
-                  - button "Start" [ref=e411]:
-                    - generic [ref=e412]: Start
-                  - button "Chat" [ref=e413]
-                  - button "✕" [ref=e414]
-              - generic [ref=e416]:
-                - generic [ref=e420]:
-                  - generic "點擊複製路徑" [ref=e421] [cursor=pointer]: ClassPost
-                  - generic [ref=e422]: "16"
-                - generic [ref=e423]:
-                  - button "Start" [ref=e424]:
-                    - generic [ref=e425]: Start
-                  - button "Chat" [ref=e426]
-                  - button "✕" [ref=e427]
-              - generic [ref=e429]:
-                - generic [ref=e433]:
-                  - generic "點擊複製路徑" [ref=e434] [cursor=pointer]: GSC-Dashboard
-                  - generic [ref=e435]: "03"
-                - generic [ref=e436]:
-                  - button "Start" [ref=e437]:
-                    - generic [ref=e438]: Start
-                  - button "Chat" [ref=e439]
-                  - button "✕" [ref=e440]
-              - generic [ref=e442]:
-                - generic [ref=e446]:
-                  - generic "點擊複製路徑" [ref=e447] [cursor=pointer]: SaleKit
-                  - generic [ref=e448]: "08"
-                - generic [ref=e449]:
-                  - button "Start" [ref=e450]:
-                    - generic [ref=e451]: Start
-                  - button "Chat" [ref=e452]
-                  - button "✕" [ref=e453]
-              - generic [ref=e455]:
-                - generic [ref=e459]:
-                  - generic "點擊複製路徑" [ref=e460] [cursor=pointer]: ClaudeCodeLab
-                  - generic [ref=e461]: "12"
-                - generic [ref=e462]:
-                  - button "Start" [ref=e463]:
-                    - generic [ref=e464]: Start
-                  - button "Chat" [ref=e465]
-                  - button "✕" [ref=e466]
-              - generic [ref=e468]:
-                - generic [ref=e472]:
-                  - generic "點擊複製路徑" [ref=e473] [cursor=pointer]: ExcelFactory
-                  - generic [ref=e474]: "14"
-                - generic [ref=e475]:
-                  - button "Start" [ref=e476]:
-                    - generic [ref=e477]: Start
-                  - button "Chat" [ref=e478]
-                  - button "✕" [ref=e479]
-              - generic [ref=e481]:
-                - generic [ref=e485]:
-                  - generic "點擊複製路徑" [ref=e486] [cursor=pointer]: OnlineWorkshop
-                  - generic [ref=e487]: "17"
-                - generic [ref=e488]:
-                  - button "Start" [ref=e489]:
-                    - generic [ref=e490]: Start
-                  - button "Chat" [ref=e491]
-                  - button "✕" [ref=e492]
-              - generic [ref=e494]:
-                - generic [ref=e498]:
-                  - generic "點擊複製路徑" [ref=e499] [cursor=pointer]: OfflineWorkshop
-                  - generic [ref=e500]: "18"
-                - generic [ref=e501]:
-                  - button "Start" [ref=e502]:
-                    - generic [ref=e503]: Start
-                  - button "Chat" [ref=e504]
-                  - button "✕" [ref=e505]
-          - generic [ref=e507]:
-            - generic [ref=e508]:
-              - heading "Claude Usage" [level=2] [ref=e509]
-              - generic [ref=e510]:
-                - generic [ref=e511]: just now
-                - button "Refresh" [ref=e512]
-            - generic [ref=e513]:
-              - generic [ref=e515]:
-                - generic [ref=e516]:
-                  - generic [ref=e517]: Current session
-                  - generic [ref=e518]: 67% used
-                - generic [ref=e521]: Resets in 3 hr 24 min
-              - generic [ref=e522]:
-                - generic [ref=e523]: Weekly limits
-                - generic [ref=e524]:
-                  - generic [ref=e525]:
-                    - generic [ref=e526]: All models
-                    - generic [ref=e527]: 29% used
-                  - generic [ref=e530]: Resets Thu 10:59 AM
-                - generic [ref=e531]:
-                  - generic [ref=e532]:
-                    - generic [ref=e533]: Sonnet only
-                    - generic [ref=e534]: 12% used
-                  - generic [ref=e537]: Resets Tue 12:59 PM
-        - separator [ref=e538]
-        - generic [ref=e539]:
-          - generic [ref=e540]:
-            - heading "Brickverse Projects" [level=2] [ref=e542] [cursor=pointer]
-            - generic [ref=e543]:
-              - generic [ref=e545]:
-                - generic [ref=e546]: ├──
-                - generic "點擊複製路徑" [ref=e547] [cursor=pointer]: BlogBackend/
-                - generic [ref=e548]: "13"
-              - generic [ref=e550]:
-                - generic [ref=e551]: ├──
-                - generic "點擊複製路徑" [ref=e552] [cursor=pointer]: BlogFrontend/
-                - generic [ref=e553]: "05"
-              - generic [ref=e555]:
-                - generic [ref=e556]: ├──
-                - generic "點擊複製路徑" [ref=e557] [cursor=pointer]: brickverse-design/
-                - generic [ref=e558]: "02"
-              - generic [ref=e560]:
-                - generic [ref=e561]: ├──
-                - generic "點擊複製路徑" [ref=e562] [cursor=pointer]: brickverse-learn/
-                - generic [ref=e563]: "04"
-              - generic [ref=e565]:
-                - generic [ref=e566]: ├──
-                - generic "點擊複製路徑" [ref=e567] [cursor=pointer]: brickverse-web/
-                - generic [ref=e568]: "01"
-              - generic [ref=e570]:
-                - generic [ref=e571]: ├──
-                - generic "點擊複製路徑" [ref=e572] [cursor=pointer]: ClassPost/
-                - generic [ref=e573]: "16"
-              - generic [ref=e575]:
-                - generic [ref=e576]: ├──
-                - generic "點擊複製路徑" [ref=e577] [cursor=pointer]: GSC-Dashboard/
-                - generic [ref=e578]: "03"
-              - generic [ref=e580]:
-                - generic [ref=e581]: ├──
-                - generic "點擊複製路徑" [ref=e582] [cursor=pointer]: SaleKit/
-                - generic [ref=e583]: "08"
-              - generic [ref=e585]:
-                - generic [ref=e586]: └──
-                - generic "點擊複製路徑" [ref=e587] [cursor=pointer]: Todo-Dashboard/
-                - generic [ref=e588]: "00"
-          - generic [ref=e589]:
-            - heading "CourseFiles" [level=2] [ref=e591] [cursor=pointer]
-            - generic [ref=e592]:
-              - generic [ref=e593]:
-                - generic [ref=e594]:
-                  - generic [ref=e595]: ├──
-                  - generic "點擊複製路徑" [ref=e596] [cursor=pointer]: AICode100/
-                  - button "+" [ref=e597]
-                - generic [ref=e598]:
-                  - generic [ref=e599]:
-                    - generic [ref=e600]: │ ├──
-                    - generic "點擊複製路徑" [ref=e601] [cursor=pointer]: GeminilmageGen/
-                    - button "+" [ref=e602]
-                  - generic [ref=e603]:
-                    - generic [ref=e604]: │ └──
-                    - generic "點擊複製路徑" [ref=e605] [cursor=pointer]: ClassPresentation/
-                    - button "+" [ref=e606]
-              - generic [ref=e607]:
-                - generic [ref=e608]:
-                  - generic [ref=e609]: ├──
-                  - generic "點擊複製路徑" [ref=e610] [cursor=pointer]: AICode101/
-                  - button "+" [ref=e611]
-                - generic [ref=e612]:
-                  - generic [ref=e613]:
-                    - generic [ref=e614]: │ ├──
-                    - generic "點擊複製路徑" [ref=e615] [cursor=pointer]: Bonus/
-                    - button "+" [ref=e616]
-                  - generic [ref=e617]:
-                    - generic [ref=e618]: │ ├──
-                    - generic "點擊複製路徑" [ref=e619] [cursor=pointer]: ClassPersentation/
-                    - button "+" [ref=e620]
-                  - generic [ref=e621]:
-                    - generic [ref=e622]: │ ├──
-                    - generic "點擊複製路徑" [ref=e623] [cursor=pointer]: ClassQAGame/
-                    - button "+" [ref=e624]
-                  - generic [ref=e625]:
-                    - generic [ref=e626]: │ ├──
-                    - generic "點擊複製路徑" [ref=e627] [cursor=pointer]: ReactClassPresentation/
-                    - button "+" [ref=e628]
-                  - generic [ref=e629]:
-                    - generic [ref=e630]: │ ├──
-                    - generic "點擊複製路徑" [ref=e631] [cursor=pointer]: StudentStauts/
-                    - button "+" [ref=e632]
-                  - generic [ref=e633]:
-                    - generic [ref=e634]: │ ├──
-                    - generic "點擊複製路徑" [ref=e635] [cursor=pointer]: SupabaseExample/
-                    - button "+" [ref=e636]
-                  - generic [ref=e637]:
-                    - generic [ref=e638]: │ ├──
-                    - generic "點擊複製路徑" [ref=e639] [cursor=pointer]: dashborard/
-                    - button "+" [ref=e640]
-                  - generic [ref=e641]:
-                    - generic [ref=e642]: │ └──
-                    - generic "點擊複製路徑" [ref=e643] [cursor=pointer]: 典藏/
-                    - button "+" [ref=e644]
-              - generic [ref=e646]:
-                - generic [ref=e647]: ├──
-                - generic "點擊複製路徑" [ref=e648] [cursor=pointer]: CourseTemplate/
-                - button "+" [ref=e649]
-              - generic [ref=e650]:
-                - generic [ref=e651]:
-                  - generic [ref=e652]: └──
-                  - generic "點擊複製路徑" [ref=e653] [cursor=pointer]: HRWorkshop/
-                  - button "+" [ref=e654]
-                - generic [ref=e655]:
-                  - generic [ref=e656]:
-                    - generic [ref=e657]: ├──
-                    - generic "點擊複製路徑" [ref=e658] [cursor=pointer]: OnlineWorkshop/
-                    - generic [ref=e659]: "17"
-                  - generic [ref=e660]:
-                    - generic [ref=e661]: └──
-                    - generic "點擊複製路徑" [ref=e662] [cursor=pointer]: OfflineWorkshop/
-                    - generic [ref=e663]: "18"
-          - generic [ref=e664]:
-            - heading "UtilityTools" [level=2] [ref=e666] [cursor=pointer]
-            - generic [ref=e667]:
-              - generic [ref=e669]:
-                - generic [ref=e670]: ├──
-                - generic "點擊複製路徑" [ref=e671] [cursor=pointer]: ClaudeCodeLab/
-                - generic [ref=e672]: "12"
-              - generic [ref=e674]:
-                - generic [ref=e675]: ├──
-                - generic "點擊複製路徑" [ref=e676] [cursor=pointer]: DiskSense/
-                - button "+" [ref=e677]
-              - generic [ref=e679]:
-                - generic [ref=e680]: ├──
-                - generic "點擊複製路徑" [ref=e681] [cursor=pointer]: DownloadHTML/
-                - button "+" [ref=e682]
-              - generic [ref=e684]:
-                - generic [ref=e685]: ├──
-                - generic "點擊複製路徑" [ref=e686] [cursor=pointer]: Editer/
-                - button "+" [ref=e687]
-              - generic [ref=e689]:
-                - generic [ref=e690]: ├──
-                - generic "點擊複製路徑" [ref=e691] [cursor=pointer]: ExcelFactory/
-                - generic [ref=e692]: "14"
-              - generic [ref=e694]:
-                - generic [ref=e695]: ├──
-                - generic "點擊複製路徑" [ref=e696] [cursor=pointer]: GenerateImage/
-                - button "+" [ref=e697]
-              - generic [ref=e699]:
-                - generic [ref=e700]: ├──
-                - generic "點擊複製路徑" [ref=e701] [cursor=pointer]: MetaAdsLab/
-                - button "+" [ref=e702]
-              - generic [ref=e704]:
-                - generic [ref=e705]: ├──
-                - generic "點擊複製路徑" [ref=e706] [cursor=pointer]: OnlineTodoList/
-                - button "+" [ref=e707]
-              - generic [ref=e709]:
-                - generic [ref=e710]: ├──
-                - generic "點擊複製路徑" [ref=e711] [cursor=pointer]: Presentation2PDF/
-                - button "+" [ref=e712]
-              - generic [ref=e714]:
-                - generic [ref=e715]: ├──
-                - generic "點擊複製路徑" [ref=e716] [cursor=pointer]: PythonInteractiveLab/
-                - button "+" [ref=e717]
-              - generic [ref=e719]:
-                - generic [ref=e720]: ├──
-                - generic "點擊複製路徑" [ref=e721] [cursor=pointer]: SocialFormat/
-                - button "+" [ref=e722]
-              - generic [ref=e724]:
-                - generic [ref=e725]: └──
-                - generic "點擊複製路徑" [ref=e726] [cursor=pointer]: SubscriptionChecker/
-                - button "+" [ref=e727]
-        - separator [ref=e728]
-        - generic [ref=e729]:
-          - generic [ref=e730]:
-            - heading "Skill 架構" [level=2] [ref=e731]
-            - button "↻" [ref=e732] [cursor=pointer]:
-              - generic [ref=e733]: ↻
-          - generic [ref=e734]:
-            - generic [ref=e735]:
-              - generic [ref=e736]:
-                - generic [ref=e737]: Global Skill
-                - generic [ref=e738]: ~/.claude/skills/
-              - generic [ref=e739]:
-                - generic [ref=e740]:
-                  - generic [ref=e741]: 部署流程
-                  - generic "點擊複製指令" [ref=e742] [cursor=pointer]:
-                    - generic [ref=e743]:
-                      - generic [ref=e744]: /ship
-                      - generic [ref=e745]: "1. 執行 `git status` 確認有哪些變更"
-                    - generic [ref=e746]: haiku
-                  - generic "點擊複製指令" [ref=e747] [cursor=pointer]:
-                    - generic [ref=e748]:
-                      - generic [ref=e749]: /zeabur-debug
-                      - generic [ref=e750]: 分析 Zeabur 部署失敗的原因並嘗試修復
-                    - generic [ref=e751]: sonnet
-                  - generic "點擊複製指令" [ref=e752] [cursor=pointer]:
-                    - generic [ref=e753]:
-                      - generic [ref=e754]: /zeabur-setup
-                      - generic [ref=e755]: 設定當前專案的 Zeabur 部署資訊（只需提供 Service ID），自動查詢 Project ID 和 Environment ID，寫入專案 CLAUDE.md 供 /ship 和 /zeabur-debug 使用
-                    - generic [ref=e756]: haiku
-                  - generic [ref=e757]:
-                    - generic [ref=e758]: ↳ ship → zeabur-setup（無設定時）
-                    - generic [ref=e759]: ↳ ship → zeabur-debug（失敗時）
-                - generic [ref=e760]:
-                  - generic [ref=e761]: 程式碼品質
-                  - generic "點擊複製指令" [ref=e762] [cursor=pointer]:
-                    - generic [ref=e763]:
-                      - generic [ref=e764]: /audit
-                      - generic [ref=e765]: 完整程式碼審計流水線（健康檢測 → 安全掃描 → 自動修復）
-                    - generic [ref=e766]: sonnet
-                  - generic "點擊複製指令" [ref=e767] [cursor=pointer]:
-                    - generic [ref=e768]:
-                      - generic [ref=e769]: /code-health
-                      - generic [ref=e770]: 程式碼健康度檢測（重複、死程式碼、循環依賴）
-                    - generic [ref=e771]: sonnet
-                  - generic "點擊複製指令" [ref=e772] [cursor=pointer]:
-                    - generic [ref=e773]:
-                      - generic [ref=e774]: /refactor
-                      - generic [ref=e775]: 全自動程式碼重構與修復
-                    - generic [ref=e776]: opus
-                  - generic "點擊複製指令" [ref=e777] [cursor=pointer]:
-                    - generic [ref=e778]:
-                      - generic [ref=e779]: /security-review
-                      - generic [ref=e780]: 安全審查（自動化掃描 + AI 程式碼審查）
-                    - generic [ref=e781]: sonnet
-                  - generic [ref=e783]: ↳ audit → code-health → security-review → refactor（條件觸發）
-                - generic [ref=e784]:
-                  - generic [ref=e785]: 知識載入
-                  - generic "點擊複製指令" [ref=e786] [cursor=pointer]:
-                    - generic [ref=e787]:
-                      - generic [ref=e788]: /design-system
-                      - generic [ref=e789]: 請參照 Brickverse Design System 作為當前專案的設計規範基底。
-                    - generic [ref=e790]: haiku
-                - generic [ref=e791]:
-                  - generic [ref=e792]: Blog 編輯流水線
-                  - generic [ref=e794]: ↳ 11 個 Skill（intake → outline → ... → engagement → Insforge DB）
-                - generic [ref=e795]:
-                  - generic [ref=e796]: 開發除錯
-                  - generic "點擊複製指令" [ref=e797] [cursor=pointer]:
-                    - generic [ref=e798]:
-                      - generic [ref=e799]: /check-console
-                      - generic [ref=e800]: 透過 CDP 讀取 Arc 瀏覽器的 Console Error 並定位問題
-                    - generic [ref=e801]: sonnet
-                - generic [ref=e802]:
-                  - generic [ref=e803]: 工具
-                  - generic "點擊複製指令" [ref=e804] [cursor=pointer]:
-                    - generic [ref=e805]:
-                      - generic [ref=e806]: /insights-zh
-                      - generic [ref=e807]: 將 /insights 英文報告翻譯為繁體中文版
-                    - generic [ref=e808]: sonnet
-            - generic [ref=e809]:
-              - generic [ref=e810]:
-                - generic [ref=e811]: Project Skill
-                - generic [ref=e812]: <project>/.claude/skills/
-              - generic [ref=e813]:
-                - generic [ref=e814]:
-                  - generic [ref=e815]: Todo-Dashboard
-                  - generic "點擊複製指令" [ref=e816] [cursor=pointer]:
-                    - generic [ref=e817]:
-                      - generic [ref=e818]: /add-child
-                      - generic [ref=e819]: 新增子專案資料夾
-                    - generic [ref=e820]: haiku
-                  - generic "點擊複製指令" [ref=e821] [cursor=pointer]:
-                    - generic [ref=e822]:
-                      - generic [ref=e823]: /rescan
-                      - generic [ref=e824]: 重掃檔案系統同步 JSON
-                    - generic [ref=e825]: haiku
-                - generic [ref=e826]:
-                  - generic [ref=e827]: brickverse-web
-                  - generic "點擊複製指令" [ref=e828] [cursor=pointer]:
-                    - generic [ref=e829]:
-                      - generic [ref=e830]: /form-integration
-                      - generic [ref=e831]: 表單整合測試（真實 API）
-                    - generic [ref=e832]: haiku
-                  - generic "點擊複製指令" [ref=e833] [cursor=pointer]:
-                    - generic [ref=e834]:
-                      - generic [ref=e835]: /test-email
-                      - generic [ref=e836]: Email 測試工具
-                    - generic [ref=e837]: haiku
-                  - generic "點擊複製指令" [ref=e838] [cursor=pointer]:
-                    - generic [ref=e839]:
-                      - generic [ref=e840]: /insforge
-                      - generic [ref=e841]: 連接 InsForge 後台
-                    - generic [ref=e842]: haiku
-                  - generic "點擊複製指令" [ref=e843] [cursor=pointer]:
-                    - generic [ref=e844]:
-                      - generic [ref=e845]: /form-e2e
-                      - generic [ref=e846]: 表單 E2E 測試（Mock API）
-                    - generic [ref=e847]: haiku
-          - generic [ref=e848]:
-            - generic [ref=e849]:
-              - generic [ref=e850]: Built-in
-              - generic [ref=e851]: /keybindings-help
-            - generic [ref=e852]: 鍵盤快捷鍵設定
-        - separator [ref=e853]
-        - generic [ref=e854]:
-          - heading "架構關係" [level=2] [ref=e855]
-          - generic [ref=e857]:
-            - generic [ref=e858]:
-              - generic [ref=e859]: brickverse-web
-              - generic [ref=e860]: 主體
-            - generic [ref=e861]:
-              - img [ref=e862]
-              - img [ref=e864]
-            - generic [ref=e866]:
-              - generic [ref=e867]:
-                - generic [ref=e868]: BlogFrontend
-                - generic [ref=e869]: Blog · /blog
-              - generic [ref=e870]:
-                - generic [ref=e871]: brickverse-learn
-                - generic [ref=e872]: /course
-            - img [ref=e873]
-            - generic [ref=e876]:
-              - generic [ref=e877]: BlogBackend
-              - generic [ref=e878]: Blog 後端 · 串接 Insforge
-      - button "展開專案列表"
-  - button "Open Next.js Dev Tools" [ref=e321] [cursor=pointer]:
-    - img [ref=e322]
-  - alert [ref=e325]: Brickverse Dashboard
+  - navigation [ref=e2]:
+    - link "返回課程列表" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - text: 返回課程列表
+    - heading "AI Coding 101 課程總覽" [level=3] [ref=e5]
+    - link "Skills" [ref=e6] [cursor=pointer]:
+      - /url: "#skills"
+      - text: Skills
+    - link "0. 環境設定" [ref=e8] [cursor=pointer]:
+      - /url: "#ch0"
+    - link "0-1 人員簽到" [ref=e9] [cursor=pointer]:
+      - /url: "#ch0-1"
+    - link "0-2 課程介紹" [ref=e10] [cursor=pointer]:
+      - /url: "#ch0-2"
+    - link "0-3 課程注意事項" [ref=e11] [cursor=pointer]:
+      - /url: "#ch0-3"
+    - link "0-5 版面基本介紹與設定" [ref=e12] [cursor=pointer]:
+      - /url: "#ch0-5"
+    - link "0-6 小試身手：利用 AI 來建立資料夾" [ref=e13] [cursor=pointer]:
+      - /url: "#ch0-6"
+    - link "0-7 建立資料夾 Prompt" [ref=e14] [cursor=pointer]:
+      - /url: "#ch0-7"
+    - link "0-8 加上好用的外掛：Live Server" [ref=e15] [cursor=pointer]:
+      - /url: "#ch0-8"
+    - link "0-9 安裝 Live Server" [ref=e16] [cursor=pointer]:
+      - /url: "#ch0-9"
+    - link "0-10 家有家規，班有班規" [ref=e17] [cursor=pointer]:
+      - /url: "#ch0-10"
+    - link "0-11 複製 IDE 規則" [ref=e18] [cursor=pointer]:
+      - /url: "#ch0-11"
+    - link "0-12 基本設置完畢" [ref=e19] [cursor=pointer]:
+      - /url: "#ch0-12"
+    - link "1. 官網、活動頁" [ref=e20] [cursor=pointer]:
+      - /url: "#ch1"
+    - link "1-2 課程重點 — 內容創作" [ref=e21] [cursor=pointer]:
+      - /url: "#ch1-2"
+    - link "1-3 加入內容" [ref=e22] [cursor=pointer]:
+      - /url: "#ch1-3"
+    - link "1-4 Vibe Coding 迷因圖" [ref=e23] [cursor=pointer]:
+      - /url: "#ch1-4"
+    - link "1-5 AI 工作原則" [ref=e24] [cursor=pointer]:
+      - /url: "#ch1-5"
+    - link "1-6 Prompt 層級說明" [ref=e25] [cursor=pointer]:
+      - /url: "#ch1-6"
+    - link "1-7 A 級案例示範" [ref=e26] [cursor=pointer]:
+      - /url: "#ch1-7"
+    - link "1-8 AI 工作原則（續）" [ref=e27] [cursor=pointer]:
+      - /url: "#ch1-8"
+    - link "1-9 新增素材 — 圖片" [ref=e28] [cursor=pointer]:
+      - /url: "#ch1-9"
+    - link "1-10 素材 — 連結" [ref=e29] [cursor=pointer]:
+      - /url: "#ch1-10"
+    - link "1-11 課程重點 — 設計優化" [ref=e30] [cursor=pointer]:
+      - /url: "#ch1-11"
+    - link "1-12 選顏色" [ref=e31] [cursor=pointer]:
+      - /url: "#ch1-12"
+    - link "1-13 選字體" [ref=e32] [cursor=pointer]:
+      - /url: "#ch1-13"
+    - link "1-14 Font Awesome Icon" [ref=e33] [cursor=pointer]:
+      - /url: "#ch1-14"
+    - link "1-15 小結" [ref=e34] [cursor=pointer]:
+      - /url: "#ch1-15"
+    - link "1-16 休息時間" [ref=e35] [cursor=pointer]:
+      - /url: "#ch1-16"
+    - link "1-17 本地端與雲端工作流程" [ref=e36] [cursor=pointer]:
+      - /url: "#ch1-17"
+    - link "1-18 使用 Zeabur 部署" [ref=e37] [cursor=pointer]:
+      - /url: "#ch1-18"
+    - link "1-19 使用 Zeabur AI 詢問機房選擇" [ref=e38] [cursor=pointer]:
+      - /url: "#ch1-19"
+    - link "1-20 兌換積分，升級 Dev Plan" [ref=e39] [cursor=pointer]:
+      - /url: "#ch1-20"
+    - link "1-21 上傳專案到 Zeabur" [ref=e40] [cursor=pointer]:
+      - /url: "#ch1-21"
+    - link "1-22 建立 Domain" [ref=e41] [cursor=pointer]:
+      - /url: "#ch1-22"
+    - link "1-23 打開 Domain" [ref=e42] [cursor=pointer]:
+      - /url: "#ch1-23"
+    - link "1-24 Zeabur 部署流程" [ref=e43] [cursor=pointer]:
+      - /url: "#ch1-24"
+    - link "1-25 恭喜完成產品開發流程" [ref=e44] [cursor=pointer]:
+      - /url: "#ch1-25"
+    - link "1-26 課程重點 — 搜尋引擎優化" [ref=e45] [cursor=pointer]:
+      - /url: "#ch1-26"
+    - link "1-27 SEO — Meta Tag" [ref=e46] [cursor=pointer]:
+      - /url: "#ch1-27"
+    - link "1-28 修改 Meta" [ref=e47] [cursor=pointer]:
+      - /url: "#ch1-28"
+    - link "1-29 課程重點 — 資安防護" [ref=e48] [cursor=pointer]:
+      - /url: "#ch1-29"
+    - link "1-30 沒有一定的防盜標準" [ref=e49] [cursor=pointer]:
+      - /url: "#ch1-30"
+    - link "1-31 資安標題" [ref=e50] [cursor=pointer]:
+      - /url: "#ch1-31"
+    - link "1-32 互動拖拉遊戲" [ref=e51] [cursor=pointer]:
+      - /url: "#ch1-32"
+    - link "1-33 更新後，重新部署" [ref=e52] [cursor=pointer]:
+      - /url: "#ch1-33"
+    - link "1-34 重新部署狀態" [ref=e53] [cursor=pointer]:
+      - /url: "#ch1-34"
+    - link "1-35 Zeabur 資安檢測" [ref=e54] [cursor=pointer]:
+      - /url: "#ch1-35"
+    - link "1-36 小結" [ref=e55] [cursor=pointer]:
+      - /url: "#ch1-36"
+    - link "1-37 Q&A" [ref=e56] [cursor=pointer]:
+      - /url: "#ch1-37"
+    - link "2. 儀表板 Dashboard" [ref=e57] [cursor=pointer]:
+      - /url: "#ch2"
+    - link "2-2 下載銷售資料" [ref=e58] [cursor=pointer]:
+      - /url: "#ch2-2"
+    - link "2-3 銷售資料儀表板範例" [ref=e59] [cursor=pointer]:
+      - /url: "#ch2-3"
+    - link "2-4 目標" [ref=e60] [cursor=pointer]:
+      - /url: "#ch2-4"
+    - link "2-5 上傳檔案並生成圖表" [ref=e61] [cursor=pointer]:
+      - /url: "#ch2-5"
+    - link "2-11 小結" [ref=e62] [cursor=pointer]:
+      - /url: "#ch2-11"
+    - link "2-12 Q&A" [ref=e63] [cursor=pointer]:
+      - /url: "#ch2-12"
+    - link "2-13 休息時間" [ref=e64] [cursor=pointer]:
+      - /url: "#ch2-13"
+    - link "3. 開發環境設定" [ref=e65] [cursor=pointer]:
+      - /url: "#ch3"
+    - link "3-2 複製 IDE 規則" [ref=e66] [cursor=pointer]:
+      - /url: "#ch3-2"
+    - link "3-3 貼上 Rule 到 Cursor" [ref=e67] [cursor=pointer]:
+      - /url: "#ch3-3"
+    - link "3-4 加上好用的外掛：Live Server" [ref=e68] [cursor=pointer]:
+      - /url: "#ch3-4"
+    - link "3-5 安裝 Live Server" [ref=e69] [cursor=pointer]:
+      - /url: "#ch3-5"
+    - link "3-6 基本設置完畢" [ref=e70] [cursor=pointer]:
+      - /url: "#ch3-6"
+    - link "3-7 Q&A" [ref=e71] [cursor=pointer]:
+      - /url: "#ch3-7"
+    - link "4. 串接資料庫 Supabase" [ref=e72] [cursor=pointer]:
+      - /url: "#ch4"
+    - link "4-2 Supabase 核心功能" [ref=e73] [cursor=pointer]:
+      - /url: "#ch4-2"
+    - link "4-3 有了 Supabase 後，可以做到什麼" [ref=e74] [cursor=pointer]:
+      - /url: "#ch4-3"
+    - link "4-4 Supabase 介面看起來很難" [ref=e75] [cursor=pointer]:
+      - /url: "#ch4-4"
+    - link "4-5 別擔心，現在有 MCP 技術" [ref=e76] [cursor=pointer]:
+      - /url: "#ch4-5"
+    - link "4-6 MCP 餐廳比喻" [ref=e77] [cursor=pointer]:
+      - /url: "#ch4-6"
+    - link "4-7 安裝 Supabase MCP" [ref=e78] [cursor=pointer]:
+      - /url: "#ch4-7"
+    - link "4-8 安裝 Supabase MCP（示範）" [ref=e79] [cursor=pointer]:
+      - /url: "#ch4-8"
+    - link "4-9 基本設置完畢" [ref=e80] [cursor=pointer]:
+      - /url: "#ch4-9"
+    - link "4-10 範例 1：點餐系統" [ref=e81] [cursor=pointer]:
+      - /url: "#ch4-10"
+    - link "4-11 寫基礎頁面" [ref=e82] [cursor=pointer]:
+      - /url: "#ch4-11"
+    - link "4-12 手動建立 Supabase 專案" [ref=e83] [cursor=pointer]:
+      - /url: "#ch4-12"
+    - link "4-13 建立專案步驟" [ref=e84] [cursor=pointer]:
+      - /url: "#ch4-13"
+    - link "4-14 複製 Project URL" [ref=e85] [cursor=pointer]:
+      - /url: "#ch4-14"
+    - link "4-15 建立 Table" [ref=e86] [cursor=pointer]:
+      - /url: "#ch4-15"
+    - link "4-16 確認表格" [ref=e87] [cursor=pointer]:
+      - /url: "#ch4-16"
+    - link "4-17 使用 MCP 確認表格" [ref=e88] [cursor=pointer]:
+      - /url: "#ch4-17"
+    - link "4-18 前後串接" [ref=e89] [cursor=pointer]:
+      - /url: "#ch4-18"
+    - link "4-19 測試" [ref=e90] [cursor=pointer]:
+      - /url: "#ch4-19"
+    - link "4-20 頭過身就過" [ref=e91] [cursor=pointer]:
+      - /url: "#ch4-20"
+    - link "4-21 加上其他功能" [ref=e92] [cursor=pointer]:
+      - /url: "#ch4-21"
+    - link "4-22 串接 Supabase 流程" [ref=e93] [cursor=pointer]:
+      - /url: "#ch4-22"
+    - link "4-23 小結" [ref=e94] [cursor=pointer]:
+      - /url: "#ch4-23"
+    - link "4-24 Q&A" [ref=e95] [cursor=pointer]:
+      - /url: "#ch4-24"
+    - link "4-25 休息時間" [ref=e96] [cursor=pointer]:
+      - /url: "#ch4-25"
+    - link "5. 庫存系統與會員驗證" [ref=e97] [cursor=pointer]:
+      - /url: "#ch5"
+    - link "5-2 範例 2：庫存系統" [ref=e98] [cursor=pointer]:
+      - /url: "#ch5-2"
+    - link "5-3 相比上個案例" [ref=e99] [cursor=pointer]:
+      - /url: "#ch5-3"
+    - link "5-4 任務" [ref=e100] [cursor=pointer]:
+      - /url: "#ch5-4"
+    - link "5-5 寫基礎頁面" [ref=e101] [cursor=pointer]:
+      - /url: "#ch5-5"
+    - link "5-6 檢查點" [ref=e102] [cursor=pointer]:
+      - /url: "#ch5-6"
+    - link "5-7 建立 Table" [ref=e103] [cursor=pointer]:
+      - /url: "#ch5-7"
+    - link "5-8 檢查點" [ref=e104] [cursor=pointer]:
+      - /url: "#ch5-8"
+    - link "5-9 讀取表格與欄位" [ref=e105] [cursor=pointer]:
+      - /url: "#ch5-9"
+    - link "5-10 檢查點" [ref=e106] [cursor=pointer]:
+      - /url: "#ch5-10"
+    - link "5-11 前後串接" [ref=e107] [cursor=pointer]:
+      - /url: "#ch5-11"
+    - link "5-12 檢查點" [ref=e108] [cursor=pointer]:
+      - /url: "#ch5-12"
+    - link "5-13 新增商品功能" [ref=e109] [cursor=pointer]:
+      - /url: "#ch5-13"
+    - link "5-14 檢查點" [ref=e110] [cursor=pointer]:
+      - /url: "#ch5-14"
+    - link "5-15 修正商品數據" [ref=e111] [cursor=pointer]:
+      - /url: "#ch5-15"
+    - link "5-16 檢查點" [ref=e112] [cursor=pointer]:
+      - /url: "#ch5-16"
+    - link "5-17 恭喜完全自主任務" [ref=e113] [cursor=pointer]:
+      - /url: "#ch5-17"
+    - link "5-18 登入系統" [ref=e114] [cursor=pointer]:
+      - /url: "#ch5-18"
+    - link "5-19 什麼是 Magic Link？" [ref=e115] [cursor=pointer]:
+      - /url: "#ch5-19"
+    - link "5-20 加上 Magic Link" [ref=e116] [cursor=pointer]:
+      - /url: "#ch5-20"
+    - link "5-21 檢查點" [ref=e117] [cursor=pointer]:
+      - /url: "#ch5-21"
+    - link "5-22 加上登入限制" [ref=e118] [cursor=pointer]:
+      - /url: "#ch5-22"
+    - link "5-23 檢查點" [ref=e119] [cursor=pointer]:
+      - /url: "#ch5-23"
+    - link "5-24 部署上 Zeabur" [ref=e120] [cursor=pointer]:
+      - /url: "#ch5-24"
+    - link "5-25 登入問題" [ref=e121] [cursor=pointer]:
+      - /url: "#ch5-25"
+    - link "5-26 網站網址 vs Magic Link 連結" [ref=e122] [cursor=pointer]:
+      - /url: "#ch5-26"
+    - link "5-27 預設 vs 有設定 Site URL" [ref=e123] [cursor=pointer]:
+      - /url: "#ch5-27"
+    - link "5-28 需要設定 Site URL" [ref=e124] [cursor=pointer]:
+      - /url: "#ch5-28"
+    - link "5-29 真實 URL vs 詐騙 URL" [ref=e125] [cursor=pointer]:
+      - /url: "#ch5-29"
+    - link "5-30 Site URL + Redirect URLs" [ref=e126] [cursor=pointer]:
+      - /url: "#ch5-30"
+    - link "5-31 比較表格" [ref=e127] [cursor=pointer]:
+      - /url: "#ch5-31"
+    - link "5-32 Site URL 和 Redirect URLs 設定值" [ref=e128] [cursor=pointer]:
+      - /url: "#ch5-32"
+    - link "5-33 Supabase 新增 URL" [ref=e129] [cursor=pointer]:
+      - /url: "#ch5-33"
+    - link "5-34 設定完成" [ref=e130] [cursor=pointer]:
+      - /url: "#ch5-34"
+    - link "5-35 小結" [ref=e131] [cursor=pointer]:
+      - /url: "#ch5-35"
+    - link "5-36 回家作業" [ref=e132] [cursor=pointer]:
+      - /url: "#ch5-36"
+    - link "5-37 Q&A" [ref=e133] [cursor=pointer]:
+      - /url: "#ch5-37"
+    - link "5-38 休息時間" [ref=e134] [cursor=pointer]:
+      - /url: "#ch5-38"
+    - link "6. 個人產品開發" [ref=e135] [cursor=pointer]:
+      - /url: "#ch6"
+    - link "6-2 回顧之前學習的基本技能" [ref=e136] [cursor=pointer]:
+      - /url: "#ch6-2"
+    - link "6-3 很重要，但還沒有習得的技能：爬取即時資料" [ref=e137] [cursor=pointer]:
+      - /url: "#ch6-3"
+    - link "6-4 爬即時資料很難嗎？" [ref=e138] [cursor=pointer]:
+      - /url: "#ch6-4"
+    - link "6-5 先用 Mock Data" [ref=e139] [cursor=pointer]:
+      - /url: "#ch6-5"
+    - link "6-6 建議從簡單的開始" [ref=e140] [cursor=pointer]:
+      - /url: "#ch6-6"
+    - link "6-7 現成工具也可以達成" [ref=e141] [cursor=pointer]:
+      - /url: "#ch6-7"
+    - link "6-8 Vibe Coding 的魅力" [ref=e142] [cursor=pointer]:
+      - /url: "#ch6-8"
+    - link "6-9 實作建議" [ref=e143] [cursor=pointer]:
+      - /url: "#ch6-9"
+    - link "6-10 流程" [ref=e144] [cursor=pointer]:
+      - /url: "#ch6-10"
+    - link "6-11 Cursor 功能介紹：Plan Mode" [ref=e145] [cursor=pointer]:
+      - /url: "#ch6-11"
+    - link "6-12 1. 產出原形" [ref=e146] [cursor=pointer]:
+      - /url: "#ch6-12"
+    - link "6-13 Supabase 補給包" [ref=e147] [cursor=pointer]:
+      - /url: "#ch6-13"
+    - link "6-14 Supabase 實作 Prompt" [ref=e148] [cursor=pointer]:
+      - /url: "#ch6-14"
+    - link "6-15 兩兩一組" [ref=e149] [cursor=pointer]:
+      - /url: "#ch6-15"
+    - link "6-16 3. 優化產品" [ref=e150] [cursor=pointer]:
+      - /url: "#ch6-16"
+    - link "6-18 4. 作品發表" [ref=e151] [cursor=pointer]:
+      - /url: "#ch6-18"
+  - main [ref=e152]:
+    - generic [ref=e153]:
+      - generic [ref=e154]:
+        - heading "Skills" [level=2] [ref=e156]
+        - paragraph [ref=e157]: 點擊技能卡片，查看完整的 AI Prompt 內容
+      - generic [ref=e158]:
+        - button "設計優化 配色、排版與響應式設計" [ref=e159] [cursor=pointer]:
+          - generic [ref=e162]:
+            - heading "設計優化" [level=4] [ref=e163]
+            - paragraph [ref=e164]: 配色、排版與響應式設計
+        - button "SEO 優化 搜尋引擎優化與 Meta 標籤" [ref=e166] [cursor=pointer]:
+          - generic [ref=e169]:
+            - heading "SEO 優化" [level=4] [ref=e170]
+            - paragraph [ref=e171]: 搜尋引擎優化與 Meta 標籤
+        - button "資安防護 安全性檢查與漏洞防護" [ref=e173] [cursor=pointer]:
+          - generic [ref=e176]:
+            - heading "資安防護" [level=4] [ref=e177]
+            - paragraph [ref=e178]: 安全性檢查與漏洞防護
+    - generic [ref=e180]:
+      - heading "0. 環境設定" [level=1] [ref=e181]
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - generic [ref=e184]: 0-1
+          - generic [ref=e185]: 人員簽到
+        - paragraph [ref=e186]: 課堂簽到（people-check 互動元件）。
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - generic [ref=e189]: 0-2
+          - generic [ref=e190]: 課程介紹
+        - paragraph [ref=e191]: 展示課程基本資訊和目標（class-intro 互動元件）。
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - generic [ref=e194]: 0-3
+          - generic [ref=e195]: 課程注意事項
+        - paragraph [ref=e196]: 說明課程規則和重要提醒（course-notice 互動元件）。
+      - generic [ref=e197]:
+        - generic [ref=e198]:
+          - generic [ref=e199]: 0-5
+          - generic [ref=e200]: 版面基本介紹與設定
+        - paragraph [ref=e201]: 介紹 IDE 的基本版面配置，讓學員熟悉開發環境。
+        - img "IDE 版面介紹" [ref=e202]
+      - generic [ref=e203]:
+        - generic [ref=e204]:
+          - generic [ref=e205]: 0-6
+          - generic [ref=e206]: 小試身手：利用 AI 來建立資料夾
+        - paragraph [ref=e207]: 因為今天要做五個專案，所以我們需要建立以下資料夾架構：
+        - generic [ref=e208]: AICodingClass ├── OfficeWebsite ├── Dashboard ├── OrderDrink ├── ECommerce └── MyProject
+      - generic [ref=e209]:
+        - generic [ref=e210]:
+          - generic [ref=e211]: 0-7
+          - generic [ref=e212]: 建立資料夾 Prompt
+        - generic [ref=e213]:
+          - generic [ref=e214]:
+            - generic [ref=e215]: 建立資料夾
+            - button "複製" [ref=e216] [cursor=pointer]: 複製
+          - generic [ref=e218]: 幫我建立五個子資料夾，名稱分別是 OfficeWebsite、Dashboard、OrderDrink、ECommerce、MyProject
+      - generic [ref=e219]:
+        - generic [ref=e220]:
+          - generic [ref=e221]: 0-8
+          - generic [ref=e222]: 加上好用的外掛：Live Server
+        - paragraph [ref=e223]: 安裝 Live Server 外掛，讓修改後可以即時預覽網頁變化。
+        - img "Live Server 比較圖" [ref=e224]
+      - generic [ref=e225]:
+        - generic [ref=e226]:
+          - generic [ref=e227]: 0-9
+          - generic [ref=e228]: 安裝 Live Server
+        - paragraph [ref=e229]:
+          - text: 步驟：四個正方形 Icon
+          - text: Live Server (有 5 的 Icon)
+          - text: Install
+          - text: 關閉分頁
+          - text: 跳回資料夾 Icon
+        - img "安裝 Live Server 操作示範" [ref=e234]
+      - generic [ref=e235]:
+        - generic [ref=e236]:
+          - generic [ref=e237]: 0-10
+          - generic [ref=e238]: 家有家規，班有班規
+        - paragraph [ref=e239]: 設定新手友善的開發環境。
+        - paragraph [ref=e240]: 我們先來設定新手友善的開發環境。
+      - generic [ref=e241]:
+        - generic [ref=e242]:
+          - generic [ref=e243]: 0-11
+          - generic [ref=e244]: 複製 IDE 規則
+        - paragraph [ref=e245]: 點擊按鈕複製編輯器 IDE 規則（Cursor Rule）。
+        - button "查看 IDE 規則內容" [ref=e246] [cursor=pointer]: 查看 IDE 規則內容
+      - generic [ref=e248]:
+        - generic [ref=e249]:
+          - generic [ref=e250]: 0-12
+          - generic [ref=e251]: 基本設置完畢
+        - list [ref=e252]:
+          - listitem [ref=e253]: 設定班規
+          - listitem [ref=e254]: 安裝套件 Live Server
+        - paragraph [ref=e255]: 以上兩件事情「設定一次」就好，不需要每次開專案都重新設定。
+    - generic [ref=e256]:
+      - heading "1. 官網、活動頁" [level=1] [ref=e257]
+      - generic [ref=e258]:
+        - generic [ref=e259]:
+          - generic [ref=e260]: 1-2
+          - generic [ref=e261]: 課程重點 — 內容創作
+        - paragraph [ref=e262]:
+          - text: 課程四大主題之一：
+          - strong [ref=e263]: 內容創作
+          - text: （另有設計優化、搜尋引擎優化、資安防護）。
+      - generic [ref=e264]:
+        - generic [ref=e265]:
+          - generic [ref=e266]: 1-3
+          - generic [ref=e267]: 加入內容
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - generic [ref=e270]: 加入內容
+            - button "複製" [ref=e271] [cursor=pointer]: 複製
+          - generic [ref=e273]: 寫一個「」的網站，以下是這個網站的內容 ---
+        - generic [ref=e274]:
+          - generic [ref=e275]:
+            - generic [ref=e276]: 參考資料
+            - button "複製" [ref=e277] [cursor=pointer]: 複製
+          - generic [ref=e279]: 售價 3,999，單堂 3 小時，內容是教 Cursor 開發，以及 Zeabur 部署
+      - generic [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]: 1-4
+          - generic [ref=e283]: Vibe Coding 迷因圖
+        - paragraph [ref=e284]: 展示 Vibe Coding 的輕鬆編程概念。
+        - img "Vibe Coding 迷因圖" [ref=e285]
+      - generic [ref=e286]:
+        - generic [ref=e287]:
+          - generic [ref=e288]: 1-5
+          - generic [ref=e289]: AI 工作原則
+        - paragraph [ref=e290]: 你必需大膽刪除內容、限制它
+      - generic [ref=e291]:
+        - generic [ref=e292]:
+          - generic [ref=e293]: 1-6
+          - generic [ref=e294]: Prompt 層級說明
+        - generic [ref=e295]:
+          - generic [ref=e296]:
+            - heading "A 級" [level=4] [ref=e297]
+            - paragraph [ref=e298]: 幫我把「協助人們變得更健康」改成「幫助人們變得更健康」
+          - generic [ref=e299]:
+            - heading "B 級" [level=4] [ref=e300]
+            - paragraph [ref=e301]: 幫我改成「幫助人們變得更健康」
+          - generic [ref=e302]:
+            - heading "C 級" [level=4] [ref=e303]
+            - paragraph [ref=e304]: 幫我改成幫助人們變得更健康
+      - generic [ref=e305]:
+        - generic [ref=e306]:
+          - generic [ref=e307]: 1-7
+          - generic [ref=e308]: A 級案例示範
+        - generic [ref=e309]:
+          - generic [ref=e310]:
+            - heading "新增" [level=4] [ref=e311]
+            - paragraph [ref=e312]: 在「聯絡我們」的區塊上，新增「電話」的欄位
+          - generic [ref=e313]:
+            - heading "刪除" [level=4] [ref=e314]
+            - paragraph [ref=e315]: 在「聯絡我們」的區塊上，把「電話」的欄位拿掉
+          - generic [ref=e316]:
+            - heading "修改" [level=4] [ref=e317]
+            - paragraph [ref=e318]: 在「聯絡我們」的區塊上，把「電話」改為「手機」
+      - generic [ref=e319]:
+        - generic [ref=e320]:
+          - generic [ref=e321]: 1-8
+          - generic [ref=e322]: AI 工作原則（續）
+        - list [ref=e323]:
+          - listitem [ref=e324]: 暫時用不到的內容就移除
+          - listitem [ref=e325]: 利用引號技巧，精修你的文案
+      - generic [ref=e326]:
+        - generic [ref=e327]:
+          - generic [ref=e328]: 1-9
+          - generic [ref=e329]: 新增素材 — 圖片
+        - generic [ref=e330]:
+          - heading "圖片" [level=4] [ref=e331]
+          - paragraph [ref=e332]: 產品圖片、品牌圖片、背景圖片
+      - generic [ref=e333]:
+        - generic [ref=e334]:
+          - generic [ref=e335]: 1-10
+          - generic [ref=e336]: 素材 — 連結
+        - generic [ref=e337]:
+          - heading "連結" [level=4] [ref=e338]
+          - paragraph [ref=e339]: 社群媒體連結、表單連結
+        - generic [ref=e340]:
+          - generic [ref=e341]:
+            - generic [ref=e342]: 加上連結
+            - button "複製" [ref=e343] [cursor=pointer]: 複製
+          - generic [ref=e345]: 加上「」的超連結，連結是 https://www.instagram.com/bytech719/
+      - generic [ref=e346]:
+        - generic [ref=e347]:
+          - generic [ref=e348]: 1-11
+          - generic [ref=e349]: 課程重點 — 設計優化
+        - paragraph [ref=e350]:
+          - text: 進入第二主題：
+          - strong [ref=e351]: 設計優化
+          - text: 。
+      - generic [ref=e352]:
+        - generic [ref=e353]:
+          - generic [ref=e354]: 1-12
+          - generic [ref=e355]: 選顏色
+        - paragraph [ref=e356]:
+          - text: 資源：
+          - link "Color Hunt" [ref=e357] [cursor=pointer]:
+            - /url: https://colorhunt.co/
+        - generic [ref=e358]:
+          - generic [ref=e359]:
+            - generic [ref=e360]: 選顏色
+            - button "複製" [ref=e361] [cursor=pointer]: 複製
+          - generic [ref=e363]: 我的網站配色要改成如下： - 主要色（Primary Color）：「」（用於主要背景） - 次要色（Secondary Color）：「」（用於次要背景和卡片） - 強調色（Accent Color）：「」（用於按鈕、連結和重點元素）
+      - generic [ref=e364]:
+        - generic [ref=e365]:
+          - generic [ref=e366]: 1-13
+          - generic [ref=e367]: 選字體
+        - paragraph [ref=e368]:
+          - text: 資源：
+          - link "Google Fonts" [ref=e369] [cursor=pointer]:
+            - /url: https://fonts.google.com/
+        - generic [ref=e370]:
+          - generic [ref=e371]:
+            - generic [ref=e372]: 選字體
+            - button "複製" [ref=e373] [cursor=pointer]: 複製
+          - generic [ref=e375]: 我字體要用 Google Font 的 []
+        - paragraph [ref=e376]: 推薦字體：Noto Sans TC（標準）、Klee One（手寫風）、IBM Plex Sans JP（科技風）、Zen Maru Gothic（圓潤）、Zen Old Mincho（古典）、Yusei Magic（魔法風）
+      - generic [ref=e377]:
+        - generic [ref=e378]:
+          - generic [ref=e379]: 1-14
+          - generic [ref=e380]: Font Awesome Icon
+        - paragraph [ref=e381]:
+          - text: 資源：
+          - link "Font Awesome" [ref=e382] [cursor=pointer]:
+            - /url: https://fontawesome.com/
+        - generic [ref=e383]:
+          - generic [ref=e384]:
+            - generic [ref=e385]: 使用 Font Awesome
+            - button "複製" [ref=e386] [cursor=pointer]: 複製
+          - generic [ref=e388]: 網站上的 Icon 都使用 Font Awesome
+      - generic [ref=e389]:
+        - generic [ref=e390]:
+          - generic [ref=e391]: 1-15
+          - generic [ref=e392]: 小結
+        - list [ref=e393]:
+          - listitem [ref=e394]: 內容創作：使用「」引號技巧，學會新增、刪除、修改內容
+          - listitem [ref=e395]: AI 協作原則：大膽刪除不需要的內容，利用引號技巧精修文案
+          - listitem [ref=e396]: 素材管理：加入圖片和連結素材，豐富網站內容
+          - listitem [ref=e397]: 設計優化：選擇合適的顏色、字體，並使用 Font Awesome Icon
+      - generic [ref=e398]:
+        - generic [ref=e399]:
+          - generic [ref=e400]: 1-16
+          - generic [ref=e401]: 休息時間
+        - paragraph [ref=e402]: 休息 10 分鐘
+        - paragraph [ref=e403]: 下一節：
+        - paragraph [ref=e404]: 1. 上面部署至 Zeabur
+        - paragraph [ref=e405]: 2. 設定 SEO 與資安
+      - generic [ref=e406]:
+        - generic [ref=e407]:
+          - generic [ref=e408]: 1-17
+          - generic [ref=e409]: 本地端與雲端工作流程
+        - paragraph [ref=e410]: 理解「本地端開發 → 雲端部署」的流程概念（local-and-cloud 互動元件）。
+      - generic [ref=e411]:
+        - generic [ref=e412]:
+          - generic [ref=e413]: 1-18
+          - generic [ref=e414]: 使用 Zeabur 部署
+        - paragraph [ref=e415]:
+          - text: 使用 Zeabur 來部署讓網站上線啦！前往
+          - link "Zeabur" [ref=e416] [cursor=pointer]:
+            - /url: https://zeabur.com/projects
+      - generic [ref=e417]:
+        - generic [ref=e418]:
+          - generic [ref=e419]: 1-19
+          - generic [ref=e420]: 使用 Zeabur AI 詢問機房選擇
+        - generic [ref=e421]:
+          - generic [ref=e422]:
+            - generic [ref=e423]: 使用 Zeabur AI 詢問機房選擇
+            - button "複製" [ref=e424] [cursor=pointer]: 複製
+          - generic [ref=e426]: 我是新手，想要問共享叢集跟專用伺服器這兩者該如何選，需要講的簡單一點
+      - generic [ref=e427]:
+        - generic [ref=e428]:
+          - generic [ref=e429]: 1-20
+          - generic [ref=e430]: 兌換積分，升級 Dev Plan
+        - paragraph [ref=e431]: 兌換積分，升級 Dev Plan，獲得 10 美元額度。
+        - generic [ref=e432]:
+          - generic [ref=e433]:
+            - generic [ref=e434]: 升級活動碼
+            - button "複製" [ref=e435] [cursor=pointer]: 複製
+          - generic [ref=e437]: tbr0131
+      - generic [ref=e438]:
+        - generic [ref=e439]:
+          - generic [ref=e440]: 1-21
+          - generic [ref=e441]: 上傳專案到 Zeabur
+        - list [ref=e442]:
+          - listitem [ref=e443]: 建立專案
+          - listitem [ref=e444]: 選擇部署類型：共享叢集
+          - listitem [ref=e445]: 選擇地區：台北
+          - listitem [ref=e446]: 部署新服務 → 選擇「本機專案」
+          - listitem [ref=e447]: 拖曳「專案資料夾」上去（正確：OfficeWebsite，錯誤：AICodingClass）
+          - listitem [ref=e448]: 部署
+      - generic [ref=e449]:
+        - generic [ref=e450]:
+          - generic [ref=e451]: 1-22
+          - generic [ref=e452]: 建立 Domain
+        - paragraph [ref=e453]:
+          - text: Add Domain
+          - text: 綁定 Zeabur 子網域
+          - text: 取一個跟網站有關的名字（只能小寫英文）
+        - img "建立 Domain 操作示範" [ref=e456]
+      - generic [ref=e457]:
+        - generic [ref=e458]:
+          - generic [ref=e459]: 1-23
+          - generic [ref=e460]: 打開 Domain
+        - paragraph [ref=e461]: 等網域變綠色後，點擊開啟。
+        - img "打開 Domain 操作示範" [ref=e1310]
+      - generic [ref=e462]:
+        - generic [ref=e463]:
+          - generic [ref=e464]: 1-24
+          - generic [ref=e465]: Zeabur 部署流程
+        - list [ref=e466]:
+          - listitem [ref=e467]: 選擇「共享叢集」
+          - listitem [ref=e468]: 選擇地區：台北
+          - listitem [ref=e469]: 建立服務，拖曳資料夾
+          - listitem [ref=e470]: 建立 Domain
+      - generic [ref=e471]:
+        - generic [ref=e472]:
+          - generic [ref=e473]: 1-25
+          - generic [ref=e474]: 恭喜完成產品開發流程
+        - paragraph [ref=e475]: 恭喜你完成整個產品開發流程！利用 Cursor 進行開發，並透過 Zeabur 完成部署，讓你的服務上線，全世界都能使用。
+      - generic [ref=e476]:
+        - generic [ref=e477]:
+          - generic [ref=e478]: 1-26
+          - generic [ref=e479]: 課程重點 — 搜尋引擎優化
+        - paragraph [ref=e480]:
+          - text: 進入第三主題：
+          - strong [ref=e481]: SEO
+          - text: 。
+      - generic [ref=e482]:
+        - generic [ref=e483]:
+          - generic [ref=e484]: 1-27
+          - generic [ref=e485]: SEO — Meta Tag
+        - generic [ref=e486]:
+          - heading "Meta Tag" [level=4] [ref=e487]
+          - paragraph [ref=e488]: 告訴搜尋引擎「這個頁面的內容是什麼」，每個頁面獨立的介紹。
+        - img "SEO 基礎設置示範圖" [ref=e1311]
+      - generic [ref=e489]:
+        - generic [ref=e490]:
+          - generic [ref=e491]: 1-28
+          - generic [ref=e492]: 修改 Meta
+        - generic [ref=e493]:
+          - generic [ref=e494]:
+            - generic [ref=e495]: 設定 SEO
+            - button "複製" [ref=e496] [cursor=pointer]: 複製
+          - generic [ref=e498]: 幫我加上基本的 SEO Meta Tag，另外 網站連結是： 預覽照片是：
+      - generic [ref=e499]:
+        - generic [ref=e500]:
+          - generic [ref=e501]: 1-29
+          - generic [ref=e502]: 課程重點 — 資安防護
+        - paragraph [ref=e503]:
+          - text: 進入第四主題：
+          - strong [ref=e504]: 資安防護
+          - text: 。
+      - generic [ref=e505]:
+        - generic [ref=e506]:
+          - generic [ref=e507]: 1-30
+          - generic [ref=e508]: 沒有一定的防盜標準
+        - generic [ref=e509]:
+          - generic [ref=e510]:
+            - heading "超嚴格規範" [level=4] [ref=e511]
+            - paragraph [ref=e512]: 不准動、不准說話、上廁所前舉手
+          - generic [ref=e513]:
+            - heading "毫無規範" [level=4] [ref=e514]
+            - paragraph [ref=e515]: 想幹嘛就幹嘛、可以帶玩具、吃東西、到處跑
+      - generic [ref=e516]:
+        - generic [ref=e517]:
+          - generic [ref=e518]: 1-31
+          - generic [ref=e519]: 資安標題
+        - generic [ref=e520]:
+          - generic [ref=e521]:
+            - generic [ref=e522]: 資安標題
+            - button "複製" [ref=e523] [cursor=pointer]: 複製
+          - generic [ref=e525]: 根據我的網站，幫我加上必備的資安標頭
+      - generic [ref=e526]:
+        - generic [ref=e527]:
+          - generic [ref=e528]: 1-32
+          - generic [ref=e529]: 互動拖拉遊戲
+        - paragraph [ref=e530]: 互動練習：將本地端與雲端的元素拖放到正確的位置（local-and-cloud 拖曳模式）。
+      - generic [ref=e531]:
+        - generic [ref=e532]:
+          - generic [ref=e533]: 1-33
+          - generic [ref=e534]: 更新後，重新部署
+        - paragraph [ref=e535]: 更新後，重新部署。
+      - generic [ref=e536]:
+        - generic [ref=e537]:
+          - generic [ref=e538]: 1-34
+          - generic [ref=e539]: 重新部署狀態
+        - paragraph [ref=e540]: 本地端修改 → 重新上傳到 Zeabur → 自動重新部署。
+        - img "重新部署狀態畫面" [ref=e1312]
+      - generic [ref=e541]:
+        - generic [ref=e542]:
+          - generic [ref=e543]: 1-35
+          - generic [ref=e544]: Zeabur 資安檢測
+        - paragraph [ref=e545]: 讓專業工程師幫你的專案做資安檢測，重點是：免費
+        - img "Zeabur 資安檢測畫面" [ref=e1313]
+      - generic [ref=e546]:
+        - generic [ref=e547]:
+          - generic [ref=e548]: 1-36
+          - generic [ref=e549]: 小結
+        - list [ref=e550]:
+          - listitem [ref=e551]: 部署上線：使用 Zeabur 部署網站，建立 Domain，讓全世界的人都可以使用
+          - listitem [ref=e552]: SEO 優化：設定 Meta Tag，讓搜尋引擎可以找到你的網站
+          - listitem [ref=e553]: 資安防護：加上必備的資安標頭，使用 Zeabur 的安全檢查
+          - listitem [ref=e554]: 更新部署：了解本地端與雲端工作流程，更新後重新部署到 Zeabur
+      - generic [ref=e555]:
+        - generic [ref=e556]:
+          - generic [ref=e557]: 1-37
+          - generic [ref=e558]: Q&A
+        - paragraph [ref=e559]: Q&A 問答時間
+    - generic [ref=e560]:
+      - heading "2. 儀表板 Dashboard" [level=1] [ref=e561]
+      - generic [ref=e562]:
+        - generic [ref=e563]:
+          - generic [ref=e564]: 2-2
+          - generic [ref=e565]: 下載銷售資料
+        - paragraph [ref=e566]: 提供兩份銷售資料供學員練習：
+        - button "十月銷售資料" [ref=e567] [cursor=pointer]: 十月銷售資料
+        - button "九月銷售資料" [ref=e569] [cursor=pointer]: 九月銷售資料
+      - generic [ref=e571]:
+        - generic [ref=e572]:
+          - generic [ref=e573]: 2-3
+          - generic [ref=e574]: 銷售資料儀表板範例
+        - paragraph [ref=e575]:
+          - text: 展示嵌入式 iframe 範例：
+          - link "銷售資料儀表板" [ref=e576] [cursor=pointer]:
+            - /url: https://theclassexample.zeabur.app/sales-dashboard.html
+      - generic [ref=e577]:
+        - generic [ref=e578]:
+          - generic [ref=e579]: 2-4
+          - generic [ref=e580]: 目標
+        - paragraph [ref=e581]: 做一個 Dashboard，可以上傳 xlsx，系統會自動抓取欄位數據生成圖表
+      - generic [ref=e582]:
+        - generic [ref=e583]:
+          - generic [ref=e584]: 2-5
+          - generic [ref=e585]: 上傳檔案並生成圖表
+        - generic [ref=e586]:
+          - generic [ref=e587]:
+            - generic [ref=e588]: 上傳檔案，並顯示
+            - button "複製" [ref=e589] [cursor=pointer]: 複製
+          - generic [ref=e591]: 寫一個網頁，可以上傳 xlsx，並且把數據顯示出來
+        - generic [ref=e592]:
+          - generic [ref=e593]:
+            - generic [ref=e594]: 生成圖表
+            - button "複製" [ref=e595] [cursor=pointer]: 複製
+          - generic [ref=e597]: 以下是我 xlsx 的數據內容，幫我分析，給我對合適的圖表，來讓我做商業分析 ---
+      - generic [ref=e598]:
+        - generic [ref=e599]:
+          - generic [ref=e600]: 2-11
+          - generic [ref=e601]: 小結
+        - list [ref=e602]:
+          - listitem [ref=e603]: 透過 AI Coding 可以快速建立 Dashboard，支援上傳 xlsx 檔案並自動生成圖表
+          - listitem [ref=e604]: 使用適當的圖表類型（折線圖、長條圖、圓餅圖等）可以更清楚地呈現數據趨勢與分析結果
+      - generic [ref=e605]:
+        - generic [ref=e606]:
+          - generic [ref=e607]: 2-12
+          - generic [ref=e608]: Q&A
+        - paragraph [ref=e609]: Q&A 問答時間
+      - generic [ref=e610]:
+        - generic [ref=e611]:
+          - generic [ref=e612]: 2-13
+          - generic [ref=e613]: 休息時間
+        - paragraph [ref=e614]: 下一章：串接資料庫 Supabase
+        - paragraph [ref=e615]:
+          - text: 提醒：如果還沒註冊 Supabase，請先完成註冊。
+          - link "Supabase 註冊教學" [ref=e616] [cursor=pointer]:
+            - /url: https://preclass.zeabur.app/Supabase.html
+    - generic [ref=e617]:
+      - heading "3. 開發環境設定" [level=1] [ref=e618]
+      - generic [ref=e619]:
+        - generic [ref=e620]:
+          - generic [ref=e621]: 3-2
+          - generic [ref=e622]: 複製 IDE 規則
+        - paragraph [ref=e623]: 點擊按鈕複製 Cursor Rule。
+        - button "查看 IDE 規則內容" [ref=e624] [cursor=pointer]: 查看 IDE 規則內容
+      - generic [ref=e626]:
+        - generic [ref=e627]:
+          - generic [ref=e628]: 3-3
+          - generic [ref=e629]: 貼上 Rule 到 Cursor
+        - paragraph [ref=e630]:
+          - text: Rule & Commands
+          - text: User Rule
+          - text: Add Rule
+        - img "貼上 Rule 到 Cursor 操作示範" [ref=e633]
+      - generic [ref=e634]:
+        - generic [ref=e635]:
+          - generic [ref=e636]: 3-4
+          - generic [ref=e637]: 加上好用的外掛：Live Server
+        - paragraph [ref=e638]: 安裝 Live Server 外掛。
+        - img "Live Server 比較圖" [ref=e639]
+      - generic [ref=e640]:
+        - generic [ref=e641]:
+          - generic [ref=e642]: 3-5
+          - generic [ref=e643]: 安裝 Live Server
+        - paragraph [ref=e644]:
+          - text: 步驟：四個正方形 Icon
+          - text: Live Server (有 5 的 Icon)
+          - text: Install
+          - text: 關閉分頁
+          - text: 跳回資料夾 Icon
+        - img "安裝 Live Server 操作示範" [ref=e649]
+      - generic [ref=e650]:
+        - generic [ref=e651]:
+          - generic [ref=e652]: 3-6
+          - generic [ref=e653]: 基本設置完畢
+        - list [ref=e654]:
+          - listitem [ref=e655]: 設定班規
+          - listitem [ref=e656]: 安裝套件 Live Server
+        - paragraph [ref=e657]: 以上兩件事情「設定一次」就好，不需要每次開專案都重新設定。
+      - generic [ref=e658]:
+        - generic [ref=e659]:
+          - generic [ref=e660]: 3-7
+          - generic [ref=e661]: Q&A
+        - paragraph [ref=e662]: Q&A 問答時間
+    - generic [ref=e663]:
+      - heading "4. 串接資料庫 Supabase" [level=1] [ref=e664]
+      - generic [ref=e665]:
+        - generic [ref=e666]:
+          - generic [ref=e667]: 4-2
+          - generic [ref=e668]: Supabase 核心功能
+        - paragraph [ref=e669]: 展示 Supabase 的核心功能圖解。
+        - img "Supabase 核心功能圖解" [ref=e670]
+      - generic [ref=e671]:
+        - generic [ref=e672]:
+          - generic [ref=e673]: 4-3
+          - generic [ref=e674]: 有了 Supabase 後，可以做到什麼
+        - generic [ref=e675]:
+          - generic [ref=e676]:
+            - heading "點餐系統" [level=4] [ref=e677]
+            - paragraph [ref=e678]: 記錄顧客的訂單資訊，包括姓名、飲品選擇、糖度、冰塊等
+          - generic [ref=e679]:
+            - heading "庫存管理" [level=4] [ref=e680]
+            - paragraph [ref=e681]: 追蹤商品庫存數量，自動更新進出貨記錄
+          - generic [ref=e682]:
+            - heading "會員系統" [level=4] [ref=e683]
+            - paragraph [ref=e684]: 儲存會員資料、積分、消費記錄等資訊
+      - generic [ref=e685]:
+        - generic [ref=e686]:
+          - generic [ref=e687]: 4-4
+          - generic [ref=e688]: Supabase 介面看起來很難
+        - paragraph [ref=e689]: 聽很起來讚沒錯，但...這個介面看起來很難欸。
+        - img "Supabase 介面截圖" [ref=e1314]
+      - generic [ref=e690]:
+        - generic [ref=e691]:
+          - generic [ref=e692]: 4-5
+          - generic [ref=e693]: 別擔心，現在有 MCP 技術
+        - paragraph [ref=e694]:
+          - text: MCP 的全名是
+          - strong [ref=e695]: Model Context Protocol
+          - text: ，簡單來說就是讓 AI 可以直接操作各種工具的橋樑。
+        - paragraph [ref=e696]: 以前你要用 Supabase，必須自己寫程式碼、查文件、設定連線... 現在有了 MCP，你只要告訴 AI「幫我建立一個表格」，AI 就會自動幫你完成所有複雜的設定！
+        - paragraph [ref=e697]: 就像給 AI 一雙「手」，讓它可以直接幫你操作 Supabase，你完全不需要懂那些複雜的技術細節。
+      - generic [ref=e698]:
+        - generic [ref=e699]:
+          - generic [ref=e700]: 4-6
+          - generic [ref=e701]: MCP 餐廳比喻
+        - paragraph [ref=e702]: 想像你走進一間餐廳，而 Supabase 等同於是廚房：
+        - generic [ref=e703]:
+          - generic [ref=e704]:
+            - heading "沒有串 MCP" [level=4] [ref=e705]
+            - paragraph [ref=e706]: 你要自己去廚房開冰箱、做菜、端盤子
+          - generic [ref=e707]:
+            - heading "有串 MCP" [level=4] [ref=e708]
+            - paragraph [ref=e709]: 有一個服務生 (AI)，你只要呼叫他，他就會幫你把廚房該做的事情都做好
+      - generic [ref=e710]:
+        - generic [ref=e711]:
+          - generic [ref=e712]: 4-7
+          - generic [ref=e713]: 安裝 Supabase MCP
+        - paragraph [ref=e714]:
+          - text: 安裝連結：
+          - link "Supabase MCP 安裝教學" [ref=e715] [cursor=pointer]:
+            - /url: https://supabase.com/docs/guides/getting-started/mcp
+      - generic [ref=e716]:
+        - generic [ref=e717]:
+          - generic [ref=e718]: 4-8
+          - generic [ref=e719]: 安裝 Supabase MCP（示範）
+        - paragraph [ref=e720]: 安裝 Supabase MCP 的操作示範。
+        - img "安裝 Supabase MCP 操作示範" [ref=e1315]
+      - generic [ref=e721]:
+        - generic [ref=e722]:
+          - generic [ref=e723]: 4-9
+          - generic [ref=e724]: 基本設置完畢
+        - list [ref=e725]:
+          - listitem [ref=e726]: 設定班規 Cursor Rule
+          - listitem [ref=e727]: 安裝套件 Live Server
+          - listitem [ref=e728]: 綁定連結 Supabase MCP
+        - paragraph [ref=e729]: 以上三件事情「設定一次」就好，不需要每次開專案都重新設定。
+      - generic [ref=e730]:
+        - generic [ref=e731]:
+          - generic [ref=e732]: 4-10
+          - generic [ref=e733]: 範例 1：點餐系統
+        - paragraph [ref=e734]:
+          - text: 範例連結：
+          - link "Brickverse 點餐機" [ref=e735] [cursor=pointer]:
+            - /url: https://orderdirnk.zeabur.app/
+      - generic [ref=e736]:
+        - generic [ref=e737]:
+          - generic [ref=e738]: 4-11
+          - generic [ref=e739]: 寫基礎頁面
+        - generic [ref=e740]:
+          - generic [ref=e741]:
+            - generic [ref=e742]: 寫基礎頁面
+            - button "複製" [ref=e743] [cursor=pointer]: 複製
+          - generic [ref=e745]: 給我一個可以輸入「姓名」的頁面
+      - generic [ref=e746]:
+        - generic [ref=e747]:
+          - generic [ref=e748]: 4-12
+          - generic [ref=e749]: 手動建立 Supabase 專案
+        - paragraph [ref=e750]:
+          - text: 前端介面寫好了，接下來設定後端。前往
+          - link "Supabase" [ref=e751] [cursor=pointer]:
+            - /url: https://supabase.com/
+      - generic [ref=e752]:
+        - generic [ref=e753]:
+          - generic [ref=e754]: 4-13
+          - generic [ref=e755]: 建立專案步驟
+        - paragraph [ref=e756]: 建立專案 (new project) → 改專案名稱 (practice) → 密碼讓系統自動設定即可。
+        - img "建立 Supabase 專案操作示範" [ref=e1316]
+      - generic [ref=e757]:
+        - generic [ref=e758]:
+          - generic [ref=e759]: 4-14
+          - generic [ref=e760]: 複製 Project URL
+        - paragraph [ref=e761]: 複製 Project URL 存在個人小本本，之後都會用到。
+        - img "查詢 Supabase 專案 URL 操作示範" [ref=e1317]
+      - generic [ref=e762]:
+        - generic [ref=e763]:
+          - generic [ref=e764]: 4-15
+          - generic [ref=e765]: 建立 Table
+        - generic [ref=e766]:
+          - generic [ref=e767]:
+            - generic [ref=e768]: 建立 Table
+            - button "複製" [ref=e769] [cursor=pointer]: 複製
+          - generic [ref=e771]: 利用 Supabase MCP ，在 Supabase 上面建立表格。這樣有人輸入資料時，才有辦法把資料存起來。但要注意，先幫我建立一個後端表格就好，並且有個欄位為「name」，不要做前後端串接。 Project ID： 表格名稱：Drinks
+      - generic [ref=e772]:
+        - generic [ref=e773]:
+          - generic [ref=e774]: 4-16
+          - generic [ref=e775]: 確認表格
+        - paragraph [ref=e776]: 先來確認 Supabase 上面是否真的成功建立好表格。
+      - generic [ref=e777]:
+        - generic [ref=e778]:
+          - generic [ref=e779]: 4-17
+          - generic [ref=e780]: 使用 MCP 確認表格
+        - generic [ref=e781]:
+          - generic [ref=e782]:
+            - generic [ref=e783]: 確認表格
+            - button "複製" [ref=e784] [cursor=pointer]: 複製
+          - generic [ref=e786]: 幫我用 Supabase MCP 讀取現在這個專案是否有表格，以及表格的欄位。另外看一下跟前端現在的輸入欄位是否一致
+        - paragraph [ref=e787]: 關鍵字：Supabase MCP
+      - generic [ref=e788]:
+        - generic [ref=e789]:
+          - generic [ref=e790]: 4-18
+          - generic [ref=e791]: 前後串接
+        - generic [ref=e792]:
+          - generic [ref=e793]:
+            - generic [ref=e794]: 前後串接
+            - button "複製" [ref=e795] [cursor=pointer]: 複製
+          - generic [ref=e797]: 很好，現在前後端都固定了，幫我串起來。
+      - generic [ref=e798]:
+        - generic [ref=e799]:
+          - generic [ref=e800]: 4-19
+          - generic [ref=e801]: 測試
+        - paragraph [ref=e802]: 測試：現在送出姓名，是否有收到資料。
+      - generic [ref=e803]:
+        - generic [ref=e804]:
+          - generic [ref=e805]: 4-20
+          - generic [ref=e806]: 頭過身就過
+        - paragraph [ref=e807]: 現在前後端已經串接起來了，所以送新的需求時，AI 就會前後端一起做。
+      - generic [ref=e808]:
+        - generic [ref=e809]:
+          - generic [ref=e810]: 4-21
+          - generic [ref=e811]: 加上其他功能
+        - generic [ref=e812]:
+          - generic [ref=e813]:
+            - generic [ref=e814]: 加上其他功能
+            - button "複製" [ref=e815] [cursor=pointer]: 複製
+          - generic [ref=e817]: 現在需要再加上其他選項，像是飲品 (奶茶、紅茶、綠茶)以及糖度跟冰塊
+      - generic [ref=e818]:
+        - generic [ref=e819]:
+          - generic [ref=e820]: 4-22
+          - generic [ref=e821]: 串接 Supabase 流程
+        - list [ref=e822]:
+          - listitem [ref=e823]: 建立前端頁面，先從一個欄位開始
+          - listitem [ref=e824]: 建立 Supabase 表格
+          - listitem [ref=e825]: 去後台確認 Supabase 表格有被建立
+          - listitem [ref=e826]: 用 MCP 確認表格欄位與前端一致
+          - listitem [ref=e827]: 前後端串接
+          - listitem [ref=e828]: 送資料，確認有接上
+          - listitem [ref=e829]: 開始送新需求
+      - generic [ref=e830]:
+        - generic [ref=e831]:
+          - generic [ref=e832]: 4-23
+          - generic [ref=e833]: 小結
+        - list [ref=e834]:
+          - listitem [ref=e835]: Supabase 功能：可以用來存資料
+          - listitem [ref=e836]: 善用 MCP：不需要手動設定表格，串上 MCP 讓 AI 幫我們做
+      - generic [ref=e837]:
+        - generic [ref=e838]:
+          - generic [ref=e839]: 4-24
+          - generic [ref=e840]: Q&A
+        - paragraph [ref=e841]: Q&A 問答時間
+      - generic [ref=e842]:
+        - generic [ref=e843]:
+          - generic [ref=e844]: 4-25
+          - generic [ref=e845]: 休息時間
+        - paragraph [ref=e846]: 下一章節：Supabase 庫存系統
+    - generic [ref=e847]:
+      - heading "5. 庫存系統與會員驗證" [level=1] [ref=e848]
+      - generic [ref=e849]:
+        - generic [ref=e850]:
+          - generic [ref=e851]: 5-2
+          - generic [ref=e852]: 範例 2：庫存系統
+        - paragraph [ref=e853]:
+          - text: 範例連結：
+          - link "倉儲庫存" [ref=e854] [cursor=pointer]:
+            - /url: https://ecom.zeabur.app/
+      - generic [ref=e855]:
+        - generic [ref=e856]:
+          - generic [ref=e857]: 5-3
+          - generic [ref=e858]: 相比上個案例
+        - paragraph [ref=e859]: 相比上個案例：更多的表格 + 會員系統
+      - generic [ref=e860]:
+        - generic [ref=e861]:
+          - generic [ref=e862]: 5-4
+          - generic [ref=e864]: 任務
+        - paragraph [ref=e865]:
+          - strong [ref=e866]: 步驟一
+          - text: ：打開新的 Cursor 視窗，並且將資料夾 ECommerce 拖入
+        - paragraph [ref=e867]:
+          - strong [ref=e868]: 步驟二
+          - text: ：自主完成 5-5 到 5-16，除了登入功能之外，其他都要做完
+        - paragraph [ref=e869]: 請注意，每一個檢查點都要完成後，才能繼續下一頁。
+      - generic [ref=e871]:
+        - generic [ref=e872]:
+          - generic [ref=e873]: 5-5
+          - generic [ref=e874]: 寫基礎頁面
+        - generic [ref=e875]:
+          - generic [ref=e876]:
+            - generic [ref=e877]: 寫基礎頁面
+            - button "複製" [ref=e878] [cursor=pointer]: 複製
+          - generic [ref=e880]: 給我一個可以輸入「商品名稱」的頁面
+      - generic [ref=e881]:
+        - generic [ref=e882]:
+          - generic [ref=e883]: 5-6
+          - generic [ref=e884]: 檢查點
+        - paragraph [ref=e887]: 確認畫面上就是只有「一個」輸入商品名稱的欄位
+      - generic [ref=e888]:
+        - generic [ref=e889]:
+          - generic [ref=e890]: 5-7
+          - generic [ref=e891]: 建立 Table
+        - generic [ref=e892]:
+          - generic [ref=e893]:
+            - generic [ref=e894]: 建立 Table
+            - button "複製" [ref=e895] [cursor=pointer]: 複製
+          - generic [ref=e897]: 利用 Supabase MCP ，在 Supabase 上面建立表格。這樣有人輸入資料時，才有辦法把資料存起來。但要注意，先幫我建立一個後端表格就好，並且有個欄位為「item」，不要做前後端串接。 Project ID： 表格名稱：Inventory
+      - generic [ref=e898]:
+        - generic [ref=e899]:
+          - generic [ref=e900]: 5-8
+          - generic [ref=e901]: 檢查點
+        - paragraph [ref=e904]: 確認 Supabase 有名為 Inventory 的表格
+      - generic [ref=e905]:
+        - generic [ref=e906]:
+          - generic [ref=e907]: 5-9
+          - generic [ref=e908]: 讀取表格與欄位
+        - generic [ref=e909]:
+          - generic [ref=e910]:
+            - generic [ref=e911]: 讀取表格與欄位
+            - button "複製" [ref=e912] [cursor=pointer]: 複製
+          - generic [ref=e914]: 幫我用 Supabase MCP 讀取現在這個專案是否有表格，以及表格的欄位。另外看一下跟前端現在的輸入欄位是否一致
+      - generic [ref=e915]:
+        - generic [ref=e916]:
+          - generic [ref=e917]: 5-10
+          - generic [ref=e918]: 檢查點
+        - paragraph [ref=e921]: 確認 AI 對話視窗中提到的前後內容是一致的
+      - generic [ref=e922]:
+        - generic [ref=e923]:
+          - generic [ref=e924]: 5-11
+          - generic [ref=e925]: 前後串接
+        - generic [ref=e926]:
+          - generic [ref=e927]:
+            - generic [ref=e928]: 前後串接
+            - button "複製" [ref=e929] [cursor=pointer]: 複製
+          - generic [ref=e931]: 很好，那現在確認一致了，那就把前後端串起來
+      - generic [ref=e932]:
+        - generic [ref=e933]:
+          - generic [ref=e934]: 5-12
+          - generic [ref=e935]: 檢查點
+        - paragraph [ref=e938]: 前台送出資料後，確認 Supabase 上有收到資料
+      - generic [ref=e939]:
+        - generic [ref=e940]:
+          - generic [ref=e941]: 5-13
+          - generic [ref=e942]: 新增商品功能
+        - generic [ref=e943]:
+          - generic [ref=e944]:
+            - generic [ref=e945]: 新增商品
+            - button "複製" [ref=e946] [cursor=pointer]: 複製
+          - generic [ref=e948]: 除了「新增商品」的欄位外，現在還需要可以輸入「價格」與「數量」
+      - generic [ref=e949]:
+        - generic [ref=e950]:
+          - generic [ref=e951]: 5-14
+          - generic [ref=e952]: 檢查點
+        - paragraph [ref=e955]: 輸入完整商品數據，確認後台是否有收到數據
+      - generic [ref=e956]:
+        - generic [ref=e957]:
+          - generic [ref=e958]: 5-15
+          - generic [ref=e959]: 修正商品數據
+        - generic [ref=e960]:
+          - generic [ref=e961]:
+            - generic [ref=e962]: 修正商品數據
+            - button "複製" [ref=e963] [cursor=pointer]: 複製
+          - generic [ref=e965]: 現在除了新增商品外，同時也要能刪除商品，還要可以修改「商品名稱」、「價格」與「數量」
+      - generic [ref=e966]:
+        - generic [ref=e967]:
+          - generic [ref=e968]: 5-16
+          - generic [ref=e969]: 檢查點
+        - paragraph [ref=e972]: 測試刪除和修改功能，確認後台數據是否正確更新
+      - generic [ref=e973]:
+        - generic [ref=e974]:
+          - generic [ref=e975]: 5-17
+          - generic [ref=e976]: 恭喜完全自主任務
+        - paragraph [ref=e977]: 恭喜完全自主任務，接下來等待時間你可以：
+        - list [ref=e978]:
+          - listitem [ref=e979]: 修改商品的複雜度，不僅僅只有價格跟數量
+          - listitem [ref=e980]: 調整整體版面，讓畫面變得更好看
+      - generic [ref=e981]:
+        - generic [ref=e982]:
+          - generic [ref=e983]: 5-18
+          - generic [ref=e984]: 登入系統
+        - paragraph [ref=e985]: 這種系統通常會需要設定管理權限，不會讓每個人都可以登入 → 登入系統。
+      - generic [ref=e986]:
+        - generic [ref=e987]:
+          - generic [ref=e988]: 5-19
+          - generic [ref=e989]: 什麼是 Magic Link？
+        - paragraph [ref=e990]:
+          - strong [ref=e991]: Magic Link
+          - text: 是一種無密碼登入方式，使用者只需要輸入 Email，系統會發送一個特殊的連結到信箱，點擊連結就能完成登入。
+        - list [ref=e992]:
+          - listitem [ref=e993]: 不需要記住複雜的密碼
+          - listitem [ref=e994]: 安全性更高，因為連結有時效性且只能使用一次
+          - listitem [ref=e995]: 使用者體驗更流暢，減少忘記密碼的困擾
+      - generic [ref=e996]:
+        - generic [ref=e997]:
+          - generic [ref=e998]: 5-20
+          - generic [ref=e999]: 加上 Magic Link
+        - generic [ref=e1000]:
+          - generic [ref=e1001]:
+            - generic [ref=e1002]: 加上 Magic Link
+            - button "複製" [ref=e1003] [cursor=pointer]: 複製
+          - generic [ref=e1005]: 加上 magic link 登入系統
+      - generic [ref=e1006]:
+        - generic [ref=e1007]:
+          - generic [ref=e1008]: 5-21
+          - generic [ref=e1009]: 檢查點
+        - paragraph [ref=e1012]: 輸入 Email 之後，去 Email 收信做驗證
+      - generic [ref=e1013]:
+        - generic [ref=e1014]:
+          - generic [ref=e1015]: 5-22
+          - generic [ref=e1016]: 加上登入限制
+        - generic [ref=e1017]:
+          - generic [ref=e1018]:
+            - generic [ref=e1019]: 加上登入限制
+            - button "複製" [ref=e1020] [cursor=pointer]: 複製
+          - generic [ref=e1022]: 現在我不要每個人都可以登入，只有「」這個電子郵件的帳號可以做登入而已，其他都要拒絕登入
+      - generic [ref=e1023]:
+        - generic [ref=e1024]:
+          - generic [ref=e1025]: 5-23
+          - generic [ref=e1026]: 檢查點
+        - paragraph [ref=e1029]: 1. 先用「不可以登入」的帳號嘗試登入
+        - paragraph [ref=e1032]: 2. 再用「剛剛設定可以登入」的帳號做登入
+      - generic [ref=e1033]:
+        - generic [ref=e1034]:
+          - generic [ref=e1035]: 5-24
+          - generic [ref=e1036]: 部署上 Zeabur
+        - list [ref=e1037]:
+          - listitem [ref=e1038]: 前往 Zeabur
+          - listitem [ref=e1039]: 建立專案 → 共享叢集 → 區域選 Taipei, Taiwan
+          - listitem [ref=e1040]: 上傳檔案
+          - listitem [ref=e1041]: 設定 Domain
+          - listitem [ref=e1042]: 開啟網站，嘗試登入系統
+      - generic [ref=e1043]:
+        - generic [ref=e1044]:
+          - generic [ref=e1045]: 5-25
+          - generic [ref=e1046]: 登入問題
+        - paragraph [ref=e1047]: 網頁明明打開正常，但是登入時卻不行？
+      - generic [ref=e1048]:
+        - generic [ref=e1049]:
+          - generic [ref=e1050]: 5-26
+          - generic [ref=e1051]: 網站網址 vs Magic Link 連結
+        - generic [ref=e1052]:
+          - generic [ref=e1053]:
+            - heading "網站網址" [level=4] [ref=e1054]
+            - paragraph [ref=e1055]: https://ecom.zeabur.app
+          - generic [ref=e1056]:
+            - heading "Magic Link 連結" [level=4] [ref=e1057]
+            - paragraph [ref=e1058]:
+              - text: https://<ref>.supabase.co/auth/v1/verify?
+              - text: type=magiclink&
+              - text: token_hash=xxx&
+              - text: redirect_to=http://localhost:3000/
+        - paragraph [ref=e1059]: 系統會自動導航至 Site URL，預設是 localhost:3000。
+      - generic [ref=e1060]:
+        - generic [ref=e1061]:
+          - generic [ref=e1062]: 5-27
+          - generic [ref=e1063]: 預設 vs 有設定 Site URL
+        - generic [ref=e1064]:
+          - generic [ref=e1065]:
+            - heading "預設為 Localhost" [level=4] [ref=e1066]
+            - paragraph [ref=e1067]:
+              - text: https://<ref>.supabase.co/auth/v1/verify?
+              - text: type=magiclink&
+              - text: token_hash=xxx&
+              - text: redirect_to=http://localhost:3000/
+          - generic [ref=e1068]:
+            - heading "有設定 Site URL" [level=4] [ref=e1069]
+            - paragraph [ref=e1070]:
+              - text: https://<ref>.supabase.co/auth/v1/verify?
+              - text: type=magiclink&
+              - text: token_hash=xxx&
+              - text: redirect_to=https://ecom.zeabur.app/
+      - generic [ref=e1071]:
+        - generic [ref=e1072]:
+          - generic [ref=e1073]: 5-28
+          - generic [ref=e1074]: 需要設定 Site URL
+        - paragraph [ref=e1075]: 1. 需要設定 Site URL，因為是 redirect_to = Site URL
+      - generic [ref=e1076]:
+        - generic [ref=e1077]:
+          - generic [ref=e1078]: 5-29
+          - generic [ref=e1079]: 真實 URL vs 詐騙 URL
+        - generic [ref=e1080]:
+          - generic [ref=e1081]:
+            - heading "真實 URL" [level=4] [ref=e1082]
+            - paragraph [ref=e1083]: redirect_to=https://ecom.zeabur.app/
+          - generic [ref=e1084]:
+            - heading "詐騙 URL" [level=4] [ref=e1085]
+            - paragraph [ref=e1086]: redirect_to=https://evil-hacker.com/steal
+        - paragraph [ref=e1087]: 當你被自動引導至惡意網站時，駭客就能在後台做各種操作。
+      - generic [ref=e1088]:
+        - generic [ref=e1089]:
+          - generic [ref=e1090]: 5-30
+          - generic [ref=e1091]: Site URL + Redirect URLs
+        - list [ref=e1092]:
+          - listitem [ref=e1093]:
+            - text: 需要設定
+            - strong [ref=e1094]: Site URL
+            - text: ，因為是 redirect_to = Site URL
+          - listitem [ref=e1095]:
+            - text: 需要設定網址白名單
+            - strong [ref=e1096]: Redirect URLs
+            - text: ，名單外要擋下
+      - generic [ref=e1097]:
+        - generic [ref=e1098]:
+          - generic [ref=e1099]: 5-31
+          - generic [ref=e1100]: 比較表格
+        - generic [ref=e1101]:
+          - generic [ref=e1102]:
+            - heading "Site URL" [level=4] [ref=e1103]
+            - paragraph [ref=e1104]: 網站的主要地址，只能設定一個，預設 localhost:3000
+            - paragraph [ref=e1105]: 例：https://ecom.zeabur.app
+          - generic [ref=e1106]:
+            - heading "Redirect URLs" [level=4] [ref=e1107]
+            - paragraph [ref=e1108]: 重新導向的允許網址列表（白名單），可設定多個
+            - paragraph [ref=e1109]:
+              - text: 例：https://ecom.zeabur.app/
+              - text: http://127.0.0.1:5500/
+      - generic [ref=e1110]:
+        - generic [ref=e1111]:
+          - generic [ref=e1112]: 5-32
+          - generic [ref=e1113]: Site URL 和 Redirect URLs 設定值
+        - paragraph [ref=e1114]:
+          - strong [ref=e1115]: Site URL
+        - paragraph [ref=e1116]: https://ecom.zeabur.app
+        - paragraph [ref=e1117]:
+          - strong [ref=e1118]: Redirect URLs
+        - paragraph [ref=e1119]: https://ecom.zeabur.app/
+        - paragraph [ref=e1120]: http://127.0.0.1:5500/
+      - generic [ref=e1121]:
+        - generic [ref=e1122]:
+          - generic [ref=e1123]: 5-33
+          - generic [ref=e1124]: Supabase 新增 URL
+        - paragraph [ref=e1125]: 在 Supabase 後台新增 URL 設定。
+        - img "Supabase 新增 URL 設定畫面" [ref=e1318]
+      - generic [ref=e1126]:
+        - generic [ref=e1127]:
+          - generic [ref=e1128]: 5-34
+          - generic [ref=e1129]: 設定完成
+        - paragraph [ref=e1130]: 設定好了就可以直接再測一次，不用再部署，因為這是雲端 Supabase 那邊的系統問題。
+        - paragraph [ref=e1131]: 現在使用雲端版的網址再打開測試一次。
+      - generic [ref=e1132]:
+        - generic [ref=e1133]:
+          - generic [ref=e1134]: 5-35
+          - generic [ref=e1135]: 小結
+        - list [ref=e1136]:
+          - listitem [ref=e1137]: Supabase 功能：可以用來存資料以及建立會員系統
+          - listitem [ref=e1138]: 善用 MCP：不需要手動設定表格，串上 MCP 讓 AI 幫我們做
+          - listitem [ref=e1139]: 登入系統：最簡單實作登入系統的方式是 Magic Link
+          - listitem [ref=e1140]: 設定網址：使用 Magic Link 會有跳轉問題，需要去 Supabase 設定網站的網址
+      - generic [ref=e1141]:
+        - generic [ref=e1142]:
+          - generic [ref=e1143]: 5-36
+          - generic [ref=e1145]: 回家作業
+        - paragraph [ref=e1146]: 把第一章的官網串上 Supabase，可以去收客戶的需求。
+      - generic [ref=e1147]:
+        - generic [ref=e1148]:
+          - generic [ref=e1149]: 5-37
+          - generic [ref=e1150]: Q&A
+        - paragraph [ref=e1151]: Q&A 問答時間
+      - generic [ref=e1152]:
+        - generic [ref=e1153]:
+          - generic [ref=e1154]: 5-38
+          - generic [ref=e1155]: 休息時間
+        - paragraph [ref=e1156]: 休息十分鐘，下一章節：個人產品開發
+        - paragraph [ref=e1157]:
+          - text: P.S. 若沒有 Discord，可利用時間註冊
+          - link "Discord" [ref=e1158] [cursor=pointer]:
+            - /url: https://discord.com/
+          - text: （課後討論社群）
+    - generic [ref=e1159]:
+      - heading "6. 個人產品開發" [level=1] [ref=e1160]
+      - generic [ref=e1161]:
+        - generic [ref=e1162]:
+          - generic [ref=e1163]: 6-2
+          - generic [ref=e1164]: 回顧之前學習的基本技能
+        - generic [ref=e1165]:
+          - generic [ref=e1166]:
+            - heading "基礎 AI Coding 技巧" [level=4] [ref=e1167]
+            - list [ref=e1168]:
+              - listitem [ref=e1169]: 修改內容：使用 AI 協助修改和優化程式碼內容
+              - listitem [ref=e1170]: 設計：運用 AI 進行介面設計和樣式優化
+              - listitem [ref=e1171]: SEO：優化網站搜尋引擎排名和可見度
+          - generic [ref=e1172]:
+            - heading "Supabase" [level=4] [ref=e1173]
+            - list [ref=e1174]:
+              - listitem [ref=e1175]: 資料存取：使用 Supabase 進行資料庫的 CRUD 操作
+              - listitem [ref=e1176]: 會員系統：使用 Supabase 建立用戶註冊、登入和身份驗證功能
+      - generic [ref=e1177]:
+        - generic [ref=e1178]:
+          - generic [ref=e1179]: 6-3
+          - generic [ref=e1180]: 很重要，但還沒有習得的技能：爬取即時資料
+        - paragraph [ref=e1181]: 即時天氣、即時股價、即時活動資訊、串接私人 Google 資料
+      - generic [ref=e1182]:
+        - generic [ref=e1183]:
+          - generic [ref=e1184]: 6-4
+          - generic [ref=e1185]: 爬即時資料很難嗎？
+        - list [ref=e1186]:
+          - listitem [ref=e1187]: 需要根據不同服務去申請 API，如天氣 API、股價 API、活動 API 等等
+          - listitem [ref=e1188]: 要另外安裝 Python 去做網頁爬蟲
+          - listitem [ref=e1189]: 要去申請通行證，如 Google OAuth、Facebook OAuth、Threads OAuth 等等
+      - generic [ref=e1190]:
+        - generic [ref=e1191]:
+          - generic [ref=e1192]: 6-5
+          - generic [ref=e1193]: 先用 Mock Data
+        - paragraph [ref=e1194]: 如果需要有外部資料的話，就暫時先用 Mock Data (假資料)。
+      - generic [ref=e1195]:
+        - generic [ref=e1196]:
+          - generic [ref=e1197]: 6-6
+          - generic [ref=e1198]: 建議從簡單的開始
+        - paragraph [ref=e1199]: 但我建議先從簡單的開始，比如...
+        - paragraph [ref=e1200]:
+          - text: 範例：
+          - link "信用卡扣款工具" [ref=e1201] [cursor=pointer]:
+            - /url: https://subscriptionchecker.brickverse.com.tw/
+      - generic [ref=e1202]:
+        - generic [ref=e1203]:
+          - generic [ref=e1204]: 6-7
+          - generic [ref=e1205]: 現成工具也可以達成
+        - paragraph [ref=e1206]: 前面這個需求很簡單，而且現在就有千百種現成的工具可以達成，比如：Notion、Google 日曆、各種筆記軟體...等等。
+      - generic [ref=e1207]:
+        - generic [ref=e1208]:
+          - generic [ref=e1209]: 6-8
+          - generic [ref=e1210]: Vibe Coding 的魅力
+        - paragraph [ref=e1211]:
+          - strong [ref=e1212]: Vibe Coding
+          - text: 的魅力在於，你可以用更輕鬆的方式（口語），去達到「完全客製化」的成果與目標。
+      - generic [ref=e1213]:
+        - generic [ref=e1214]:
+          - generic [ref=e1215]: 6-9
+          - generic [ref=e1216]: 實作建議
+        - paragraph [ref=e1217]: 從「現有的工作流」中，截取一段做成一個小型的 APP：
+        - list [ref=e1218]:
+          - listitem [ref=e1219]:
+            - strong [ref=e1220]: 店家
+            - text: ：原本是人工輸入點餐，現在嘗試做一個自己店家的點餐系統（不含金流）
+          - listitem [ref=e1221]:
+            - strong [ref=e1222]: 知識教育
+            - text: ：原本把內容都存放在 Notion 上，做一個獨立的網頁，富有練習題跟互動元素
+          - listitem [ref=e1223]:
+            - strong [ref=e1224]: 商業
+            - text: ：現有工作上的資料處理很繁雜，做一個客製化的軟體來節省時間
+      - generic [ref=e1225]:
+        - generic [ref=e1226]:
+          - generic [ref=e1227]: 6-10
+          - generic [ref=e1228]: 流程
+        - generic [ref=e1229]:
+          - generic [ref=e1230]:
+            - heading "1. 產出原形" [level=4] [ref=e1231]
+            - paragraph
+          - generic [ref=e1232]:
+            - heading "2. 上傳第一版，相互交流試用" [level=4] [ref=e1233]
+            - paragraph
+          - generic [ref=e1234]:
+            - heading "3. 根據回饋，持續調整" [level=4] [ref=e1235]
+            - paragraph
+          - generic [ref=e1236]:
+            - heading "4. 公開上台發表" [level=4] [ref=e1237]
+            - paragraph
+      - generic [ref=e1238]:
+        - generic [ref=e1239]:
+          - generic [ref=e1240]: 6-11
+          - generic [ref=e1241]: Cursor 功能介紹：Plan Mode
+        - paragraph [ref=e1242]: 可以事先跟你討論與規劃方向後，才開始寫程式。
+        - paragraph [ref=e1243]: （先看示範 Plan Mode，此時可以同步腦中先想想看等等可以做什麼）
+      - generic [ref=e1244]:
+        - generic [ref=e1245]:
+          - generic [ref=e1246]: 6-12
+          - generic [ref=e1247]: 1. 產出原形
+        - paragraph [ref=e1248]: 開啟新的 Cursor 視窗，並拉入 MyProject 資料夾，開始開發。
+        - paragraph [ref=e1249]:
+          - strong [ref=e1250]: Tip：
+          - text: 如果還沒有想法，可以先用 Cursor 的 Plan Mode 一起討論要做什麼產品。
+      - generic [ref=e1251]:
+        - generic [ref=e1252]:
+          - generic [ref=e1253]: 6-13
+          - generic [ref=e1254]: Supabase 補給包
+        - paragraph [ref=e1255]: 如果需要有後台資料庫：
+        - list [ref=e1256]:
+          - listitem [ref=e1257]: 先把畫面做出來：做一個最小可用的表單頁面
+          - listitem [ref=e1258]: 再用 Supabase 建表：說清楚 Project ID、表格名稱、欄位
+          - listitem [ref=e1259]: 確認欄位有對齊：前端輸入欄位名稱與 Supabase 欄位一一對應
+          - listitem [ref=e1260]: 最後再串接 + 測試：送出測試資料，看 Supabase 是否多一筆紀錄
+        - paragraph [ref=e1261]:
+          - text: 下一頁
+          - strong [ref=e1262]: 6-14
+          - text: 有整理好串接 Supabase 的 Prompt。
+      - generic [ref=e1263]:
+        - generic [ref=e1264]:
+          - generic [ref=e1265]: 6-14
+          - generic [ref=e1266]: Supabase 實作 Prompt
+        - generic [ref=e1267]:
+          - generic [ref=e1268]:
+            - generic [ref=e1269]: 建立 Table
+            - button "複製" [ref=e1270] [cursor=pointer]: 複製
+          - generic [ref=e1272]: 利用 Supabase MCP ，在 Supabase 上面建立表格。這樣有人輸入資料時，才有辦法把資料存起來。但要注意，先幫我建立一個後端表格就好，並且有個欄位為「」，不要做前後端串接。 Project ID： 表格名稱：
+        - generic [ref=e1273]:
+          - generic [ref=e1274]:
+            - generic [ref=e1275]: 讀取表格與欄位
+            - button "複製" [ref=e1276] [cursor=pointer]: 複製
+          - generic [ref=e1278]: 幫我用 Supabase MCP 讀取現在這個專案是否有表格，以及表格的欄位。另外看一下跟前端現在的輸入欄位是否一致
+        - generic [ref=e1279]:
+          - generic [ref=e1280]:
+            - generic [ref=e1281]: 前後串接
+            - button "複製" [ref=e1282] [cursor=pointer]: 複製
+          - generic [ref=e1284]: 很好，那現在確認一致了，那就把前後端串起來
+      - generic [ref=e1285]:
+        - generic [ref=e1286]:
+          - generic [ref=e1287]: 6-15
+          - generic [ref=e1288]: 兩兩一組
+        - list [ref=e1289]:
+          - listitem [ref=e1290]: 其中一方先簡單介紹自己的作品，為何要做這個產品？然後請對方使用，觀察對方的操作方式
+          - listitem [ref=e1291]: 角色互換
+      - generic [ref=e1292]:
+        - generic [ref=e1293]:
+          - generic [ref=e1294]: 6-16
+          - generic [ref=e1295]: 3. 優化產品
+        - paragraph [ref=e1296]:
+          - text: 三大方向：
+          - generic [ref=e1297]: 介面
+          - generic [ref=e1298]: 功能
+          - generic [ref=e1299]: 易用性
+      - generic [ref=e1300]:
+        - generic [ref=e1301]:
+          - generic [ref=e1302]: 6-18
+          - generic [ref=e1303]: 4. 作品發表
+        - paragraph [ref=e1304]: 公開上台發表你的作品。
+  - complementary [ref=e1305]:
+    - paragraph [ref=e1309]:
+      - text: 點擊投影片中的互動按鈕，
+      - text: 相關資訊將顯示在此處

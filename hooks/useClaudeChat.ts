@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import type { ChatMessage, ChatMode, ClaudeStreamEvent, TodoItem, UserQuestion, SessionMeta } from '@/lib/claude-chat-types'
+import type { ChatMessage, ChatMode, ClaudeStreamEvent, TodoItem, UserQuestion, SessionMeta, StreamingActivity } from '@/lib/claude-chat-types'
 
 // 從工具 input 擷取簡短描述
 function extractToolDescription(name: string, input: Record<string, unknown>): string {
@@ -53,6 +53,7 @@ interface UseClaudeChatReturn {
   todos: TodoItem[]
   isStreaming: boolean
   streamStatus: StreamStatus
+  streamingActivity: StreamingActivity | null
   sessionId: string | null
   sessionMeta: SessionMeta
   pendingQuestions: { id: string; questions: UserQuestion[] } | null
@@ -65,6 +66,7 @@ interface UseClaudeChatReturn {
   clearChat: () => void
   resumeSession: (sessionId: string) => Promise<void>
   error: string | null
+  clearError: () => void
 }
 
 interface UseClaudeChatConfig {
@@ -92,6 +94,7 @@ interface StreamActions {
   setError: React.Dispatch<React.SetStateAction<string | null>>
   setPendingQuestions: React.Dispatch<React.SetStateAction<{ id: string; questions: UserQuestion[] } | null>>
   setPendingPlanApproval: React.Dispatch<React.SetStateAction<{ id: string } | null>>
+  setStreamingActivity: React.Dispatch<React.SetStateAction<StreamingActivity | null>>
   projectId: string
   message: string
   currentSessionId: string | null
@@ -106,6 +109,7 @@ function processStreamEvent(
   if (event.type === 'session') {
     console.debug('[chat] event: session', event.session_id)
     actions.setSessionId(event.session_id as string)
+    actions.setStreamingActivity({ status: 'thinking' })
     ctx.newSessionIdForHistory = event.session_id as string
     if (!actions.currentSessionId) {
       fetch('/api/claude-chat/history', {
@@ -159,6 +163,7 @@ function processStreamEvent(
     const content = streamEvent.message.content
     for (const block of content) {
       if (block.type === 'text') {
+        actions.setStreamingActivity({ status: 'replying' })
         if (!ctx.currentAssistantId) {
           ctx.currentAssistantId = crypto.randomUUID()
           const aid = ctx.currentAssistantId
@@ -175,6 +180,10 @@ function processStreamEvent(
           ))
         }
       } else if (block.type === 'tool_use') {
+        // 更新 streaming activity（所有 tool 都顯示）
+        const toolDesc = extractToolDescription(block.name, block.input as Record<string, unknown>)
+        actions.setStreamingActivity({ status: 'tool', toolName: block.name, toolDetail: toolDesc || undefined })
+
         // TodoWrite
         if (block.name === 'TodoWrite') {
           const todoInput = block.input as { todos?: TodoItem[] }
@@ -249,6 +258,10 @@ function processStreamEvent(
 
   if (streamEvent.type === 'result') {
     console.debug('[chat] event: result', streamEvent.subtype, { is_error: streamEvent.is_error })
+    actions.setStreamingActivity(null)
+    if (streamEvent.duration_ms) {
+      actions.setSessionMeta(prev => ({ ...prev, lastDurationMs: streamEvent.duration_ms }))
+    }
     if (streamEvent.is_error || (streamEvent.subtype && streamEvent.subtype !== 'success')) {
       const errorsDetail = streamEvent.errors?.join('; ') || ''
       const errorText = errorsDetail || streamEvent.result || `Claude 執行失敗 (${streamEvent.subtype})`
@@ -344,6 +357,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   const [error, setError] = useState<string | null>(null)
   const [pendingQuestions, setPendingQuestions] = useState<{ id: string; questions: UserQuestion[] } | null>(null)
   const [pendingPlanApproval, setPendingPlanApproval] = useState<{ id: string } | null>(null)
+  const [streamingActivity, setStreamingActivity] = useState<StreamingActivity | null>(null)
   const [sessionMeta, setSessionMeta] = useState<SessionMeta>({
     model: null,
     permissionMode: 'acceptEdits',
@@ -432,6 +446,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     }
     setMessages(prev => [...prev, userMsg])
     setStreamStatus('streaming')
+    setStreamingActivity({ status: 'connecting' })
 
     const controller = new AbortController()
     abortRef.current = controller
@@ -460,6 +475,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       setError,
       setPendingQuestions,
       setPendingPlanApproval,
+      setStreamingActivity,
       projectId,
       message,
       currentSessionId,
@@ -542,6 +558,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           : 'idle'
       console.debug('[chat] stream ended', { resultSuccess: ctx.resultSuccess, finalStatus, hasPendingApproval: ctx.hasPendingApproval })
       setStreamStatus(finalStatus)
+      setStreamingActivity(null)
 
       // 更新歷史紀錄
       const sid = sessionIdRef.current || ctx.newSessionIdForHistory
@@ -610,6 +627,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setPendingQuestions(null)
     setPendingPlanApproval(null)
     setSessionMeta({ model: null, permissionMode: 'acceptEdits', totalInputTokens: 0, totalOutputTokens: 0 })
+    setStreamingActivity(null)
   }, [setSessionId])
 
   const resumeSession = useCallback(async (targetSessionId: string) => {
@@ -620,6 +638,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setPendingQuestions(null)
     setPendingPlanApproval(null)
     setSessionMeta({ model: null, permissionMode: 'acceptEdits', totalInputTokens: 0, totalOutputTokens: 0 })
+    setStreamingActivity(null)
     setSessionId(targetSessionId)
 
     // 從持久化儲存載入歷史訊息
@@ -646,5 +665,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setTodos([])
   }, [projectId, setSessionId])
 
-  return { messages, todos, isStreaming, streamStatus, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error }
+  const clearError = useCallback(() => setError(null), [])
+
+  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error, clearError }
 }

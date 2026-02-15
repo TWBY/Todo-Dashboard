@@ -12,7 +12,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-06T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:24:55.816Z"
+    "updatedAt": "2026-02-15T08:34:30.692Z"
   },
   {
     "id": "download-html",
@@ -22,7 +22,9 @@
     "description": "HTML 下載工具。",
     "techStack": [],
     "createdAt": "2025-11-07T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:24:27.180Z"
+    "updatedAt": "2026-02-15T08:52:16.268Z",
+    "devPort": 3015,
+    "devAddedAt": "2026-02-15T08:52:16.268Z"
   },
   {
     "id": "editer",
@@ -32,7 +34,7 @@
     "description": "編輯器工具。",
     "techStack": [],
     "createdAt": "2025-11-27T00:00:00.000Z",
-    "updatedAt": "2025-11-27T00:00:00.000Z"
+    "updatedAt": "2026-02-15T08:17:21.304Z"
   },
   {
     "id": "generate-image",
@@ -42,8 +44,7 @@
     "description": "圖片生成工具。",
     "techStack": [],
     "createdAt": "2025-10-28T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:53:48.583Z",
-    "devPort": 3012
+    "updatedAt": "2026-02-15T12:41:37.808Z"
   },
   {
     "id": "meta-ads-lab",
@@ -124,7 +125,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-10T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:24:29.005Z"
+    "updatedAt": "2026-02-15T08:39:18.870Z"
   },
   {
     "id": "excel-factory",
@@ -134,7 +135,9 @@
     "description": "Excel 資料生成工廠。",
     "techStack": [],
     "createdAt": "2026-02-11T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:25:12.077Z"
+    "updatedAt": "2026-02-15T08:52:17.864Z",
+    "devPort": 3016,
+    "devAddedAt": "2026-02-15T08:52:17.864Z"
   },
   {
     "id": "cover-maker",
@@ -149,6 +152,6 @@
       "Remotion"
     ],
     "createdAt": "2026-02-14T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:53:45.891Z"
+    "updatedAt": "2026-02-15T08:34:39.179Z"
   }
 ]

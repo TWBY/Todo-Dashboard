@@ -21,7 +21,7 @@
       }
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-08T15:40:18.166Z"
+    "updatedAt": "2026-02-15T08:52:19.771Z"
   },
   {
     "id": "aicode101",
@@ -37,11 +37,13 @@
       },
       {
         "name": "StudentStauts",
-        "description": "學生狀態 Dashboard"
+        "description": "學生狀態 Dashboard",
+        "devPort": 3013,
+        "devAddedAt": "2026-02-15T08:34:43.910Z"
       }
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T05:26:36.000Z"
+    "updatedAt": "2026-02-15T08:34:43.910Z"
   },
   {
     "id": "hr-workshop",
@@ -77,7 +79,7 @@
     ],
     "children": [],
     "createdAt": "2026-02-12T00:00:00.000Z",
-    "updatedAt": "2026-02-11T16:18:21.181Z"
+    "updatedAt": "2026-02-15T08:39:17.376Z"
   },
   {
     "id": "course-hub",

@@ -78,7 +78,7 @@ export default function MemoryWarningBanner() {
   useEffect(() => {
     const controller = new AbortController();
     fetchData(controller.signal);
-    const interval = setInterval(() => fetchData(controller.signal), 10000);
+    const interval = setInterval(() => fetchData(controller.signal), 15000);
     return () => {
       controller.abort();
       clearInterval(interval);

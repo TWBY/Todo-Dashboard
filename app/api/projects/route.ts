@@ -88,6 +88,7 @@ export async function PATCH(request: Request) {
   if (action === 'add-to-dev') {
     const allProjects = [...brickverseProjects, ...courseFiles, ...utilityTools];
     const devPort = findNextAvailablePort(allProjects);
+    const devAddedAt = new Date().toISOString();
 
     if (childName) {
       const child = targetList[targetIndex].children?.find(c => c.name === childName);
@@ -95,12 +96,14 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: 'Child not found' }, { status: 404 });
       }
       child.devPort = devPort;
+      child.devAddedAt = devAddedAt;
     } else {
       targetList[targetIndex].devPort = devPort;
+      targetList[targetIndex].devAddedAt = devAddedAt;
     }
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
-    return NextResponse.json({ devPort });
+    return NextResponse.json({ devPort, devAddedAt });
   }
 
   if (action === 'remove-from-dev') {
@@ -112,10 +115,12 @@ export async function PATCH(request: Request) {
       delete child.devPort;
       delete child.devCommand;
       delete child.devBasePath;
+      delete child.devAddedAt;
     } else {
       delete targetList[targetIndex].devPort;
       delete targetList[targetIndex].devCommand;
       delete targetList[targetIndex].devBasePath;
+      delete targetList[targetIndex].devAddedAt;
     }
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);

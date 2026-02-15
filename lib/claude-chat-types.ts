@@ -84,10 +84,18 @@ export interface ChatSessionRecord {
   lastActiveAt: number
 }
 
+// Streaming 即時活動狀態
+export interface StreamingActivity {
+  status: 'connecting' | 'thinking' | 'replying' | 'tool'
+  toolName?: string
+  toolDetail?: string
+}
+
 // Session metadata for status bar
 export interface SessionMeta {
   model: string | null
   permissionMode: string | null
   totalInputTokens: number
   totalOutputTokens: number
+  lastDurationMs?: number
 }

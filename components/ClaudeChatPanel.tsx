@@ -24,7 +24,10 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
   const { duplicatePanel, updatePanelSession } = useChatPanels()
   const [chatKey, setChatKey] = useState(0)
   const [isClearing, setIsClearing] = useState(false)
-  const [tokenMeta, setTokenMeta] = useState({ totalInputTokens: 0, totalOutputTokens: 0 })
+  const [tokenMeta, setTokenMeta] = useState({ totalInputTokens: 0, totalOutputTokens: 0, lastDurationMs: undefined as number | undefined })
+  const handleSessionMetaChange = useCallback((meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => {
+    setTokenMeta({ totalInputTokens: meta.totalInputTokens, totalOutputTokens: meta.totalOutputTokens, lastDurationMs: meta.lastDurationMs })
+  }, [])
   const [panelStatus, setPanelStatus] = useState<PanelStatus>('idle')
 
   const clearingRef = useRef<HTMLDivElement>(null)
@@ -76,7 +79,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           {emailMode ? 'Email 回覆' : projectName}
         </h2>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <ContentsRate inputTokens={tokenMeta.totalInputTokens} outputTokens={tokenMeta.totalOutputTokens} />
+          <ContentsRate inputTokens={tokenMeta.totalInputTokens} outputTokens={tokenMeta.totalOutputTokens} lastDurationMs={tokenMeta.lastDurationMs} />
           {panelId && (
             <button
               onClick={() => duplicatePanel(panelId)}
@@ -132,7 +135,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           initialMessage={initialMessage}
           initialMode={initialMode}
           onSessionIdChange={handleSessionChange}
-          onSessionMetaChange={setTokenMeta}
+          onSessionMetaChange={handleSessionMetaChange}
           onPanelStatusChange={setPanelStatus}
         />
       </div>

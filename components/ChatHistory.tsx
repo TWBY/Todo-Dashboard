@@ -10,7 +10,10 @@ function relativeTime(timestamp: number): string {
   if (minutes < 60) return `${minutes}m`
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h`
-  return 'yesterday'
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d`
+  const d = new Date(timestamp)
+  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
 function isToday(timestamp: number): boolean {
@@ -156,6 +159,7 @@ function SessionEntry({ session, isActive, onSelect }: {
         <div
           className="text-sm truncate"
           style={{ color: isActive ? '#ffffff' : '#bbbbbb' }}
+          title={session.title}
         >
           {session.title}
         </div>

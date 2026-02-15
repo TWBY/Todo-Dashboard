@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Project } from '@/lib/types';
 
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -11,6 +10,7 @@ interface DirectoryTreeProps {
   projects: Project[];
   basePath: string;
   title: string;
+  onUpdate?: (project: Project) => void;
 }
 
 type TreeEntry =
@@ -61,19 +61,22 @@ function DevPortBadge({ projectId, childName, devPort: existingPort, onAdded }: 
   projectId: string;
   childName?: string;
   devPort?: number;
-  onAdded: () => void;
+  onAdded: (port: number, devAddedAt?: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [assignedPort, setAssignedPort] = useState<number | null>(null);
+  const [fadeIn, setFadeIn] = useState(false);
 
-  if (existingPort || assignedPort) {
-    const port = existingPort || assignedPort;
+  const port = existingPort || assignedPort;
+
+  if (port) {
     return (
       <span
-        className="text-sm font-mono px-1.5 py-0.5 rounded"
+        className={`text-sm font-mono px-1.5 py-0.5 rounded transition-opacity duration-300 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
         style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+        onAnimationEnd={() => setFadeIn(true)}
       >
-        {formatPort(port!)}
+        {formatPort(port)}
       </span>
     );
   }
@@ -90,8 +93,11 @@ function DevPortBadge({ projectId, childName, devPort: existingPort, onAdded }: 
       if (res.ok) {
         const data = await res.json();
         setAssignedPort(data.devPort);
-        onAdded();
+        setFadeIn(true);
+        onAdded(data.devPort, data.devAddedAt);
       }
+    } catch (error) {
+      console.error('Failed to add project:', error);
     } finally {
       setLoading(false);
     }
@@ -108,7 +114,14 @@ function DevPortBadge({ projectId, childName, devPort: existingPort, onAdded }: 
       }}
       title="加入 Dev Server"
     >
-      {loading ? '...' : '+'}
+      {loading ? (
+        <svg className="animate-spin h-3 w-3 inline-block" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+      ) : (
+        '+'
+      )}
     </button>
   );
 }
@@ -119,7 +132,7 @@ function ChildrenList({ project, ancestorPrefix, showDescription, copy, isCopied
   showDescription?: boolean;
   copy: (text: string) => void;
   isCopied: (text: string) => boolean;
-  onAdded: () => void;
+  onAdded: (projectId: string, childName: string | undefined, port: number, devAddedAt?: string) => void;
 }) {
   if (!project.children || project.children.length === 0) return null;
   return (
@@ -141,7 +154,12 @@ function ChildrenList({ project, ancestorPrefix, showDescription, copy, isCopied
                 <span className="ml-2 text-sm text-green-500">已複製！</span>
               )}
             </span>
-            <DevPortBadge projectId={project.id} childName={child.name} devPort={child.devPort} onAdded={onAdded} />
+            <DevPortBadge
+              projectId={project.id}
+              childName={child.name}
+              devPort={child.devPort}
+              onAdded={(port, devAddedAt) => onAdded(project.id, child.name, port, devAddedAt)}
+            />
             {showDescription && child.description && (
               <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                 {child.description}
@@ -154,11 +172,27 @@ function ChildrenList({ project, ancestorPrefix, showDescription, copy, isCopied
   );
 }
 
-export default function DirectoryTree({ projects, basePath, title }: DirectoryTreeProps) {
+export default function DirectoryTree({ projects, basePath, title, onUpdate }: DirectoryTreeProps) {
   const entries = buildTreeEntries(projects);
   const { copy, isCopied } = useCopyToClipboard();
-  const router = useRouter();
-  const handleAdded = () => router.refresh();
+
+  const handleAdded = (projectId: string, childName: string | undefined, port: number, devAddedAt?: string) => {
+    if (!onUpdate) return;
+
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    if (childName) {
+      // 更新子專案的 devPort
+      const updatedChildren = project.children?.map(child =>
+        child.name === childName ? { ...child, devPort: port, devAddedAt } : child
+      );
+      onUpdate({ ...project, children: updatedChildren });
+    } else {
+      // 更新專案本身的 devPort
+      onUpdate({ ...project, devPort: port, devAddedAt });
+    }
+  };
 
   return (
     <div
@@ -196,7 +230,11 @@ export default function DirectoryTree({ projects, basePath, title }: DirectoryTr
                     <span className="ml-2 text-sm text-green-500">已複製！</span>
                   )}
                 </span>
-                <DevPortBadge projectId={project.id} devPort={project.devPort} onAdded={handleAdded} />
+                <DevPortBadge
+                  projectId={project.id}
+                  devPort={project.devPort}
+                  onAdded={(port, devAddedAt) => handleAdded(project.id, undefined, port, devAddedAt)}
+                />
               </div>
               <ChildrenList project={project} ancestorPrefix={[isLast]} copy={copy} isCopied={isCopied} onAdded={handleAdded} />
             </div>
@@ -236,7 +274,11 @@ export default function DirectoryTree({ projects, basePath, title }: DirectoryTr
                         <span className="ml-2 text-sm text-green-500">已複製！</span>
                       )}
                     </span>
-                    <DevPortBadge projectId={project.id} devPort={project.devPort} onAdded={handleAdded} />
+                    <DevPortBadge
+                      projectId={project.id}
+                      devPort={project.devPort}
+                      onAdded={(port, devAddedAt) => handleAdded(project.id, undefined, port, devAddedAt)}
+                    />
                   </div>
                   <ChildrenList project={project} ancestorPrefix={[isLast, isProjectLast]} showDescription copy={copy} isCopied={isCopied} onAdded={handleAdded} />
                 </div>

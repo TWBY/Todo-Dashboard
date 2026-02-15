@@ -316,6 +316,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     return statuses.find(s => s.projectId === projectId);
   };
 
+  // Production 自我保護：從 4000 訪問時，不能停止 Production server
+  const isProdSelf = currentPort === 4000;
+
   return (
     <div
       className="relative"
@@ -378,19 +381,19 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             {compact ? 'O' : 'Open'}
           </button>
           <button
-            onClick={prodRunning ? handleProdStop : handleProdStart}
-            disabled={prodLoading}
+            onClick={isProdSelf && prodRunning ? undefined : (prodRunning ? handleProdStop : handleProdStart)}
+            disabled={prodLoading || (isProdSelf && prodRunning)}
             className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
-              backgroundColor: prodLoading ? '#333333' : prodRunning ? '#3d1515' : '#15332a',
-              color: prodLoading ? '#999999' : prodRunning ? '#ef4444' : '#10b981',
+              backgroundColor: prodLoading ? '#333333' : isProdSelf && prodRunning ? '#1a1a2e' : prodRunning ? '#3d1515' : '#15332a',
+              color: prodLoading ? '#999999' : isProdSelf && prodRunning ? '#7c7cff' : prodRunning ? '#ef4444' : '#10b981',
               fontSize: 'var(--text-sm)',
               fontWeight: 'var(--font-weight-semibold)',
               lineHeight: 'var(--leading-compact)',
               letterSpacing: 'var(--tracking-ui)',
-              border: prodLoading ? '1px solid #444444' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+              border: prodLoading ? '1px solid #444444' : isProdSelf && prodRunning ? '1px solid #3a3a5c' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
             }}
-            title={prodRunning ? '停止 Production server' : '啟動 Production server'}
+            title={isProdSelf && prodRunning ? '無法停止自己' : prodRunning ? '停止 Production server' : '啟動 Production server'}
           >
             {prodLoading ? (
               <>
@@ -400,6 +403,8 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                 </svg>
                 {!compact && <span className="ml-1">{prodRunning ? '停止中' : '啟動中'}</span>}
               </>
+            ) : isProdSelf && prodRunning ? (
+              compact ? 'P' : 'Pro'
             ) : compact ? (prodRunning ? 'S' : 'S') : (prodRunning ? 'Stop' : 'Start')}
           </button>
           <button
@@ -474,7 +479,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             const isLoading = loading[project.id] || false;
             const isRecentlyStarted = recentlyStarted[project.id] || false;
             const isRemoving = removingIds.has(project.id);
-            const isSelf = project.devPort === currentPort;
+            const isSelf = project.devPort === currentPort || (currentPort === 4000 && project.devPort === 3000);
 
             return (
               <div

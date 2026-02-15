@@ -53,3 +53,11 @@ next-env.d.ts
 
 # claude
 .claude/
+
+# screenshots (testing/debugging artifacts)
+*.png
+*.jpg
+*.jpeg
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg

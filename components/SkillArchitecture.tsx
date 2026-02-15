@@ -18,28 +18,7 @@ const CATEGORY_RELATIONS: Record<string, string[]> = {
   ],
 };
 
-const CATEGORY_ORDER = ['部署流程', '程式碼品質', '知識載入', 'Blog 編輯流水線'];
-
-// --- Project Skills（靜態，較少變動）---
-
-const PROJECT_SKILLS = [
-  {
-    label: 'Todo-Dashboard',
-    items: [
-      { name: 'add-child', desc: '新增子專案資料夾', model: 'haiku' },
-      { name: 'rescan', desc: '重掃檔案系統同步 JSON', model: 'haiku' },
-    ],
-  },
-  {
-    label: 'brickverse-web',
-    items: [
-      { name: 'form-integration', desc: '表單整合測試（真實 API）', model: 'haiku' },
-      { name: 'test-email', desc: 'Email 測試工具', model: 'haiku' },
-      { name: 'insforge', desc: '連接 InsForge 後台', model: 'haiku' },
-      { name: 'form-e2e', desc: '表單 E2E 測試（Mock API）', model: 'haiku' },
-    ],
-  },
-];
+const CATEGORY_ORDER = ['部署流程', '程式碼品質', '設計審查', '知識載入', 'Blog 編輯流水線'];
 
 // --- Types ---
 
@@ -148,14 +127,23 @@ function groupSkills(skills: SkillInfo[]): GroupedSkill[] {
 export default function SkillArchitecture() {
   const { copy, isCopied } = useCopyToClipboard(1000);
   const [globalGroups, setGlobalGroups] = useState<GroupedSkill[]>([]);
+  const [projectGroups, setProjectGroups] = useState<GroupedSkill[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSkills = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/claude-chat/skills');
+      const res = await fetch('/api/claude-chat/skills?allProjects=true');
       const data = await res.json();
       setGlobalGroups(groupSkills(data.globalSkills || []));
+
+      // 動態建立 project skill groups
+      const projectSkills: Record<string, { name: string; skills: SkillInfo[] }> = data.projectSkills || {};
+      const groups: GroupedSkill[] = Object.values(projectSkills).map(({ name, skills }) => ({
+        label: name,
+        items: skills.map(s => ({ name: s.name, desc: s.description, model: s.model })),
+      }));
+      setProjectGroups(groups);
     } catch {
       // 失敗時保持現有資料
     } finally {
@@ -177,7 +165,7 @@ export default function SkillArchitecture() {
     {
       title: 'Project Skill',
       subtitle: '<project>/.claude/skills/',
-      groups: PROJECT_SKILLS.map(g => ({ label: g.label, items: g.items.map(i => ({ name: i.name, desc: i.desc, model: i.model })) })),
+      groups: projectGroups,
     },
   ];
 

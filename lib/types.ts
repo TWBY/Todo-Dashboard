@@ -4,6 +4,7 @@ export interface ProjectChild {
   devPort?: number;
   devCommand?: string;
   devBasePath?: string;
+  devAddedAt?: string;
 }
 
 export interface Project {
@@ -25,6 +26,7 @@ export interface Project {
   devPort?: number;
   devCommand?: string;
   devBasePath?: string;
+  devAddedAt?: string;
 }
 
 // Claude Usage Limits (from Anthropic OAuth API)

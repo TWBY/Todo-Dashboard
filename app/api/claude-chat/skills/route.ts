@@ -69,25 +69,48 @@ async function listSkills(dir: string, ext: string): Promise<SkillInfo[]> {
   }
 }
 
+async function listProjectSkills(projectPath: string): Promise<SkillInfo[]> {
+  const skillsFromSkillsDir = await listSkills(join(projectPath, '.claude', 'skills'), 'SKILL.md')
+  const skillsFromCommandsDir = await listSkills(join(projectPath, '.claude', 'commands'), '.md')
+  return [...skillsFromSkillsDir, ...skillsFromCommandsDir]
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const projectId = searchParams.get('projectId')
+  const allProjects = searchParams.get('allProjects') === 'true'
 
   // 全域 skills
   const homeDir = process.env.HOME || ''
   const globalSkills = await listSkills(join(homeDir, '.claude', 'skills'), 'SKILL.md')
 
-  // 專案 commands
+  // 載入所有專案
+  const brickverseProjects = await readJsonFile<Project>('projects.json')
+  const courseFiles = await readJsonFile<Project>('coursefiles.json')
+  const utilityTools = await readJsonFile<Project>('utility-tools.json')
+  const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+
+  if (allProjects) {
+    // 批次查詢所有專案的 skills
+    const projectSkills: Record<string, { name: string; skills: SkillInfo[] }> = {}
+    for (const project of projects) {
+      const projectPath = project.devPath || project.path
+      const skills = await listProjectSkills(projectPath)
+      if (skills.length > 0) {
+        projectSkills[project.id] = { name: project.name, skills }
+      }
+    }
+    return Response.json({ globalSkills, projectSkills })
+  }
+
+  // 單一專案查詢
   let projectCommands: SkillInfo[] = []
   if (projectId) {
-    const brickverseProjects = await readJsonFile<Project>('projects.json')
-    const courseFiles = await readJsonFile<Project>('coursefiles.json')
-    const utilityTools = await readJsonFile<Project>('utility-tools.json')
-    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
     const project = projects.find(p => p.id === projectId)
     if (project) {
       const projectPath = project.devPath || project.path
-      projectCommands = await listSkills(join(projectPath, '.claude', 'commands'), '.md')
+      projectCommands = await listProjectSkills(projectPath)
     }
   }
 

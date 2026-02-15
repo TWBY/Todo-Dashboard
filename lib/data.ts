@@ -87,6 +87,7 @@ export function flattenProjectsWithChildren(projects: Project[]): Project[] {
             devPort: child.devPort,
             devCommand: child.devCommand,
             devBasePath: child.devBasePath,
+            devAddedAt: child.devAddedAt,
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,
           });

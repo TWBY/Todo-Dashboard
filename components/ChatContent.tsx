@@ -21,14 +21,25 @@ const MODE_CONFIG: Record<ChatMode, { label: string; prefix: string; placeholder
 const MODE_CYCLE: ChatMode[] = ['plan', 'edit', 'ask']
 
 // ContentsRate 進度條元件
-function ContentsRate({ inputTokens, outputTokens }: { inputTokens: number; outputTokens: number }) {
+function ContentsRate({ inputTokens, outputTokens, lastDurationMs }: { inputTokens: number; outputTokens: number; lastDurationMs?: number }) {
   const totalTokens = inputTokens + outputTokens
   const contextLimit = 200_000
   const pct = Math.min(Math.round((totalTokens / contextLimit) * 100), 100)
   const color = pct >= 80 ? '#f87171' : pct >= 50 ? '#fbbf24' : '#999999'
 
+  const durationStr = lastDurationMs
+    ? lastDurationMs >= 60000
+      ? `${(lastDurationMs / 60000).toFixed(1)}m`
+      : `${(lastDurationMs / 1000).toFixed(1)}s`
+    : null
+
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5" title={`輸入: ${inputTokens.toLocaleString()} / 輸出: ${outputTokens.toLocaleString()} / 上限: ${contextLimit.toLocaleString()}`}>
+      {durationStr && (
+        <span className="text-sm" style={{ color: '#555555' }} title="上次執行時長">
+          {durationStr}
+        </span>
+      )}
       <div className="w-16 h-1 rounded-full" style={{ backgroundColor: 'var(--background-primary)' }}>
         <div
           className="h-full rounded-full transition-all duration-300"
@@ -221,7 +232,7 @@ function ToolGroup({ msgs }: { msgs: ChatMessage[] }) {
 
   return (
     <div
-      className="text-sm animate-fade-in cursor-pointer flex items-center gap-1.5"
+      className="text-sm animate-fade-in cursor-pointer flex items-center gap-1.5 px-1.5 -mx-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
       onClick={() => setExpanded(true)}
       title="點擊展開所有操作"
     >
@@ -414,7 +425,7 @@ interface ChatContentProps {
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
   onSessionIdChange?: (sessionId: string) => void
-  onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number }) => void
+  onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => void
   onPanelStatusChange?: (status: PanelStatus) => void
 }
 
@@ -442,7 +453,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
   const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
-  const { messages, todos, isStreaming, streamStatus, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error } = useClaudeChat(projectId, { model: effectiveModel })
+  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error, clearError } = useClaudeChat(projectId, { model: effectiveModel })
   const { addPanel } = useChatPanels()
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
@@ -533,8 +544,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // 通知父元件 sessionMeta 變化
   useEffect(() => {
-    onSessionMetaChange?.({ totalInputTokens: sessionMeta.totalInputTokens, totalOutputTokens: sessionMeta.totalOutputTokens })
-  }, [sessionMeta.totalInputTokens, sessionMeta.totalOutputTokens, onSessionMetaChange])
+    onSessionMetaChange?.({ totalInputTokens: sessionMeta.totalInputTokens, totalOutputTokens: sessionMeta.totalOutputTokens, lastDurationMs: sessionMeta.lastDurationMs })
+  }, [sessionMeta.totalInputTokens, sessionMeta.totalOutputTokens, sessionMeta.lastDurationMs, onSessionMetaChange])
 
   // [已移除] 重複的 initialMessage effect — 保留 line 416 的版本即可
 
@@ -859,7 +870,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 {msg.role === 'assistant' && (
                   <div>
                     <div
-                      className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden
+                      className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden break-words
                         [&_h1]:text-[1.5em] [&_h1]:font-bold [&_h1]:mt-[1em] [&_h1]:mb-[0.4em]
                         [&_h2]:text-[1.3em] [&_h2]:font-bold [&_h2]:mt-[0.8em] [&_h2]:mb-[0.3em]
                         [&_h3]:text-[1.1em] [&_h3]:font-semibold [&_h3]:mt-[0.6em] [&_h3]:mb-[0.25em]
@@ -909,35 +920,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                   </div>
                 )}
 
-                {msg.role === 'tool' && msg.toolName === 'AskUserQuestion' && msg.questions && (
-                  <div className="w-full">
-                    <div className="max-w-[90%]">
-                      {pendingQuestions?.id === msg.id ? (
-                        <div
-                          className="px-2.5 py-1.5 rounded text-base animate-pulse"
-                          style={{
-                            backgroundColor: '#111111',
-                            border: '1px solid #333333',
-                            color: '#999999',
-                          }}
-                        >
-                          等待回答中...
-                        </div>
-                      ) : (
-                        <div
-                          className="px-2.5 py-1.5 rounded text-base"
-                          style={{
-                            backgroundColor: '#111111',
-                            border: '1px solid #222222',
-                            color: '#666666',
-                          }}
-                        >
-                          已回答問題
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {msg.role === 'tool' && msg.toolName === 'ExitPlanMode' && msg.planApproval && !pendingPlanApproval && (
                   <div className="w-full">
@@ -959,7 +941,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
                     return (
                       <div
-                        className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden
+                        className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden break-words
                           [&_h1]:text-[1.5em] [&_h1]:font-bold [&_h1]:mt-[1em] [&_h1]:mb-[0.4em]
                           [&_h2]:text-[1.3em] [&_h2]:font-bold [&_h2]:mt-[0.8em] [&_h2]:mb-[0.3em]
                           [&_h3]:text-[1.1em] [&_h3]:font-semibold [&_h3]:mt-[0.6em] [&_h3]:mb-[0.25em]
@@ -1021,13 +1003,22 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           })
         })()}
 
-        {isStreaming && (() => {
-          // 忽略 isError 訊息（stderr verbose output），只看真正的 assistant 回覆
-          const lastRealMsg = [...displayMessages].reverse().find(m => !(m.role === 'assistant' && m.isError))
-          return !lastRealMsg || lastRealMsg.role !== 'assistant'
-        })() && (
-          <div className="text-sm" style={{ color: '#666666' }}>
+        {isStreaming && streamingActivity && (
+          <div className="flex items-center gap-2 text-sm animate-fade-in" style={{ color: '#666666' }}>
             <PulsingDots />
+            <span className="streaming-status-text">
+              {streamingActivity.status === 'connecting' && '正在連線...'}
+              {streamingActivity.status === 'thinking' && '正在思考...'}
+              {streamingActivity.status === 'replying' && '正在回覆...'}
+              {streamingActivity.status === 'tool' && (
+                <>
+                  正在執行 <span style={{ color: '#888888' }}>{streamingActivity.toolName}</span>
+                  {streamingActivity.toolDetail && (
+                    <span style={{ color: '#555555' }}> — {streamingActivity.toolDetail}</span>
+                  )}
+                </>
+              )}
+            </span>
           </div>
         )}
         </div>
@@ -1048,10 +1039,19 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       {/* Error Display */}
       {error && (
         <div
-          className="mb-2 p-2 rounded text-base text-center flex-shrink-0"
+          className="mb-2 p-2 rounded text-base flex-shrink-0 flex items-center gap-2"
           style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444' }}
         >
-          {error}
+          <span className="flex-1 text-center">{error}</span>
+          <button
+            onClick={clearError}
+            className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
+            title="關閉"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
       )}
 
@@ -1130,10 +1130,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 />
                 <button
                   onClick={() => removeImage(i)}
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
                   style={{ backgroundColor: '#ef4444', color: 'white' }}
                 >
-                  &#10005;
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
                 </button>
               </div>
             ))}
@@ -1149,7 +1151,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           onPaste={handlePaste}
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
-          placeholder=""
+          placeholder={modeConfig.placeholder}
           rows={1}
           className="w-full px-4 pt-3 pb-1 text-lg outline-none resize-none bg-transparent"
           style={{
@@ -1314,10 +1316,10 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               <button
                 onClick={handleSend}
                 disabled={!input.trim() && images.length === 0}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{
-                  backgroundColor: (input.trim() || images.length > 0) ? '#333333' : '#111111',
-                  color: (input.trim() || images.length > 0) ? '#ffffff' : '#666666',
+                  backgroundColor: (input.trim() || images.length > 0) ? '#ffffff' : '#1a1a1a',
+                  color: (input.trim() || images.length > 0) ? '#000000' : '#444444',
                   fontSize: '16px',
                 }}
                 title="傳送"
