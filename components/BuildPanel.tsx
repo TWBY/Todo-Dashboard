@@ -23,16 +23,16 @@ Phase 2 — 智能 Commit（AI 介入）
 
 Phase 3 — 版本判斷（AI 介入）
 6. git log <上次release>..HEAD --oneline 列出所有新 commit
-7. 根據 commit 內容決定版本升級幅度（嚴格遵守 SemVer 語意）
+7. 根據 commit 內容決定版本升級幅度（嚴格遵守 SemVer 語意：patch/minor/major）
 
 Phase 4 — 版本升級與打包（機械執行）
-8. 讀取 version.json，將 development 版本升級（patch/minor/major），然後將升級後的版本號同步到 production
+8. 讀取 version.json 的 development 版本，根據步驟 7 的判斷升級版本號（例如 1.15.7-dev patch→1.15.7, minor→1.16.0, major→2.0.0），去掉 -dev 後綴，然後寫入 production 欄位
 9. npm run build
 
 Phase 5 — Release Commit（機械執行）
 10. git add version.json
-11. git commit -m "release: P-X.Y.Z — 一行功能摘要"（P 代表 Production 版本）
-12. 將 development 版本升級為下一個 patch-dev（例如從 1.15.5 變成 1.15.6-dev）
+11. git commit -m "release: vX.Y.Z — 一行功能摘要"（使用 production 版本號，不加前綴）
+12. 將 development 版本升級為下一個 patch-dev（例如 production 是 1.15.7，則 development 改為 1.15.8-dev）
 13. git add version.json && git commit -m "chore: bump dev version to X.Y.Z-dev"
 14. 回報新版本號和本次變更摘要`;
 
@@ -180,14 +180,14 @@ function VArrow({ status }: { status: StepStatus }) {
 function TypeBadge({ type }: { type: 'mechanical' | 'ai' }) {
   const config = type === 'mechanical'
     ? { bg: 'rgba(34,197,94,0.1)', fg: '#22c55e', border: 'rgba(34,197,94,0.2)', icon: 'fa-gear', label: '機械執行' }
-    : { bg: 'rgba(168,85,247,0.1)', fg: '#a855f7', border: 'rgba(168,85,247,0.2)', icon: 'fa-sparkles', label: 'AI 介入' };
+    : { bg: 'rgba(168,85,247,0.1)', fg: '#a855f7', border: 'rgba(168,85,247,0.2)', icon: 'fa-wand-magic-sparkles', label: 'AI 介入' };
 
   return (
     <span
       className="text-xs px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1"
       style={{ backgroundColor: config.bg, color: config.fg, border: `1px solid ${config.border}` }}
     >
-      <i className={`fa-sharp fa-regular ${config.icon} text-xs`} />
+      <i className={`fa-solid ${config.icon} text-xs`} />
       {config.label}
     </span>
   );
@@ -196,13 +196,13 @@ function TypeBadge({ type }: { type: 'mechanical' | 'ai' }) {
 function PhaseStatusIcon({ status }: { status: StepStatus }) {
   switch (status) {
     case 'done':
-      return <i className="fa-sharp fa-solid fa-circle-check text-xs" style={{ color: '#22c55e' }} />;
+      return <i className="fa-solid fa-circle-check text-xs" style={{ color: '#22c55e' }} />;
     case 'running':
-      return <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />;
+      return <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />;
     case 'error':
-      return <i className="fa-sharp fa-solid fa-circle-xmark text-xs" style={{ color: '#ef4444' }} />;
+      return <i className="fa-solid fa-circle-xmark text-xs" style={{ color: '#ef4444' }} />;
     default:
-      return <i className="fa-sharp fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />;
+      return <i className="fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />;
   }
 }
 
@@ -249,13 +249,13 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
       <div className="flex items-start gap-1.5">
         <span className="shrink-0 mt-0.5">
           {status === 'done' ? (
-            <i className="fa-sharp fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
+            <i className="fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
           ) : status === 'running' ? (
-            <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
+            <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
           ) : status === 'error' ? (
-            <i className="fa-sharp fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
+            <i className="fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
           ) : (
-            <i className="fa-sharp fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+            <i className="fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
           )}
         </span>
         <div className="flex-1 min-w-0">
@@ -315,7 +315,7 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
         <div className="flex items-center gap-2 mb-1">
           {streamingActivity.status === 'tool' ? (
             <span className="text-xs font-mono" style={{ color: '#a855f7' }}>
-              <i className="fa-sharp fa-regular fa-terminal mr-1" />
+              <i className="fa-regular fa-terminal mr-1" />
               {streamingActivity.toolName}
               {streamingActivity.toolDetail && (
                 <span style={{ color: 'var(--text-tertiary)' }}> — {streamingActivity.toolDetail}</span>
@@ -451,74 +451,43 @@ export default function BuildPanel() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between py-2 mb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={close}
-            className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
-            style={{ color: 'var(--text-secondary)' }}
-            title="返回"
-          >
-            <i className="fa-sharp fa-regular fa-arrow-left" />
-          </button>
-          <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--text-primary)' }}>
-            Build 流程
-          </h2>
-          {buildState === 'running' && (
-            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
-              執行中
-            </span>
-          )}
-          {buildState === 'done' && (
-            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
-              完成
-            </span>
-          )}
-          {buildState === 'error' && (
-            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
-              錯誤
-            </span>
-          )}
-        </div>
+      <div className="flex items-center justify-between py-4 mb-6 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <button
+          onClick={close}
+          className="w-9 h-9 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
+          style={{ color: 'var(--text-secondary)' }}
+          title="返回"
+        >
+          <i className="fa-solid fa-arrow-left" />
+        </button>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {buildState === 'idle' && (
             <button
               onClick={handleStartBuild}
-              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:brightness-110 flex items-center gap-1.5"
+              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:brightness-110"
               style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
             >
-              <i className="fa-sharp fa-regular fa-play text-xs" />
               開始建立
             </button>
           )}
           {buildState === 'running' && (
             <button
               onClick={stopStreaming}
-              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20 flex items-center gap-1.5"
+              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20"
               style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
             >
-              <i className="fa-sharp fa-solid fa-stop text-xs" />
               停止
             </button>
           )}
           {(buildState === 'done' || buildState === 'error') && (
             <button
               onClick={handleReset}
-              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-white/10 flex items-center gap-1.5"
+              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-white/10"
               style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
             >
-              <i className="fa-sharp fa-regular fa-rotate-right text-xs" />
               重新執行
             </button>
           )}
-          <button
-            onClick={close}
-            className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-red-500/20"
-            style={{ color: 'var(--text-secondary)' }}
-            title="關閉"
-          >
-            <i className="fa-sharp fa-regular fa-xmark" />
-          </button>
         </div>
       </div>
 
@@ -566,7 +535,7 @@ export default function BuildPanel() {
                       className="text-xs mt-2 px-2.5 py-1.5 rounded"
                       style={{ backgroundColor: 'rgba(168,85,247,0.06)', color: 'var(--text-tertiary)' }}
                     >
-                      <i className="fa-sharp fa-regular fa-circle-info text-xs mr-1" style={{ color: '#a855f7' }} />
+                      <i className="fa-regular fa-circle-info text-xs mr-1" style={{ color: '#a855f7' }} />
                       {phase.note}
                     </div>
                   )}
@@ -590,7 +559,7 @@ export default function BuildPanel() {
               className="mt-4 rounded-md px-3 py-2 text-xs"
               style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
             >
-              <i className="fa-sharp fa-regular fa-triangle-exclamation mr-1" />
+              <i className="fa-regular fa-triangle-exclamation mr-1" />
               {error}
             </div>
           )}
@@ -602,7 +571,7 @@ export default function BuildPanel() {
               style={{ backgroundColor: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
             >
               <div className="text-xs font-medium mb-1" style={{ color: '#22c55e' }}>
-                <i className="fa-sharp fa-solid fa-circle-check mr-1" />
+                <i className="fa-solid fa-circle-check mr-1" />
                 Build 完成
               </div>
               <div className="text-xs build-ai-output" style={{ color: 'var(--text-secondary)' }}>
