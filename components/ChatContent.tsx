@@ -60,17 +60,17 @@ function TodoList({ todos }: { todos: TodoItem[] }) {
         <div key={i} className="flex items-center gap-2 text-base">
           <span className="w-3 flex-shrink-0 flex items-center justify-center">
             {todo.status === 'completed' && (
-              <span className="text-green-400">&#10003;</span>
+              <i className="fa-solid fa-check text-green-400 text-[11px]" />
             )}
             {todo.status === 'in_progress' && (
-              <span className="todo-shimmer-dot text-[10px]" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }}>&#9679;</span>
+              <i className="fa-solid fa-circle shimmer-dot text-[6px]" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }} />
             )}
             {todo.status === 'pending' && (
               <span className="w-3 h-3 rounded-full border border-gray-500" />
             )}
           </span>
           <span
-            className={`${todo.status === 'completed' ? 'line-through opacity-60' : ''} ${todo.status === 'in_progress' ? 'todo-shimmer' : ''}`}
+            className={`${todo.status === 'completed' ? 'line-through opacity-60' : ''} ${todo.status === 'in_progress' ? 'shimmer-text' : ''}`}
             style={todo.status === 'in_progress' ? { color: '#999999', animationDelay: `${i * 0.3}s` } : undefined}
           >
             {todo.status === 'in_progress' ? todo.activeForm : todo.content}
@@ -245,7 +245,43 @@ function CodeBlockWithCopy({ children, ...props }: React.ComponentPropsWithoutRe
   )
 }
 
-const markdownComponents = { pre: CodeBlockWithCopy }
+// 表格溢出容器
+function TableWrapper({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="overflow-x-auto my-3 rounded-lg" style={{ border: '1px solid #222222' }}>
+      <table className="w-full border-collapse" {...rest}>{children}</table>
+    </div>
+  )
+}
+
+const markdownComponents = {
+  pre: CodeBlockWithCopy,
+  table: TableWrapper,
+}
+
+// 共用 Markdown 排版 className（基於 Brick Design 設計系統）
+const MARKDOWN_PROSE = `prose prose-invert max-w-none overflow-hidden break-words
+  [&_h1]:text-[1.6rem] [&_h1]:font-bold [&_h1]:leading-[1.4] [&_h1]:mt-8 [&_h1]:mb-3
+  [&_h2]:text-[1.35rem] [&_h2]:font-bold [&_h2]:leading-[1.4] [&_h2]:mt-6 [&_h2]:mb-2.5
+  [&_h3]:text-[1.15rem] [&_h3]:font-semibold [&_h3]:leading-[1.4] [&_h3]:mt-5 [&_h3]:mb-2
+  [&_h4]:text-[1.05rem] [&_h4]:font-semibold [&_h4]:leading-[1.4] [&_h4]:mt-4 [&_h4]:mb-1.5
+  [&>:first-child]:mt-0
+  [&_p]:mt-1 [&_p]:mb-3 [&_p]:whitespace-pre-wrap
+  [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1
+  [&_ol]:pl-[1.5em] [&_ul]:pl-[1.5em]
+  [&_ul]:list-disc [&_ol]:list-decimal
+  [&_ul_ul]:list-[circle] [&_ul_ul_ul]:list-[square]
+  [&_li]:display-list-item
+  [&_ul>li::marker]:text-[#666666] [&_ol>li::marker]:text-[#666666]
+  [&_pre]:my-3 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:bg-[#111111] [&_pre]:border [&_pre]:border-[#222222]
+  [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:bg-[#111111]
+  [&_pre_code]:p-0 [&_pre_code]:bg-transparent
+  [&_strong]:font-bold [&_a]:underline
+  [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-[#111111] [&_th]:text-sm [&_th]:font-semibold
+  [&_td]:px-3 [&_td]:py-2 [&_td]:text-sm
+  [&_tr]:border-b [&_tr]:border-[#222222] [&_tr:last-child]:border-0
+  [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-[#999]
+  [&_hr]:border-[#333333] [&_hr]:my-4`
 
 // 工具操作 Log：streaming 時展開即時顯示，結束後收合
 function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) {
@@ -489,7 +525,7 @@ function QuestionDialog({ questions, onAnswer }: {
   )
 }
 
-export type PanelStatus = 'idle' | 'waiting' | 'completed'
+export type PanelStatus = 'idle' | 'streaming' | 'waiting' | 'completed'
 
 interface ChatContentProps {
   projectId: string
@@ -521,9 +557,10 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [images, setImages] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [showImagePicker, setShowImagePicker] = useState(false)
-  const [skillMenu, setSkillMenu] = useState<'project' | 'global' | null>(null)
   const [globalSkills, setGlobalSkills] = useState<SkillInfo[]>([])
   const [projectCommands, setProjectCommands] = useState<SkillInfo[]>([])
+  const [slashFilter, setSlashFilter] = useState<string | null>(null)
+  const [slashSelectedIndex, setSlashSelectedIndex] = useState(0)
   const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
   const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high'>('medium')
   const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
@@ -534,7 +571,20 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isNearBottomRef = useRef(true)
-  const skillMenuRef = useRef<HTMLDivElement>(null)
+
+  // 合併 project + global skills，去重
+  const allSkills = useMemo(() => {
+    const map = new Map<string, SkillInfo>()
+    for (const s of projectCommands) map.set(s.name, s)
+    for (const s of globalSkills) if (!map.has(s.name)) map.set(s.name, s)
+    return Array.from(map.values())
+  }, [projectCommands, globalSkills])
+
+  const filteredSkills = useMemo(() => {
+    if (slashFilter === null) return []
+    if (slashFilter === '') return allSkills
+    return allSkills.filter(s => s.name.toLowerCase().includes(slashFilter.toLowerCase()))
+  }, [allSkills, slashFilter])
 
   // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
   const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
@@ -764,25 +814,20 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       .catch(() => {})
   }, [projectId])
 
-  // 點擊外部關閉 skill menu
-  useEffect(() => {
-    if (!skillMenu) return
-    const handler = (e: MouseEvent) => {
-      if (skillMenuRef.current && !skillMenuRef.current.contains(e.target as Node)) setSkillMenu(null)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [skillMenu])
-
   // 圖片預覽 URLs（自動清理）
   const imagePreviewUrls = useMemo(() => images.map(f => URL.createObjectURL(f)), [images])
   useEffect(() => {
     return () => imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
   }, [imagePreviewUrls])
 
+  const MAX_IMAGES = 5
   const addImages = useCallback((files: FileList | File[]) => {
     const valid = Array.from(files).filter(f => f.type.startsWith('image/'))
-    if (valid.length > 0) setImages(prev => [...prev, ...valid])
+    if (valid.length > 0) setImages(prev => {
+      const remaining = MAX_IMAGES - prev.length
+      if (remaining <= 0) return prev
+      return [...prev, ...valid.slice(0, remaining)]
+    })
   }, [])
 
   const removeImage = useCallback((index: number) => {
@@ -926,6 +971,29 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Slash menu 鍵盤操作
+    if (slashFilter !== null && filteredSkills.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSlashSelectedIndex(i => (i + 1) % filteredSkills.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSlashSelectedIndex(i => (i - 1 + filteredSkills.length) % filteredSkills.length)
+        return
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        runSkill(filteredSkills[slashSelectedIndex].name)
+        return
+      }
+    }
+    if (slashFilter !== null && e.key === 'Escape') {
+      e.preventDefault()
+      setSlashFilter(null)
+      return
+    }
     if (e.key === 'Escape' && isStreaming) {
       e.preventDefault()
       stopStreaming()
@@ -943,7 +1011,16 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }
 
   const runSkill = (name: string) => {
-    setSkillMenu(null)
+    setSlashFilter(null)
+    // 清空 textarea
+    inputRef.current = ''
+    hasInputRef.current = false
+    if (textareaRef.current) textareaRef.current.value = ''
+    setHasInput(false)
+    requestAnimationFrame(() => {
+      adjustTextareaHeight()
+      textareaRef.current?.focus()
+    })
     isNearBottomRef.current = true
     sendMessage(`/${name}`, 'edit')
     setMode('edit')
@@ -959,6 +1036,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   // 面板狀態顏色（直接從 streamStatus 衍生，無 race condition）
   const panelStatus: PanelStatus = pendingPlanApproval || pendingQuestions
     ? 'waiting'
+    : isStreaming ? 'streaming'
     : streamStatus === 'completed' ? 'completed' : 'idle'
 
   // 通知父元件面板狀態變化
@@ -1065,28 +1143,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 {msg.role === 'assistant' && (
                   <div className="group/msg relative">
                     <div
-                      className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden break-words
-                        [&_h1]:text-[1.5em] [&_h1]:font-bold [&_h1]:mt-[1em] [&_h1]:mb-[0.4em]
-                        [&_h2]:text-[1.3em] [&_h2]:font-bold [&_h2]:mt-[0.8em] [&_h2]:mb-[0.3em]
-                        [&_h3]:text-[1.1em] [&_h3]:font-semibold [&_h3]:mt-[0.6em] [&_h3]:mb-[0.25em]
-                        [&_h4]:text-[1em] [&_h4]:font-semibold [&_h4]:mt-[0.5em] [&_h4]:mb-[0.2em]
-                        [&>:first-child]:mt-0
-                        [&_p]:mt-[0.3em] [&_p]:mb-[0.5em] [&_p]:whitespace-pre-wrap
-                        [&_ul]:my-[0.4em] [&_ol]:my-[0.4em] [&_li]:my-[0.15em]
-                        [&_ol]:pl-[1.5em] [&_ul]:pl-[1.5em]
-                        [&_ul]:list-disc [&_ol]:list-decimal
-                        [&_ul_ul]:list-[circle] [&_ul_ul_ul]:list-[square]
-                        [&_li]:display-list-item
-                        [&_ul>li::marker]:text-[#666666] [&_ol>li::marker]:text-[#666666]
-                        [&_pre]:my-2 [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:bg-[#111111]
-                        [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:bg-[#111111]
-                        [&_pre_code]:p-0 [&_pre_code]:bg-transparent
-                        [&_strong]:font-bold [&_a]:underline
-                        [&_table]:w-full [&_table]:border-collapse [&_table]:my-2
-                        [&_th]:border [&_th]:border-[#222222] [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_th]:bg-[#111111]
-                        [&_td]:border [&_td]:border-[#222222] [&_td]:px-2 [&_td]:py-1
-                        [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-[#999]
-                        [&_hr]:border-[#333333] [&_hr]:my-3"
+                      className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
                       style={{ color: '#ffffff' }}
                     >
                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
@@ -1174,26 +1231,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
                     return (
                       <div
-                        className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden break-words
-                          [&_h1]:text-[1.5em] [&_h1]:font-bold [&_h1]:mt-[1em] [&_h1]:mb-[0.4em]
-                          [&_h2]:text-[1.3em] [&_h2]:font-bold [&_h2]:mt-[0.8em] [&_h2]:mb-[0.3em]
-                          [&_h3]:text-[1.1em] [&_h3]:font-semibold [&_h3]:mt-[0.6em] [&_h3]:mb-[0.25em]
-                          [&_h4]:text-[1em] [&_h4]:font-semibold [&_h4]:mt-[0.5em] [&_h4]:mb-[0.2em]
-                          [&>:first-child]:mt-0
-                          [&_p]:mt-[0.3em] [&_p]:mb-[0.5em] [&_p]:whitespace-pre-wrap
-                          [&_ul]:my-[0.4em] [&_ol]:my-[0.4em] [&_li]:my-[0.15em]
-                          [&_ol]:pl-[1.5em] [&_ul]:pl-[1.5em]
-                          [&_ul]:list-disc [&_ol]:list-decimal
-                          [&_li]:display-list-item
-                          [&_ul>li::marker]:text-[#666666] [&_ol>li::marker]:text-[#666666]
-                          [&_pre]:my-2 [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:bg-[#111111]
-                          [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:bg-[#111111]
-                          [&_pre_code]:p-0 [&_pre_code]:bg-transparent
-                          [&_strong]:font-bold [&_a]:underline
-                          [&_table]:w-full [&_table]:border-collapse [&_table]:my-2
-                          [&_th]:border [&_th]:border-[#222222] [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_th]:bg-[#111111]
-                          [&_td]:border [&_td]:border-[#222222] [&_td]:px-2 [&_td]:py-1
-                          [&_hr]:border-[#333333] [&_hr]:my-3"
+                        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
                         style={{ color: '#cccccc' }}
                       >
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{planMarkdown}</ReactMarkdown>
@@ -1298,39 +1336,44 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
       {/* Error Display */}
       {error && (
-        <div
-          className="mb-2 p-2 rounded text-base flex-shrink-0 flex items-center gap-2"
-          style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444' }}
-        >
+        <div className="mb-2 flex-shrink-0 flex items-stretch gap-2">
           {lastFailedMessage && (
             <button
               onClick={() => {
                 clearError()
                 sendMessage(lastFailedMessage.message, lastFailedMessage.mode)
               }}
-              className="flex-shrink-0 px-2 py-0.5 rounded text-sm transition-colors hover:bg-white/10"
-              style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+              className="px-4 rounded text-base font-medium transition-colors hover:bg-red-500/20"
+              style={{
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                color: '#ef4444',
+                minWidth: '72px',
+              }}
             >
               重試
             </button>
           )}
-          <span className="flex-1 text-center">{error}</span>
-          <button
-            onClick={clearError}
-            className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
-            title="關閉"
+          <div
+            className="flex-1 p-2 rounded text-base flex items-center"
+            style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444' }}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+            <span className="flex-1">{error}</span>
+            <button
+              onClick={clearError}
+              className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors ml-2"
+              title="關閉"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Skill Dropdown — 在 Input 之上 */}
-      {skillMenu && (
+      {/* Slash Command Dropdown — 在 Input 之上 */}
+      {slashFilter !== null && filteredSkills.length > 0 && (
         <div
-          ref={skillMenuRef}
           className="mb-2 min-w-[200px] max-h-[240px] overflow-y-auto rounded py-1.5 flex-shrink-0"
           style={{
             backgroundColor: '#111111',
@@ -1338,15 +1381,15 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           }}
         >
-          <div className="px-3 py-1.5 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-            {skillMenu === 'project' ? 'Project Commands' : 'Global Skills'}
-          </div>
-          {(skillMenu === 'project' ? projectCommands : globalSkills).map(s => (
+          {filteredSkills.map((s, i) => (
             <button
               key={s.name}
               onClick={() => runSkill(s.name)}
-              className="w-full text-left px-3 py-2 text-base transition-colors hover:bg-white/10"
-              style={{ color: 'var(--text-primary)' }}
+              className="w-full text-left px-3 py-2 text-base transition-colors"
+              style={{
+                color: 'var(--text-primary)',
+                backgroundColor: i === slashSelectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent',
+              }}
             >
               <div className="font-medium">/{s.name}</div>
               {s.description && (
@@ -1356,11 +1399,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               )}
             </button>
           ))}
-          {(skillMenu === 'project' ? projectCommands : globalSkills).length === 0 && (
-            <div className="px-3 py-2 text-base" style={{ color: 'var(--text-tertiary)' }}>
-              沒有可用的 {skillMenu === 'project' ? 'commands' : 'skills'}
-            </div>
-          )}
         </div>
       )}
 
@@ -1426,6 +1464,14 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               setHasInput(nowHas)
             }
             adjustTextareaHeight()
+            // Slash command 偵測：只在整行只有 /xxx 時觸發（無換行、無空格前綴）
+            const val = e.target.value
+            if (/^\/[^\s]*$/.test(val)) {
+              setSlashFilter(val.slice(1))
+              setSlashSelectedIndex(0)
+            } else if (slashFilter !== null) {
+              setSlashFilter(null)
+            }
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
@@ -1433,7 +1479,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           onCompositionEnd={() => setIsComposing(false)}
           placeholder={(pendingPlanApproval || pendingQuestions) ? '請先處理上方的決策...' : modeConfig.placeholder}
           rows={1}
-          className="w-full px-4 pt-3 pb-1 text-lg outline-none resize-none bg-transparent"
+          className="w-full px-4 pt-3 pb-1 text-base outline-none resize-none bg-transparent"
           style={{
             color: 'var(--text-primary)',
             maxHeight: '200px',
