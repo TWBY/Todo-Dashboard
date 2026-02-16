@@ -195,9 +195,9 @@
     "sessionId": "0c4f7416-8fbd-4122-8013-0d3fdb6a9629",
     "projectId": "dashboard",
     "title": "根據這個專案，有沒有適合的 agent team 應用組合或是場景",
-    "messageCount": 17,
+    "messageCount": 18,
     "createdAt": 1771219373404,
-    "lastActiveAt": 1771230708758
+    "lastActiveAt": 1771231946783
   },
   {
     "sessionId": "e18f039e-0aa9-4dfe-90c6-03cab93db731",
@@ -219,8 +219,8 @@
     "sessionId": "9e93ccc2-2ed8-4f9d-8bef-4c052ccc61f8",
     "projectId": "dashboard",
     "title": "關於 Pack 的流程，我們之前有一度是使用類似於 Chat 的功能，它是擺在最右邊的位置，會開一個跟 Chat 大小一",
-    "messageCount": 7,
+    "messageCount": 9,
     "createdAt": 1771230372896,
-    "lastActiveAt": 1771231585917
+    "lastActiveAt": 1771231847695
   }
 ]
