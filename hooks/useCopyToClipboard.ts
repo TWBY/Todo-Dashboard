@@ -12,42 +12,72 @@ export function useCopyToClipboard(timeout = 2000) {
     };
   }, []);
 
-  const copy = useCallback(async (text: string) => {
+  const markCopied = useCallback((text: string) => {
+    setCopiedValue(text);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopiedValue(null), timeout);
+  }, [timeout]);
+
+  // 同步複製：使用 execCommand('copy') 確保剪貼簿立即寫入
+  // （navigator.clipboard.write 是 async，OS 剪貼簿可能尚未同步就被使用者貼上）
+  const copy = useCallback((text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedValue(text);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setCopiedValue(null), timeout);
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      markCopied(text);
       return true;
     } catch (err) {
       console.error('Failed to copy:', err);
       return false;
     }
-  }, [timeout]);
+  }, [markCopied]);
 
   // 複製 rich text（同時寫入 text/html + text/plain），貼到 Gmail 等郵件客戶端會保留格式
-  const copyRichText = useCallback(async (markdown: string) => {
+  const copyRichText = useCallback((markdown: string) => {
     try {
       const html = markdownToHtml(markdown);
-      const blobHtml = new Blob([html], { type: 'text/html' });
-      const blobText = new Blob([markdown], { type: 'text/plain' });
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': blobHtml,
-          'text/plain': blobText,
-        }),
-      ]);
-      // 注意：不要再呼叫 writeText — 它會覆蓋 ClipboardItem 寫入的所有 MIME 層（包括 html）
-      setCopiedValue(markdown);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setCopiedValue(null), timeout);
+
+      // 建立隱藏容器，放入 HTML 內容
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.opacity = '0';
+      document.body.appendChild(container);
+
+      // 選取容器內容
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      // 同步複製（包含 text/html + text/plain）
+      document.execCommand('copy');
+
+      // 清理
+      if (selection) selection.removeAllRanges();
+      document.body.removeChild(container);
+
+      markCopied(markdown);
       return true;
     } catch (err) {
       console.error('Failed to copy rich text:', err);
       // fallback to plain text
       return copy(markdown);
     }
-  }, [timeout, copy]);
+  }, [markCopied, copy]);
 
   const isCopied = useCallback((value: string) => copiedValue === value, [copiedValue]);
 

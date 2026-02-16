@@ -92,7 +92,7 @@ function HArrow() {
 function SkillNode({ node, index, copy, isCopied }: {
   node: NodeData;
   index?: number;
-  copy: (text: string) => Promise<boolean>;
+  copy: (text: string) => boolean;
   isCopied: (text: string) => boolean;
 }) {
   const hasCmd = !!node.command;
