@@ -1,258 +1,58 @@
 [
   {
-    "sessionId": "4f8998bf-bca5-4d3f-8549-c0531b41134c",
+    "sessionId": "a425c4ea-2838-46b0-95d1-3898e2f63534",
     "projectId": "dashboard",
-    "title": "chat 在問問題的時候，上面不需要有「已經回答問題」或是「等待問題回答中」的訊息提示框",
-    "messageCount": 1,
-    "createdAt": 1771159753518,
-    "lastActiveAt": 1771159753518
+    "title": "Untitled",
+    "messageCount": 8,
+    "createdAt": 1771243957899,
+    "lastActiveAt": 1771245263208
   },
   {
-    "sessionId": "fe1e17c3-411b-49a9-aabb-ba1613a041e8",
+    "sessionId": "2b4e2d58-e514-4c5a-b5f9-60d79b9382c5",
     "projectId": "dashboard",
-    "title": "chat 在問問題的時候，上面不需要有「已經回答問題」或是「等待問題回答中」的訊息提示框",
+    "title": "Untitled",
+    "messageCount": 8,
+    "createdAt": 1771244084065,
+    "lastActiveAt": 1771245415319
+  },
+  {
+    "sessionId": "10dcfd1f-8658-44ff-bcf0-f57e18f0d051",
+    "projectId": "dashboard",
+    "title": "那個 Dev Servers 不管是在打開或關閉的狀態，外面都會有一個 border，我不需要這個 border 的概念",
+    "messageCount": 1,
+    "createdAt": 1771244745921,
+    "lastActiveAt": 1771244764196
+  },
+  {
+    "sessionId": "73ef217c-cd05-4dca-9d93-570dd4c6434d",
+    "projectId": "dashboard",
+    "title": "好像卡住，再重新試試看",
     "messageCount": 9,
-    "createdAt": 1771159775651,
-    "lastActiveAt": 1771160841220
+    "createdAt": 1771244880183,
+    "lastActiveAt": 1771245178824
   },
   {
-    "sessionId": "888b8d28-e676-4fb9-b491-6e47c76e59c2",
-    "projectId": "dashboard",
-    "title": "因為我現在會同時編輯 3000 和 4000（專案版本），在想說因為我會同時在同一個畫面左右擺放，或是切來切去，有時候會",
-    "messageCount": 28,
-    "createdAt": 1771160579547,
-    "lastActiveAt": 1771162443655
-  },
-  {
-    "sessionId": "22edad41-f058-4d92-a98d-d048719a9a6e",
-    "projectId": "dashboard",
-    "title": "讀取 package.json 的版本號並告訴我",
-    "messageCount": 1,
-    "createdAt": 1771160801588,
-    "lastActiveAt": 1771160814538
-  },
-  {
-    "sessionId": "ab9c71b7-d4ae-49da-9b32-504f15153ba1",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 2,
-    "createdAt": 1771161139817,
-    "lastActiveAt": 1771161330398
-  },
-  {
-    "sessionId": "2c600951-bc33-4ea3-a446-8d67ab163013",
-    "projectId": "dashboard",
-    "title": "現在 chat 有各種小細節的 UIUX 問題，去主動想想看有哪先小地方直得優化改善的",
-    "messageCount": 2,
-    "createdAt": 1771161995250,
-    "lastActiveAt": 1771162616471
-  },
-  {
-    "sessionId": "621e3626-2840-4709-aa19-e13705851aea",
-    "projectId": "dashboard",
-    "title": "關於部署的 commit 規則有一些改善與建議，以下是 建議，需要修改一下 build 在 commit 的過程\n\n你的",
-    "messageCount": 1,
-    "createdAt": 1771162623904,
-    "lastActiveAt": 1771162655723
-  },
-  {
-    "sessionId": "ed267137-5717-4fb3-8f17-9d34f876b1ef",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 1,
-    "createdAt": 1771162662506,
-    "lastActiveAt": 1771162662506
-  },
-  {
-    "sessionId": "a6dad1d0-8fe3-4d53-b5ae-349c95df8dd7",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 5,
-    "createdAt": 1771162682426,
-    "lastActiveAt": 1771162798848
-  },
-  {
-    "sessionId": "ef7079b6-c52d-4fc1-a914-d9099c56a76e",
-    "projectId": "dashboard",
-    "title": "[PROD] Dashboard 在 4000 的時候，現在還是顯示 stop，沒有顯示 Pro 保護自己耶，但是 30",
-    "messageCount": 7,
-    "createdAt": 1771162905680,
-    "lastActiveAt": 1771163941765
-  },
-  {
-    "sessionId": "2d88182e-469c-474e-8f46-9bd901cb1ccb",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 0,
-    "createdAt": 1771163099072,
-    "lastActiveAt": 1771163150300
-  },
-  {
-    "sessionId": "623f869c-8997-47ee-bc44-79acf5e6c95a",
-    "projectId": "dashboard",
-    "title": "好，其實我現在反而是關於在回答問題時，那個「…」以及「正在連線」後面的細節部分，我希望要有那種「呼吸感」。\n\n關於呼吸感",
-    "messageCount": 1,
-    "createdAt": 1771168270868,
-    "lastActiveAt": 1771168270868
-  },
-  {
-    "sessionId": "04a627d0-ff20-435a-a61c-469249fb9ded",
-    "projectId": "dashboard",
-    "title": "好，其實我現在反而是關於在回答問題時，那個「…」以及「正在連線」後面的細節部分，我希望要有那種「呼吸感」。\n\n關於呼吸感",
-    "messageCount": 56,
-    "createdAt": 1771168353888,
-    "lastActiveAt": 1771174880791
-  },
-  {
-    "sessionId": "8d989ea7-c4db-499a-8c82-fcd7214d0e1b",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 1,
-    "createdAt": 1771171413615,
-    "lastActiveAt": 1771171489295
-  },
-  {
-    "sessionId": "b231d41e-b21a-4fc7-81db-b1af5ae931bc",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 1,
-    "createdAt": 1771172519948,
-    "lastActiveAt": 1771172600201
-  },
-  {
-    "sessionId": "ccbc10c4-b786-4c0f-bdc3-dab0523d913d",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 1,
-    "createdAt": 1771172974299,
-    "lastActiveAt": 1771173038325
-  },
-  {
-    "sessionId": "a086a18d-6b12-4b19-817b-f8fd1fa335ac",
-    "projectId": "dashboard",
-    "title": "一共有三個問題需要修正，整理如下：\n\n1. Reload 功能修正\nReload 的地方應該要直接重啟才對。目前似乎沒有",
-    "messageCount": 6,
-    "createdAt": 1771175239440,
-    "lastActiveAt": 1771175656508
-  },
-  {
-    "sessionId": "93e2271a-4754-4fa8-bca3-2db49c712a50",
-    "projectId": "dashboard",
-    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 找到上次 release commit：git log --onelin",
-    "messageCount": 38,
-    "createdAt": 1771175854493,
-    "lastActiveAt": 1771210437252
-  },
-  {
-    "sessionId": "2175bed0-0aaa-414a-a3cf-5472f155aca1",
-    "projectId": "dashboard",
-    "title": "現在 chat 是如何跟 claude code 串接的，為何我現在這個抽象層有很多功能好像不能實作？",
-    "messageCount": 53,
-    "createdAt": 1771177259865,
-    "lastActiveAt": 1771213275379
-  },
-  {
-    "sessionId": "1dcd6036-a7da-4a84-9149-f71d1863a026",
-    "projectId": "dashboard",
-    "title": "你好，請簡短回覆一句話確認你能正常運作",
-    "messageCount": 1,
-    "createdAt": 1771201366249,
-    "lastActiveAt": 1771201369544
-  },
-  {
-    "sessionId": "26547bc2-c795-4330-bb5b-aa9bc4d81edc",
-    "projectId": "dashboard",
-    "title": "你好，請用一句話回覆確認你能正常運作",
-    "messageCount": 2,
-    "createdAt": 1771201461814,
-    "lastActiveAt": 1771201535923
-  },
-  {
-    "sessionId": "6261d922-ad2a-415d-a62b-5776383a3890",
-    "projectId": "dashboard",
-    "title": "現在記憶體跟 CPU 監控跟整體面板搭配起來有點突兀，需要修正，我可以理解記憶法本身有顏色，但是顯示方式需要低調點，也許",
-    "messageCount": 1,
-    "createdAt": 1771204016751,
-    "lastActiveAt": 1771204103261
-  },
-  {
-    "sessionId": "777a030f-1f5a-46df-af30-f026281551e9",
-    "projectId": "dashboard",
-    "title": "現在 3000 好像處於死掉狀態，檢查一下生死",
-    "messageCount": 10,
-    "createdAt": 1771206670975,
-    "lastActiveAt": 1771208082521
-  },
-  {
-    "sessionId": "a1e168a8-68a5-4f8b-8e6d-ef525d21cb07",
-    "projectId": "dashboard",
-    "title": "現在我的系統設計在介面上設定 opus 的 hight、max、low 等等的嗎",
-    "messageCount": 25,
-    "createdAt": 1771207143322,
-    "lastActiveAt": 1771211217143
-  },
-  {
-    "sessionId": "0c4f7416-8fbd-4122-8013-0d3fdb6a9629",
-    "projectId": "dashboard",
-    "title": "根據這個專案，有沒有適合的 agent team 應用組合或是場景",
-    "messageCount": 44,
-    "createdAt": 1771219373404,
-    "lastActiveAt": 1771236390965
-  },
-  {
-    "sessionId": "e18f039e-0aa9-4dfe-90c6-03cab93db731",
-    "projectId": "dashboard",
-    "title": "現在 chat 的功能在確認完計劃之後，按下執行都有按超過兩次還有反應，而且如果是打字還沒感應，超級奇怪的",
-    "messageCount": 50,
-    "createdAt": 1771219821643,
-    "lastActiveAt": 1771236141755
-  },
-  {
-    "sessionId": "d6a16f7c-83ca-4871-9044-bd93adcbfbc5",
-    "projectId": "dashboard",
-    "title": "關於 Cloud Usage 的設計，我覺得目前太複雜了，需要進行以下調整：\n\n1. 功能與顯示優化：\n   (a) 不",
-    "messageCount": 6,
-    "createdAt": 1771230277230,
-    "lastActiveAt": 1771231451245
-  },
-  {
-    "sessionId": "9e93ccc2-2ed8-4f9d-8bef-4c052ccc61f8",
-    "projectId": "dashboard",
-    "title": "關於 Pack 的流程，我們之前有一度是使用類似於 Chat 的功能，它是擺在最右邊的位置，會開一個跟 Chat 大小一",
-    "messageCount": 11,
-    "createdAt": 1771230372896,
-    "lastActiveAt": 1771232670020
-  },
-  {
-    "sessionId": "8552bcc8-8134-4ac0-ab59-f5f96ca0e73d",
-    "projectId": "dashboard",
-    "title": "簡單介紹這個專案",
-    "messageCount": 1,
-    "createdAt": 1771234115506,
-    "lastActiveAt": 1771234234655
-  },
-  {
-    "sessionId": "d3b9e021-9e5c-4fe0-a92e-34859fae1cfd",
+    "sessionId": "2c02ba28-1acb-41d2-870d-75023c8e13af",
     "projectId": "dashboard",
     "title": "簡單介紹專案",
     "messageCount": 1,
-    "createdAt": 1771234769350,
-    "lastActiveAt": 1771234784695
+    "createdAt": 1771245323472,
+    "lastActiveAt": 1771245364102
   },
   {
-    "sessionId": "f4407558-182e-4b02-bdab-4b668cae3791",
+    "sessionId": "83a8f07d-e8e5-4519-9974-b7850a323bb1",
     "projectId": "dashboard",
-    "title": "簡單介紹專案",
+    "title": "把 PEA 的 A 拿掉，然后后面的 SAO 改成 HSO。也就是把 A 自动化的部分拿掉，然后加上 Haiku 的模型",
     "messageCount": 1,
-    "createdAt": 1771234811762,
-    "lastActiveAt": 1771234811762
+    "createdAt": 1771245540214,
+    "lastActiveAt": 1771245540214
   },
   {
-    "sessionId": "026f82b1-d970-4fd8-a84b-d858e2a06e0e",
+    "sessionId": "5e66f673-8453-46bb-aa9a-29089215dee6",
     "projectId": "dashboard",
-    "title": "我在修改部落格流水線，有兩點需求：\n\n1. 調整標題點擊行為：\n   當我按下標題時，只要將斜線後面的那段英文文字調整為",
+    "title": "/ship",
     "messageCount": 1,
-    "createdAt": 1771236476450,
-    "lastActiveAt": 1771236525255
+    "createdAt": 1771246307116,
+    "lastActiveAt": 1771246312262
   }
 ]

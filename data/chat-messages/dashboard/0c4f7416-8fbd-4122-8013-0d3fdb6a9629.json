@@ -3746,5 +3746,424 @@
     "role": "assistant",
     "content": "全部完成。改動總結：\n\n### 改動清單\n\n**1. BlogBackend `/api/embeddings/single/route.ts`**\n- 新增 `?skipBidirectional=true` query 參數\n- 開啟時跳過雙向更新，避免 draft 污染已發布文章的推薦\n\n**2. `blog-intake` SKILL.md**\n- 在 Professional Editor 和 SEO Specialist 之間插入「第三步：提前寫入 Insforge + 觸發 bge-m3 單向計算」\n- 階段三從 POST 改為 PATCH 更新最終版（含 fallback）\n\n**3. Dashboard `app/blog/pipeline/page.tsx`**\n- Phase 2 拆成三段：前 5 個 skill → 提前寫入+語意計算（紫色虛線框）→ 後 3 個 skill\n- Phase 3 描述更新為「PATCH 更新」\n- Phase 5 更新為「雙向更新」，說明流水線已做單向、發布後再做雙向",
     "timestamp": 1771236378904
+  },
+  {
+    "id": "28758b3b-6548-4353-8f7f-d62be7ea7c1f",
+    "role": "user",
+    "content": "因為我們流程有改，那跑 /blog-pipeline-review 看看流水線敘述是否有可以優化的地方",
+    "timestamp": 1771236528699
+  },
+  {
+    "id": "831bd329-df5c-4933-8d96-c408064c080e",
+    "role": "tool",
+    "content": "{\n  \"skill\": \"blog-pipeline-review\"\n}",
+    "toolName": "Skill",
+    "toolDescription": "",
+    "timestamp": 1771236536927
+  },
+  {
+    "id": "17173a71-86dd-4808-bc51-8100829552fc",
+    "role": "assistant",
+    "content": "好，讓我先全面讀取目前所有 Skill 的最新狀態，再對照本次的流程改動進行覆盤。",
+    "timestamp": 1771236539380
+  },
+  {
+    "id": "8096fa68-4a80-46af-9238-f6fca5e695e9",
+    "role": "tool",
+    "content": "{\n  \"subagent_type\": \"Explore\",\n  \"description\": \"Read all blog pipeline skills\",\n  \"prompt\": \"Read ALL blog pipeline skill files and return their complete content. I need every single line:\\n\\n1. /Users/ruanbaiye/.claude/skills/blog-intake/SKILL.md\\n2. /Users/ruanbaiye/.claude/skills/blog-outline-architect/SKILL.md\\n3. /Users/ruanbaiye/.claude/skills/blog-pitfall-recorder/SKILL.md\\n4. /Users/ruanbaiye/.claude/skills/blog-beginner-reviewer/SKILL.md\\n5. /Users/ruanbaiye/.claude/skills/blog-visual-advisor/SKILL.md\\n6. /Users/ruanbaiye/.claude/skills/blog-professional-editor/SKILL.md\\n7. /Users/ruanbaiye/.claude/skills/blog-seo-specialist/SKILL.md\\n8. /Users/ruanbaiye/.claude/skills/blog-ai-quoter/SKILL.md\\n9. /Users/ruanbaiye/.claude/skills/blog-engagement-designer/SKILL.md\\n10. /Users/ruanbaiye/.claude/skills/blog-articles/SKILL.md\\n11. /Users/ruanbaiye/.claude/skills/blog-pipeline-review/SKILL.md\\n\\nFor each skill, tell me:\\n- The frontmatter (model, category)\\n- Whether it references /api/related or article_similarities\\n- Whether it references /blog-articles\\n- Whether it references Insforge API directly\\n- The key responsibilities and output format\\n- Any issues: outdated descriptions, inconsistencies with the new pipeline flow (where \\\"提前寫入 + 語意計算\\\" happens between professional-editor and seo-specialist)\",\n  \"model\": \"sonnet\"\n}",
+    "toolName": "Task",
+    "toolDescription": "Read all blog pipeline skills",
+    "timestamp": 1771236547959
+  },
+  {
+    "id": "8351f4d2-f5e2-4b2a-8d3f-4a00287c9435",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-intake/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236550930
+  },
+  {
+    "id": "be857936-cd38-4e77-b0a1-d4dabe8afc56",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-outline-architect/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236551293
+  },
+  {
+    "id": "735ee943-d03b-4723-87ca-fdd561e9b4c2",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-pitfall-recorder/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236551706
+  },
+  {
+    "id": "990e7f62-203b-49b9-9aba-54d119b05736",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-beginner-reviewer/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236552258
+  },
+  {
+    "id": "03022b01-b12c-46ae-b4a5-2522cfa8aebb",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-visual-advisor/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236552951
+  },
+  {
+    "id": "5bdd3c30-b6aa-40f0-ba22-afe38dd6096c",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-professional-editor/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236553079
+  },
+  {
+    "id": "d2b6a5aa-e5f7-4278-b858-e6dc98cea082",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-seo-specialist/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236553409
+  },
+  {
+    "id": "dfceae28-52dc-4262-b8b7-09379ec8002b",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-ai-quoter/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236553939
+  },
+  {
+    "id": "9c3a1a43-616c-48af-82e9-8135fe87cfaa",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-engagement-designer/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236554254
+  },
+  {
+    "id": "3aba3676-026f-43d4-8761-38b10f023485",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-articles/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236554714
+  },
+  {
+    "id": "171f043d-08b7-4336-a9d1-153a436ac7ec",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-pipeline-review/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236555060
+  },
+  {
+    "id": "fd22b2f0-6a99-4ffc-bfa1-b9424dc6a377",
+    "role": "assistant",
+    "content": "好，所有 Skill 已全面審查完畢。以下是覆盤報告：\n\n---\n\n## 一、本次流水線結構變更摘要\n\n本次不是「跑完一篇文章」的覆盤，而是**流水線架構變更**的覆盤——在 Professional Editor 和 SEO Specialist 之間插入了「提前寫入 + 語意計算」步驟。\n\n| 變更項目 | 說明 |\n|---------|------|\n| BlogBackend API | `/api/embeddings/single` 新增 `?skipBidirectional=true` 參數 |\n| blog-intake | 插入第三步（POST draft → bge-m3 單向計算），階段三改為 PATCH |\n| Dashboard 視覺圖 | Phase 2 拆三段，Phase 3/5 描述更新 |\n\n---\n\n## 二、逐一檢討：11 個 Skill 與新流程的一致性\n\n### 上游 Skill（寫入前，不需要語意索引）\n\n| Skill | 狀態 | 說明 |\n|-------|------|------|\n| `/blog-outline-architect` | 正確 | 用 `/blog-articles` 做通用內鏈建議，不需語意索引 |\n| `/blog-pitfall-recorder` | 正確 | 純技術內容，不涉及文章引用 |\n| `/blog-beginner-reviewer` | 正確 | 純可讀性審查 |\n| `/blog-visual-advisor` | 正確 | 純視覺建議 |\n| `/blog-professional-editor` | 正確 | 最後一個「寫入前」Skill |\n\n### 下游 Skill（寫入後，應讀取語意索引）\n\n| Skill | `/api/related` | `/blog-articles` fallback | 狀態 |\n|-------|:-:|:-:|------|\n| `/blog-seo-specialist` | 優先 | 補充 | 正確 |\n| `/blog-ai-quoter` | 優先（>0.7 強推薦） | 補充 | 正確 |\n| `/blog-engagement-designer` | 優先（取 top-3） | 補充 | 正確 |\n\n### 基礎設施 Skill\n\n| Skill | 狀態 | 說明 |\n|-------|------|------|\n| `/blog-intake` | 已更新 | 正確描述三段式流程 + PATCH 最終版 |\n| `/blog-articles` | 正確 | Haiku 輕量查詢，作為 fallback |\n| `/blog-pipeline-review` | 正確 | 後設 Skill，不涉及文章操作 |\n\n**結論：所有 11 個 Skill 與新流程一致，無過時描述。**\n\n---\n\n## 三、流水線整體建議\n\n| 建議類型 | 說明 | 優先級 |\n|---------|------|--------|\n| 更新 Skill 內容 | `/blog-seo-specialist` 第 40 行描述仍為「這些是 AI 用 bge-m3 模型計算出來的結果」，可補充說明「流水線中已提前計算，此處直接讀取」讓語境更清楚 | 低 |\n| 更新 Skill 內容 | `/blog-ai-quoter` 同上，第 58 行可補充「流水線已在 SEO 階段前完成 embedding 計算」 | 低 |\n| 新增 Skill | 目前沒有「文章更新」的 Skill——如果修改已發布文章，需要重新跑 embedding + 雙向更新。可考慮一個 `/blog-update` skill 處理「改稿 → PATCH → 重算 embedding（完整雙向）」流程 | 中 |\n| 流程監控 | `blog-intake` 第三步的語意計算如果 BlogBackend 沒啟動會靜默失敗。建議在 intake 中加一個明確的 warning 輸出，讓用戶知道「本次未取得語意推薦」 | 低 |\n\n---\n\n## 四、Action Items\n\n1. **[低]** `/blog-seo-specialist` 和 `/blog-ai-quoter` 的語意索引描述，補充一句說明這些資料來自流水線中的提前計算\n2. **[低]** `blog-intake` 第三步語意計算失敗時，輸出更明確的提示（目前只有 `console.error`）\n3. **[中]** 考慮未來新增 `/blog-update` skill，處理已發布文章的修改 + 重新計算流程\n\n---\n\n**總結：本次架構變更乾淨俐落，所有 Skill 的描述和 API 引用都與新流程一致，沒有需要緊急修復的問題。** 上面三個 Action Item 都是「nice to have」的優化，不影響目前流程的正確性。",
+    "timestamp": 1771236629762
+  },
+  {
+    "id": "4c5e512e-04c6-4e7b-81f3-c5857610c435",
+    "role": "user",
+    "content": "那就微調，還是優化",
+    "timestamp": 1771236673218
+  },
+  {
+    "id": "1539fa3a-6417-48dc-beca-3b30ad23928e",
+    "role": "user",
+    "content": "那就微調，還是優化",
+    "timestamp": 1771236678960
+  },
+  {
+    "id": "a35cb1d0-00c2-4915-8f5c-16ca64541343",
+    "role": "user",
+    "content": "那就微調，還是優化",
+    "timestamp": 1771236680875
+  },
+  {
+    "id": "f2068a59-933b-4b3b-b5d1-5f4889352bb3",
+    "role": "user",
+    "content": "那就微調，還是優化",
+    "timestamp": 1771236683516
+  },
+  {
+    "id": "5d184d29-040e-4b4f-9e72-428a683ecfd2",
+    "role": "user",
+    "content": "那就微調，還是優化",
+    "timestamp": 1771236684928
+  },
+  {
+    "id": "11a2e12b-59b4-4d31-842c-b95a93b3d5fa",
+    "role": "assistant",
+    "content": "覆盤結論很清楚——所有 11 個 Skill 與新流程一致，沒有緊急問題。那三個低/中優先的 Action Item，你要我現在一起做掉嗎？分別是：\n\n1. **[低]** `/blog-seo-specialist` 和 `/blog-ai-quoter` 補充一句「資料來自流水線中的提前計算」\n2. **[低]** `blog-intake` 語意計算失敗時輸出更明確的提示\n3. **[中]** 新增 `/blog-update` skill 處理已發布文章的修改 + 重新計算\n\n還是你覺得目前這樣就好，先不動？",
+    "timestamp": 1771236692217
+  },
+  {
+    "id": "7cea6701-5915-4059-b8a8-8184bc6142c4",
+    "role": "user",
+    "content": "一起做掉",
+    "timestamp": 1771236703755
+  },
+  {
+    "id": "1c07ca85-6800-41a2-ba4b-abeaef62d4bd",
+    "role": "assistant",
+    "content": "\n\n好，三個微調一起處理。",
+    "timestamp": 1771236710549
+  },
+  {
+    "id": "35dc2f12-71f2-4d65-a2e7-e9f10a5c80ce",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "blog-seo-specialist 補充「資料來自流水線提前計算」說明",
+        "status": "in_progress",
+        "activeForm": "微調 SEO Specialist skill"
+      },
+      {
+        "content": "blog-ai-quoter 補充「資料來自流水線提前計算」說明",
+        "status": "pending",
+        "activeForm": "微調 AI Quoter skill"
+      },
+      {
+        "content": "blog-intake 語意計算失敗時輸出更明確提示",
+        "status": "pending",
+        "activeForm": "優化 blog-intake 錯誤提示"
+      },
+      {
+        "content": "新增 /blog-update skill（已發布文章修改+重算）",
+        "status": "pending",
+        "activeForm": "建立 blog-update skill"
+      }
+    ],
+    "timestamp": 1771236715147
+  },
+  {
+    "id": "8950eba4-4d45-45ee-8878-cbfa2ac91491",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-seo-specialist/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236718995
+  },
+  {
+    "id": "69b1b9a2-9db8-4f48-827f-d798713d0d8c",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-ai-quoter/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236719426
+  },
+  {
+    "id": "e2abde25-7ef9-44c9-971d-7fc3a0bd9705",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-engagement-designer/SKILL.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236720044
+  },
+  {
+    "id": "6d1670af-6e09-4529-9e8f-0ffdc99faae7",
+    "role": "assistant",
+    "content": "三個檔案都讀完了，開始逐一微調。",
+    "timestamp": 1771236722698
+  },
+  {
+    "id": "07b4d67a-c76f-439f-a565-abf50741baf0",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-seo-specialist/SKILL.md\",\n  \"old_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），這些是 AI 用 bge-m3 模型計算出來的結果，比人工判斷更精準。**內鏈建議應優先使用這份清單。**\",\n  \"new_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），由流水線在 Professional Editor 完成後提前計算（bge-m3 單向模式）。**內鏈建議應優先使用這份清單。**\\n\\n> 如果查詢無結果，代表 BlogBackend 未啟動或語意計算未完成，請退回使用下方文章清單。\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236729652
+  },
+  {
+    "id": "e99f2519-5398-42bd-bf0c-e96fe9aa84b2",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "blog-seo-specialist 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 SEO Specialist skill"
+      },
+      {
+        "content": "blog-ai-quoter 補充「資料來自流水線提前計算」說明",
+        "status": "in_progress",
+        "activeForm": "微調 AI Quoter skill"
+      },
+      {
+        "content": "blog-intake 語意計算失敗時輸出更明確提示",
+        "status": "pending",
+        "activeForm": "優化 blog-intake 錯誤提示"
+      },
+      {
+        "content": "新增 /blog-update skill（已發布文章修改+重算）",
+        "status": "pending",
+        "activeForm": "建立 blog-update skill"
+      }
+    ],
+    "timestamp": 1771236739975
+  },
+  {
+    "id": "c8559415-17aa-43c6-a6d2-218171a3de94",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-ai-quoter/SKILL.md\",\n  \"old_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），這些是 AI 用 bge-m3 模型計算出來的結果。**交叉引用建議應優先使用這份清單，特別是高分（>0.7）的文章。**\",\n  \"new_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），由流水線在 Professional Editor 完成後提前計算（bge-m3 單向模式）。**交叉引用建議應優先使用這份清單，特別是高分（>0.7）的文章。**\\n\\n> 如果查詢無結果，代表 BlogBackend 未啟動或語意計算未完成，請退回使用下方文章清單。\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236745790
+  },
+  {
+    "id": "f4ec36c2-6c51-4a9d-817e-518f2291bf02",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-engagement-designer/SKILL.md\",\n  \"old_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），這些是 AI 用 bge-m3 模型計算出來的結果。**「延伸閱讀」推薦應優先使用這份清單的前 3 名。**\",\n  \"new_string\": \"### 語意相似度查詢（優先）\\n如果知道當前文章的 article-id，先呼叫 BlogBackend API 取得語意相似的文章：\\n```\\nGET http://localhost:3013/api/related?slug={article-id}\\n```\\n回傳 top-5 語意最相關的文章（含相似度分數），由流水線在 Professional Editor 完成後提前計算（bge-m3 單向模式）。**「延伸閱讀」推薦應優先使用這份清單的前 3 名。**\\n\\n> 如果查詢無結果，代表 BlogBackend 未啟動或語意計算未完成，請退回使用下方文章清單。\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236752210
+  },
+  {
+    "id": "fed4b783-e029-4f04-8718-760c0be134ae",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "blog-seo-specialist 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 SEO Specialist skill"
+      },
+      {
+        "content": "blog-ai-quoter 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 AI Quoter skill"
+      },
+      {
+        "content": "blog-intake 語意計算失敗時輸出更明確提示",
+        "status": "in_progress",
+        "activeForm": "優化 blog-intake 錯誤提示"
+      },
+      {
+        "content": "新增 /blog-update skill（已發布文章修改+重算）",
+        "status": "pending",
+        "activeForm": "建立 blog-update skill"
+      }
+    ],
+    "timestamp": 1771236759015
+  },
+  {
+    "id": "7fdff122-b438-4b1e-858d-82673a21f3e6",
+    "role": "assistant",
+    "content": "現在優化 blog-intake 的語意計算失敗提示——目前只有 `console.error`，加入更明確的上下文提示。",
+    "timestamp": 1771236760999
+  },
+  {
+    "id": "71f8b64e-081f-4111-8911-a393368c89e9",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-intake/SKILL.md\",\n  \"old_string\": \"**注意**：如果 BlogBackend（port 3013）未啟動，語意計算會失敗但不影響流水線繼續執行。後續 SEO/AI Quoter 會退回使用 `/blog-articles` 清單。\",\n  \"new_string\": \"**注意**：\\n- 如果 BlogBackend（port 3013）未啟動，語意計算會失敗但**不影響流水線繼續執行**\\n- 語意計算失敗時，**必須明確告知用戶**：「語意計算未完成（BlogBackend 未啟動），後續 SEO/AI Quoter/互動設計 將使用通用文章清單替代 ML 推薦」\\n- 後續 Skill 會自動退回使用 `/blog-articles` 清單作為 fallback\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236767061
+  },
+  {
+    "id": "1d6a0b8b-1160-4b1e-a8a5-2b9232501880",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "blog-seo-specialist 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 SEO Specialist skill"
+      },
+      {
+        "content": "blog-ai-quoter 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 AI Quoter skill"
+      },
+      {
+        "content": "blog-intake 語意計算失敗時輸出更明確提示",
+        "status": "completed",
+        "activeForm": "優化 blog-intake 錯誤提示"
+      },
+      {
+        "content": "新增 /blog-update skill（已發布文章修改+重算）",
+        "status": "in_progress",
+        "activeForm": "建立 blog-update skill"
+      }
+    ],
+    "timestamp": 1771236773234
+  },
+  {
+    "id": "7d91a421-eeae-464b-aef8-2f1d34933006",
+    "role": "assistant",
+    "content": "最後建立 `/blog-update` skill。",
+    "timestamp": 1771236776210
+  },
+  {
+    "id": "1da6c553-c85f-4188-a543-f0fd49d2202c",
+    "role": "tool",
+    "content": "{\n  \"command\": \"ls /Users/ruanbaiye/.claude/skills/blog-update 2>/dev/null || echo \\\"not exists\\\"\",\n  \"description\": \"Check if blog-update skill dir exists\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "ls /Users/ruanbaiye/.claude/skills/blog-…",
+    "timestamp": 1771236777440
+  },
+  {
+    "id": "3c2a748e-ffa7-4d6e-885a-6e0d821cbd98",
+    "role": "tool",
+    "content": "{\n  \"command\": \"mkdir -p /Users/ruanbaiye/.claude/skills/blog-update\",\n  \"description\": \"Create blog-update skill directory\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "mkdir -p /Users/ruanbaiye/.claude/skills…",
+    "timestamp": 1771236780538
+  },
+  {
+    "id": "76efb696-bf33-4ba3-8f9e-f491d8359d40",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/skills/blog-update/SKILL.md\",\n  \"content\": \"---\\nmodel: sonnet\\ncategory: Blog 編輯流水線\\ndescription: 更新已發布文章 — PATCH 內容到 Insforge + 重新計算語意索引（完整雙向更新）\\n---\\n\\n# 文章更新 Blog Update\\n\\n你是「文章更新助手」，負責將已發布文章的修改內容同步到 Insforge 資料庫，並觸發完整的語意索引雙向更新。\\n\\n## 觸發時機\\n\\n當用戶修改了一篇**已發布**的文章內容後，手動呼叫此 Skill 完成以下操作：\\n1. PATCH 更新文章內容到 Insforge\\n2. 重新計算 bge-m3 embedding（完整雙向模式）\\n\\n## 你的工作流程\\n\\n### 1. 確認更新範圍\\n\\n向用戶確認：\\n- **article-id（slug）**：要更新的文章 ID\\n- **更新內容**：哪些欄位需要更新（content、title、summary、description、tags、category）\\n\\n### 2. PATCH 更新到 Insforge\\n\\n```bash\\nnode -e \\\"\\nconst now = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16) + ':00+08:00';\\nconst update = {\\n  // 只包含需要更新的欄位\\n  content: JSON.parse(require('fs').readFileSync('/tmp/blog-article-content.json', 'utf-8')),\\n  updated_at: now\\n};\\n\\nfetch('https://5k5x3s47.us-east.insforge.app/api/database/records/blog_articles?id=eq.{slug}', {\\n  method: 'PATCH',\\n  headers: {\\n    'Content-Type': 'application/json',\\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2OTAzMDN9.ffsGwSQhTIIvoyIUduW1UbG2XV0_WPNQrO_1OuAYASA',\\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2OTAzMDN9.ffsGwSQhTIIvoyIUduW1UbG2XV0_WPNQrO_1OuAYASA',\\n    'Prefer': 'return=representation'\\n  },\\n  body: JSON.stringify(update)\\n}).then(r => r.json()).then(d => {\\n  console.log('文章已更新:', d[0]?.id || '{slug}');\\n  console.log('預覽：https://brickverse.com.tw/blog/{slug}');\\n}).catch(e => console.error('更新失敗:', e));\\n\\\"\\n```\\n\\n### 3. 觸發語意索引雙向更新\\n\\n文章內容改了，embedding 需要重算，且因為是已發布文章，使用**完整雙向模式**（不帶 `skipBidirectional`）：\\n\\n```bash\\nnode -e \\\"\\nfetch('http://localhost:3013/api/embeddings/single', {\\n  method: 'POST',\\n  headers: { 'Content-Type': 'application/json' },\\n  body: JSON.stringify({ articleId: '{slug}' })\\n}).then(r => r.json()).then(d => {\\n  console.log('語意索引雙向更新完成:', d.message);\\n  console.log('相關文章:', JSON.stringify(d.relatedArticles, null, 2));\\n}).catch(e => console.error('語意更新失敗（BlogBackend 可能未啟動）:', e.message));\\n\\\"\\n```\\n\\n### 4. 回報結果\\n\\n告知用戶：\\n- 文章已更新（列出更新的欄位）\\n- 語意索引是否更新成功\\n- 提供預覽連結：`https://brickverse.com.tw/blog/{slug}`\\n\\n## 注意事項\\n\\n- PATCH body 只包含**有變更的欄位**，不要覆蓋沒改的欄位\\n- `updated_at` 必定要更新\\n- 語意計算需要 BlogBackend（port 3013）已啟動，如果未啟動要告知用戶\\n- 此 Skill 用於**已發布文章**的修改；新文章請走 `/blog-intake` 完整流水線\\n- 用戶的指示：$ARGUMENTS\\n\"\n}",
+    "toolName": "Write",
+    "toolDescription": "SKILL.md",
+    "timestamp": 1771236811224
+  },
+  {
+    "id": "96d4c741-cc59-43a1-9d61-0dcd7dd135f7",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "blog-seo-specialist 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 SEO Specialist skill"
+      },
+      {
+        "content": "blog-ai-quoter 補充「資料來自流水線提前計算」說明",
+        "status": "completed",
+        "activeForm": "微調 AI Quoter skill"
+      },
+      {
+        "content": "blog-intake 語意計算失敗時輸出更明確提示",
+        "status": "completed",
+        "activeForm": "優化 blog-intake 錯誤提示"
+      },
+      {
+        "content": "新增 /blog-update skill（已發布文章修改+重算）",
+        "status": "completed",
+        "activeForm": "建立 blog-update skill"
+      }
+    ],
+    "timestamp": 1771236818076
+  },
+  {
+    "id": "a6116257-5464-46fe-bed5-b86463407f63",
+    "role": "assistant",
+    "content": "四項全部完成。總結：\n\n1. **`/blog-seo-specialist`** — 補充說明語意資料來自流水線提前計算 + 無結果時的 fallback 提示\n2. **`/blog-ai-quoter`** — 同上\n3. **`/blog-engagement-designer`** — 同上\n4. **`blog-intake`** — 語意計算失敗時必須明確告知用戶，而非靜默失敗\n5. **新增 `/blog-update`** — 已發布文章修改後的更新流程：PATCH 內容 → 完整雙向 embedding 重算\n\n`/blog-update` 已經自動被系統識別為可用 skill（可以看到 skill list 裡已出現）。",
+    "timestamp": 1771236821241
   }
 ]

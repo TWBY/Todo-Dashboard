@@ -1,0 +1,14 @@
+[
+  {
+    "id": "065d2978-9fb4-495f-bc9f-67dc39345747",
+    "role": "user",
+    "content": "簡介專案",
+    "timestamp": 1771244846629
+  },
+  {
+    "id": "d67a295c-8994-4768-8a63-c0d154479185",
+    "role": "assistant",
+    "content": "歡迎來到 **Brickverse Design System**！\n\n## 專案概述\n\n這是一個專為**繁體中文（zh-TW）Web 環境**設計的設計系統，作為所有 Brickverse 專案的視覺與 UI 規範基底。\n\n### 核心特色\n\n- **語系優先**：針對 CJK（中日韓）文字排版優化\n  - 內文行高 1.75（比 Latin 的 1.5 更寬鬆）\n  - 字距預設 0em（中文不需額外間距）\n  - 最小字級 12px（避免中文筆畫模糊）\n  - 理想行長 30~40 字\n\n- **響應式字級**：使用 CSS `clamp()` Fluid Typography，從手機到桌面自動縮放\n\n- **語義化 Token**：\n  - 行高：`compact` / `heading` / `caption` / `body`\n  - 字距：`default` / `fine` / `ui` / `display`\n  \n- **字級比例**：Perfect Fourth (1.333)，base 16px，範圍 12px ~ 67px\n\n### 技術棧\n\n- **Next.js** + TypeScript\n- **Tailwind CSS v4**（使用 `@theme` 定義 CSS 變數）\n- **Noto Sans TC** 字型（via Google Fonts）\n\n### 專案結構\n\n```\nsrc/\n├── tokens/          # 設計 Token（字型、顏色、間距、陰影、動畫）\n├── components/ui/   # 可複用 UI 元件\n├── app/examples/    # 範例頁面（Blog、Dynamic Island 等）\n└── app/globals.css  # Tailwind v4 theme + 基礎樣式\n```\n\n### 快速開始\n\n```bash\nnpm run dev   # http://localhost:3002\nnpm run build\nnpm run lint\n```\n\n---\n\n**需要協助的事項？** 我可以：\n- 解釋設計 Token 的使用方式\n- 協助新增或修改 UI 元件\n- 說明如何將此設計系統套用到其他專案",
+    "timestamp": 1771244851120
+  }
+]

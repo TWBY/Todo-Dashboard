@@ -1,0 +1,100 @@
+[
+  {
+    "id": "07495811-4ffb-4681-b0c1-993de1a72ba1",
+    "role": "user",
+    "content": "簡單介紹專案",
+    "timestamp": 1771245323216
+  },
+  {
+    "id": "51e632d0-2582-4770-9bce-374194e759c6",
+    "role": "assistant",
+    "content": "讓我快速探索一下這個專案的結構和功能。",
+    "timestamp": 1771245328796
+  },
+  {
+    "id": "29f4773a-7894-4ac9-8164-b6a8fa805523",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/package.json\"\n}",
+    "toolName": "Read",
+    "toolDescription": "package.json",
+    "timestamp": 1771245329889
+  },
+  {
+    "id": "fe08e618-cd3f-4baf-bd8d-5cefef6749e3",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/README.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "README.md",
+    "timestamp": 1771245330426
+  },
+  {
+    "id": "b41d676e-3f50-452b-b038-265efb0c60bc",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"app/**/page.tsx\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "app/**/page.tsx",
+    "timestamp": 1771245331183
+  },
+  {
+    "id": "440b672c-ed31-4d3c-b309-4ceb34366d22",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"app/**/page.tsx\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "app/**/page.tsx",
+    "timestamp": 1771245333376
+  },
+  {
+    "id": "34695bd0-b35a-4393-8c29-ad1bd5acb284",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/version.json\"\n}",
+    "toolName": "Read",
+    "toolDescription": "version.json",
+    "timestamp": 1771245333966
+  },
+  {
+    "id": "4e013adf-ed6c-4ca4-847e-9f747c29318e",
+    "role": "tool",
+    "content": "{\n  \"command\": \"ls -la /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard\",\n  \"description\": \"List root directory structure\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "ls -la /Users/ruanbaiye/Documents/Brickv…",
+    "timestamp": 1771245334672
+  },
+  {
+    "id": "690ccfc9-b01a-48af-834f-6bee7c90bbee",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/page.tsx\"\n}",
+    "toolName": "Read",
+    "toolDescription": "page.tsx",
+    "timestamp": 1771245337793
+  },
+  {
+    "id": "f28bcce9-8bcf-4ac6-b6a8-ddd0481340a4",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"data/**/*.json\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "data/**/*.json",
+    "timestamp": 1771245338437
+  },
+  {
+    "id": "3039d2e3-3ef3-418e-b55b-924f0822dd34",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/data/projects.json\",\n  \"limit\": 50\n}",
+    "toolName": "Read",
+    "toolDescription": "projects.json",
+    "timestamp": 1771245341213
+  },
+  {
+    "id": "99f2247b-6da2-47e8-b992-7a0c87b3da09",
+    "role": "tool",
+    "content": "{\n  \"command\": \"ls -la /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components | head -20\",\n  \"description\": \"List main components\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "ls -la /Users/ruanbaiye/Documents/Brickv…",
+    "timestamp": 1771245342035
+  },
+  {
+    "id": "5ddda7a1-1bd4-4343-8728-33d41d9e0318",
+    "role": "assistant",
+    "content": "# Todo-Dashboard 專案簡介\n\n這是一個**專案管理 Dashboard**，用 Next.js 16 建構，專門管理 Brickverse 生態系中的多個專案。\n\n## 核心功能\n\n### 1. **專案集中管理**\n- 管理多個 Next.js 專案（brickverse-web、BlogFrontend、BlogBackend、brickverse-learn 等）\n- 每個專案有自己的 **Dev Server Port 分配**（見 CLAUDE.md 的 Port 表）\n- 追蹤專案的路徑、技術棧、產品 ID、建立時間等\n\n### 2. **DevServer 自動化面板**\n- 可直接從 Dashboard 啟動/停止各專案的開發伺服器\n- 監控 dev server 狀態（running/stopped）\n- 自動分配 port 避免衝突\n\n### 3. **Claude Chat 整合**\n- 內建 Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)\n- 每個專案可獨立開啟對話 session\n- 保存對話歷史到 `data/chat-history/` 和 `data/chat-messages/`\n\n### 4. **版本管理系統**\n- 雙版本號系統：`production` 和 `development`（帶 `-dev` 後綴）\n- 自動化打包流程（見 CLAUDE.md 的「打包流程」）\n- 智能 commit 分組、SemVer 版本判斷\n\n### 5. **Changelog 頁面**\n- 顯示 release 歷史（從 git log 解析）\n- 版本號視覺化呈現\n\n### 6. **Blog Pipeline 頁面**\n- Blog 編輯流水線管理（`/blog/pipeline`）\n- 整合多個 Skills（如 `/blog-update`、`/blog-articles` 等）\n\n## 技術棧\n\n- **React 19** + **TypeScript 5**\n- **Tailwind CSS 4**\n- **GSAP** (動畫庫)\n- **react-markdown** + **remark-gfm** (Markdown 渲染)\n\n## 專案特色\n\n- **Port 表驅動**：所有專案都有固定 port，避免混亂\n- **Crash Report 機制**：自動記錄錯誤到 `data/crash-reports/`\n- **自動重啟腳本**：`dev-with-restart.sh` 可監控檔案變化自動重啟\n- **UI 統一規範**：禁用 Unicode emoji，統一使用 Font Awesome\n- **與 Insforge 整合**：Blog 系統後端用 Insforge 作為資料庫\n\n## 當前版本\n\n- **Production**: `1.17.0`\n- **Development**: `1.17.1-dev`\n\n最近的 release（v1.17.0）包含：Blog Pipeline 三段式流程、Slash command 即時搜尋、Chat 排版系統重構。",
+    "timestamp": 1771245343308
+  }
+]

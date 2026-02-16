@@ -539,9 +539,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
               <div className={`overflow-hidden min-h-0${index > 0 ? ' pt-2' : ''}`}>
               <div
                 className={`py-2.5 px-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
-                  isRemoving ? 'opacity-0 scale-95 -translate-x-4' :
-                  isLoading ? 'ring-2 ring-yellow-500/30' :
-                  isRecentlyStarted ? 'ring-2 ring-green-500/30' : ''
+                  isRemoving ? 'opacity-0 scale-95 -translate-x-4' : ''
                 }`}
                 style={{ backgroundColor: 'var(--background-secondary)', containerType: 'inline-size' }}
               >
