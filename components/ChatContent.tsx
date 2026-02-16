@@ -1539,25 +1539,26 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               )
             })}
 
-            {/* Model Switcher: [S][A][O] */}
+            {/* Model Switcher: [H][S][O] */}
             {!planOnly && !emailMode && (
               <>
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>
-                {(['sonnet', 'opus'] as const).map(m => {
+                {(['haiku', 'sonnet', 'opus'] as const).map(m => {
                   const isActive = modelChoice === m
-                  const label = m === 'sonnet' ? 'S' : 'O'
+                  const label = m === 'haiku' ? 'H' : m === 'sonnet' ? 'S' : 'O'
                   const isOpusActive = m === 'opus' && isActive
+                  const isHaikuActive = m === 'haiku' && isActive
                   return (
                     <button
                       key={m}
-                      onClick={() => { setModelChoice(m); setAutoResolvedModel(null) }}
+                      onClick={() => setModelChoice(m)}
                       className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                       style={{
-                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : '#222222') : 'transparent',
-                        color: isActive ? (isOpusActive ? '#f5a623' : '#ffffff') : '#666666',
-                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : '1px solid #333333') : '1px solid transparent',
+                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : isHaikuActive ? '#0a1a1f' : '#222222') : 'transparent',
+                        color: isActive ? (isOpusActive ? '#f5a623' : isHaikuActive ? '#34d399' : '#ffffff') : '#666666',
+                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : isHaikuActive ? '1px solid #34d399' : '1px solid #333333') : '1px solid transparent',
                       }}
-                      title={m === 'sonnet' ? 'Sonnet (default)' : `Opus (effort: ${effortLevel})`}
+                      title={m === 'haiku' ? 'Haiku (fast & lightweight)' : m === 'sonnet' ? 'Sonnet (default)' : `Opus (effort: ${effortLevel})`}
                     >
                       {label}
                     </button>

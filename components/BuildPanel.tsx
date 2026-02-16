@@ -531,22 +531,31 @@ export default function BuildPanel() {
       {/* Content */}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div className="pb-8">
-          {/* Phase 0: System startup */}
-          {buildState === 'running' && currentPhase === 0 && (
+          {/* Phase 0: System startup — always show once build started, don't hide after completion */}
+          {buildState === 'running' && (
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <i className="fa-solid fa-circle text-base" style={{ color: '#f59e0b' }} />
+                <i className={`fa-solid ${currentPhase === 0 ? 'fa-circle' : 'fa-circle-check'} text-base`} style={{ color: currentPhase === 0 ? '#f59e0b' : '#22c55e' }} />
                 <span
                   className="text-base font-semibold px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', lineHeight: '1.7' }}
+                  style={{ backgroundColor: currentPhase === 0 ? 'rgba(245,158,11,0.15)' : 'rgba(34,197,94,0.1)', color: currentPhase === 0 ? '#f59e0b' : '#22c55e', lineHeight: '1.7' }}
                 >
                   Phase 0
                 </span>
                 <span className="text-base" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>系統啟動</span>
               </div>
               <div className="pl-7 flex items-center gap-3 py-2.5">
-                <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
-                <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>系統準備中</span>
+                {currentPhase === 0 ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
+                    <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>系統準備中</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-check text-base" style={{ color: '#22c55e' }} />
+                    <span className="text-base font-mono" style={{ color: '#22c55e', lineHeight: '1.7' }}>系統準備完成</span>
+                  </>
+                )}
               </div>
             </div>
           )}
