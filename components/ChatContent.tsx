@@ -465,6 +465,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [globalSkills, setGlobalSkills] = useState<SkillInfo[]>([])
   const [projectCommands, setProjectCommands] = useState<SkillInfo[]>([])
   const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
+  const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high' | 'max'>('medium')
   const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -769,7 +770,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       messageToSend = emailSystemPrompt + messageToSend
     }
 
-    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel)
+    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel, modelChoice === 'opus' ? effortLevel : undefined)
     inputRef.current = ''
     if (textareaRef.current) textareaRef.current.value = ''
     setHasInput(false)
@@ -1254,12 +1255,29 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                         color: isActive ? (isOpusActive ? '#f5a623' : isAutoActive ? '#60a5fa' : '#ffffff') : '#666666',
                         border: isActive ? (isOpusActive ? '1px solid #f5a623' : isAutoActive ? '1px solid #60a5fa' : '1px solid #333333') : '1px solid transparent',
                       }}
-                      title={m === 'sonnet' ? 'Sonnet (default)' : m === 'auto' ? `Auto (Haiku 預分類)${autoResolvedModel ? ` → ${autoResolvedModel}` : ''}` : 'Opus (high effort)'}
+                      title={m === 'sonnet' ? 'Sonnet (default)' : m === 'auto' ? `Auto (Haiku 預分類)${autoResolvedModel ? ` → ${autoResolvedModel}` : ''}` : `Opus (effort: ${effortLevel})`}
                     >
                       {label}
                     </button>
                   )
                 })}
+                {modelChoice === 'opus' && (
+                  <button
+                    onClick={() => {
+                      const cycle = ['high', 'max', 'low', 'medium'] as const
+                      setEffortLevel(prev => cycle[(cycle.indexOf(prev) + 1) % 4])
+                    }}
+                    className="w-7 h-7 rounded-md text-xs font-semibold flex items-center justify-center transition-all duration-150"
+                    style={{
+                      backgroundColor: '#2d1f00',
+                      color: '#f5a623',
+                      border: '1px solid #f5a623',
+                    }}
+                    title={`Effort: ${effortLevel}`}
+                  >
+                    {effortLevel === 'low' ? 'L' : effortLevel === 'medium' ? 'M' : effortLevel === 'high' ? 'H' : 'X'}
+                  </button>
+                )}
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>
               </>
             )}

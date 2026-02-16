@@ -7,7 +7,7 @@ export const maxDuration = 300
 
 export async function POST(request: Request) {
   try {
-    const { projectId, message, sessionId, mode, model } = await request.json()
+    const { projectId, message, sessionId, mode, model, effort } = await request.json()
 
     if (!projectId || !message) {
       return new Response(JSON.stringify({ error: 'Missing projectId or message' }), {
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       projectId,
       mode,
       model,
+      effort,
     })
 
     const { queryInstance, abortController, toolStats } = createSDKQuery(
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       model,
       sessionId,                          // resume existing session
       sessionId ? undefined : newSessionId, // new session ID
+      effort,
     )
 
     // 監聽 client 斷開連線

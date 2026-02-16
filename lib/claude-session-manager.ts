@@ -56,6 +56,7 @@ function buildQueryOptions(
   model?: string,
   existingSessionId?: string | null,
   newSessionId?: string,
+  effort?: 'low' | 'medium' | 'high' | 'max',
 ): Options {
   const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'
 
@@ -79,6 +80,10 @@ function buildQueryOptions(
     opts.model = 'opus'
   }
 
+  if (effort) {
+    opts.effort = effort
+  }
+
   if (existingSessionId) {
     opts.resume = existingSessionId
   } else if (newSessionId) {
@@ -97,12 +102,13 @@ export function createSDKQuery(
   model?: string,
   existingSessionId?: string | null,
   newSessionId?: string,
+  effort?: 'low' | 'medium' | 'high' | 'max',
 ): { queryInstance: Query; abortController: AbortController; toolStats: ToolStats } {
   const abortController = new AbortController()
   const sessionId = existingSessionId || newSessionId || 'unknown'
   const toolStats: ToolStats = {}
 
-  const opts = buildQueryOptions(projectPath, mode, model, existingSessionId, newSessionId)
+  const opts = buildQueryOptions(projectPath, mode, model, existingSessionId, newSessionId, effort)
   opts.abortController = abortController
 
   // canUseTool：攔截 AskUserQuestion/ExitPlanMode

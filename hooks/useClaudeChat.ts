@@ -58,7 +58,7 @@ interface UseClaudeChatReturn {
   sessionMeta: SessionMeta
   pendingQuestions: PendingQuestionsState | null
   pendingPlanApproval: PendingPlanApprovalState | null
-  sendMessage: (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus') => Promise<void>
+  sendMessage: (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus', effortOverride?: 'low' | 'medium' | 'high' | 'max') => Promise<void>
   answerQuestion: (answers: Record<string, string>) => void
   approvePlan: (approved: boolean, feedback?: string) => void
   stopStreaming: () => void
@@ -483,7 +483,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setStreamStatus('idle')
   }, [])
 
-  const sendMessage = useCallback(async (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus') => {
+  const sendMessage = useCallback(async (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus', effortOverride?: 'low' | 'medium' | 'high' | 'max') => {
     if (!message.trim() && (!images || images.length === 0)) {
       console.debug('[chat] sendMessage skipped: empty message')
       return
@@ -604,6 +604,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           sessionId: currentSessionId,
           mode: mode || 'plan',
           model: modelOverride || config?.model || undefined,
+          effort: effortOverride || undefined,
         }),
         signal: controller.signal,
       })
