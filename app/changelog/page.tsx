@@ -74,23 +74,33 @@ export default function ChangelogPage() {
 
                 return (
                   <div key={entry.hash} className={`relative pl-8 ${isRelease ? 'pb-8' : 'pb-4'}`}>
-                    {/* Version tags (only for first release) */}
-                    {isRelease && isFirst && (
-                      <div className="absolute -left-16 top-0 flex flex-col gap-1">
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded"
-                          style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
-                        >
-                          DEV
-                        </span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded"
-                          style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}
-                        >
-                          PROD
-                        </span>
-                      </div>
-                    )}
+                    {/* PROD / DEV tags — match against version.json */}
+                    {isRelease && (() => {
+                      const ver = entry.version.replace(/^v/, '')
+                      const isProd = ver === versionConfig.production
+                      const isDev = ver === versionConfig.development.replace(/-dev$/, '')
+                      if (!isProd && !isDev) return null
+                      return (
+                        <div className="absolute -left-16 top-0 flex flex-col gap-1">
+                          {isProd && (
+                            <span
+                              className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                              style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}
+                            >
+                              PROD
+                            </span>
+                          )}
+                          {isDev && (
+                            <span
+                              className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                              style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
+                            >
+                              DEV
+                            </span>
+                          )}
+                        </div>
+                      )
+                    })()}
 
                     {/* Timeline dot */}
                     <div
@@ -113,16 +123,16 @@ export default function ChangelogPage() {
                         {/* Release header */}
                         <div className="flex items-center gap-3 mb-1">
                           <span
-                            className="text-lg font-bold"
+                            className="text-lg font-bold shrink-0"
                             style={{ color: isFirst ? '#a78bfa' : '#c4b5fd' }}
                           >
                             {entry.version}
                           </span>
-                          <span className="text-sm" style={{ color: '#555555' }}>
+                          <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: '#555555' }}>
                             {entry.date}
                           </span>
                           <span
-                            className="text-xs px-1.5 py-0.5 rounded font-mono"
+                            className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0"
                             style={{ backgroundColor: '#1a1a1a', color: '#666666' }}
                           >
                             {entry.hash}
@@ -135,10 +145,13 @@ export default function ChangelogPage() {
                         )}
                       </>
                     ) : (
-                      /* Regular commit */
-                      <div className="flex items-center gap-2">
+                      /* Regular commit — grid: hash | summary | date */
+                      <div
+                        className="grid items-start gap-x-2"
+                        style={{ gridTemplateColumns: 'auto 1fr auto' }}
+                      >
                         <span
-                          className="text-xs px-1.5 py-0.5 rounded font-mono"
+                          className="text-xs px-1.5 py-0.5 rounded font-mono whitespace-nowrap"
                           style={{ backgroundColor: '#1a1a1a', color: '#555555' }}
                         >
                           {entry.hash}
@@ -146,7 +159,7 @@ export default function ChangelogPage() {
                         <span className="text-sm" style={{ color: '#888888' }}>
                           {entry.summary}
                         </span>
-                        <span className="text-xs" style={{ color: '#444444' }}>
+                        <span className="text-xs whitespace-nowrap pt-0.5" style={{ color: '#444444' }}>
                           {entry.date}
                         </span>
                       </div>
