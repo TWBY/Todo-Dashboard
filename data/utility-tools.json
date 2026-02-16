@@ -22,9 +22,7 @@
     "description": "HTML 下載工具。",
     "techStack": [],
     "createdAt": "2025-11-07T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:52:16.268Z",
-    "devPort": 3015,
-    "devAddedAt": "2026-02-15T08:52:16.268Z"
+    "updatedAt": "2026-02-15T13:50:39.731Z"
   },
   {
     "id": "editer",
@@ -135,9 +133,7 @@
     "description": "Excel 資料生成工廠。",
     "techStack": [],
     "createdAt": "2026-02-11T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:52:17.864Z",
-    "devPort": 3016,
-    "devAddedAt": "2026-02-15T08:52:17.864Z"
+    "updatedAt": "2026-02-15T13:50:40.341Z"
   },
   {
     "id": "cover-maker",
@@ -152,6 +148,8 @@
       "Remotion"
     ],
     "createdAt": "2026-02-14T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:34:39.179Z"
+    "updatedAt": "2026-02-15T15:01:52.697Z",
+    "devPort": 3013,
+    "devAddedAt": "2026-02-15T15:01:52.697Z"
   }
 ]

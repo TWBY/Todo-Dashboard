@@ -75,16 +75,104 @@
     "sessionId": "ef7079b6-c52d-4fc1-a914-d9099c56a76e",
     "projectId": "dashboard",
     "title": "[PROD] Dashboard 在 4000 的時候，現在還是顯示 stop，沒有顯示 Pro 保護自己耶，但是 30",
-    "messageCount": 2,
+    "messageCount": 7,
     "createdAt": 1771162905680,
-    "lastActiveAt": 1771163061428
+    "lastActiveAt": 1771163941765
   },
   {
     "sessionId": "2d88182e-469c-474e-8f46-9bd901cb1ccb",
     "projectId": "dashboard",
     "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
-    "messageCount": 1,
+    "messageCount": 0,
     "createdAt": 1771163099072,
-    "lastActiveAt": 1771163099072
+    "lastActiveAt": 1771163150300
+  },
+  {
+    "sessionId": "623f869c-8997-47ee-bc44-79acf5e6c95a",
+    "projectId": "dashboard",
+    "title": "好，其實我現在反而是關於在回答問題時，那個「…」以及「正在連線」後面的細節部分，我希望要有那種「呼吸感」。\n\n關於呼吸感",
+    "messageCount": 1,
+    "createdAt": 1771168270868,
+    "lastActiveAt": 1771168270868
+  },
+  {
+    "sessionId": "04a627d0-ff20-435a-a61c-469249fb9ded",
+    "projectId": "dashboard",
+    "title": "好，其實我現在反而是關於在回答問題時，那個「…」以及「正在連線」後面的細節部分，我希望要有那種「呼吸感」。\n\n關於呼吸感",
+    "messageCount": 56,
+    "createdAt": 1771168353888,
+    "lastActiveAt": 1771174880791
+  },
+  {
+    "sessionId": "8d989ea7-c4db-499a-8c82-fcd7214d0e1b",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771171413615,
+    "lastActiveAt": 1771171489295
+  },
+  {
+    "sessionId": "b231d41e-b21a-4fc7-81db-b1af5ae931bc",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771172519948,
+    "lastActiveAt": 1771172600201
+  },
+  {
+    "sessionId": "ccbc10c4-b786-4c0f-bdc3-dab0523d913d",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 執行 git log --oneline 查看自上次 release c",
+    "messageCount": 1,
+    "createdAt": 1771172974299,
+    "lastActiveAt": 1771173038325
+  },
+  {
+    "sessionId": "a086a18d-6b12-4b19-817b-f8fd1fa335ac",
+    "projectId": "dashboard",
+    "title": "一共有三個問題需要修正，整理如下：\n\n1. Reload 功能修正\nReload 的地方應該要直接重啟才對。目前似乎沒有",
+    "messageCount": 6,
+    "createdAt": 1771175239440,
+    "lastActiveAt": 1771175656508
+  },
+  {
+    "sessionId": "93e2271a-4754-4fa8-bca3-2db49c712a50",
+    "projectId": "dashboard",
+    "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 找到上次 release commit：git log --onelin",
+    "messageCount": 19,
+    "createdAt": 1771175854493,
+    "lastActiveAt": 1771204644486
+  },
+  {
+    "sessionId": "2175bed0-0aaa-414a-a3cf-5472f155aca1",
+    "projectId": "dashboard",
+    "title": "現在 chat 是如何跟 claude code 串接的，為何我現在這個抽象層有很多功能好像不能實作？",
+    "messageCount": 21,
+    "createdAt": 1771177259865,
+    "lastActiveAt": 1771204480519
+  },
+  {
+    "sessionId": "1dcd6036-a7da-4a84-9149-f71d1863a026",
+    "projectId": "dashboard",
+    "title": "你好，請簡短回覆一句話確認你能正常運作",
+    "messageCount": 1,
+    "createdAt": 1771201366249,
+    "lastActiveAt": 1771201369544
+  },
+  {
+    "sessionId": "26547bc2-c795-4330-bb5b-aa9bc4d81edc",
+    "projectId": "dashboard",
+    "title": "你好，請用一句話回覆確認你能正常運作",
+    "messageCount": 2,
+    "createdAt": 1771201461814,
+    "lastActiveAt": 1771201535923
+  },
+  {
+    "sessionId": "6261d922-ad2a-415d-a62b-5776383a3890",
+    "projectId": "dashboard",
+    "title": "現在記憶體跟 CPU 監控跟整體面板搭配起來有點突兀，需要修正，我可以理解記憶法本身有顏色，但是顯示方式需要低調點，也許",
+    "messageCount": 1,
+    "createdAt": 1771204016751,
+    "lastActiveAt": 1771204103261
   }
 ]

@@ -11,7 +11,9 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:03:57.060Z"
+    "updatedAt": "2026-02-15T13:51:10.902Z",
+    "devPort": 3012,
+    "devAddedAt": "2026-02-15T13:51:10.902Z"
   },
   {
     "id": "blogfront",
@@ -45,9 +47,7 @@
     "description": "學習平台系統，掛載於主站 /course 路徑下。預計提供課程瀏覽、課程內容呈現、學習進度追蹤等功能。目前尚在規劃階段，尚未開始開發。修改方式：進入 brickverse-learn/ 目錄，結構待建立。",
     "techStack": [],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:49:31.808Z",
-    "devPort": 3014,
-    "devAddedAt": "2026-02-15T08:49:31.808Z"
+    "updatedAt": "2026-02-15T13:59:57.574Z"
   },
   {
     "id": "brickverse-design",

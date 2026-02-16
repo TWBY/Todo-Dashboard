@@ -14,5 +14,13 @@
     "messageCount": 1,
     "createdAt": 1771083721682,
     "lastActiveAt": 1771083721734
+  },
+  {
+    "sessionId": "fb8ad3e3-82a7-4e82-abd4-53fa306c46d3",
+    "projectId": "brickverse-design",
+    "title": "把 http://localhost:3002/chat-window 這個分頁直接拿掉",
+    "messageCount": 2,
+    "createdAt": 1771172262545,
+    "lastActiveAt": 1771172374093
   }
 ]

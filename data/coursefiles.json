@@ -37,13 +37,11 @@
       },
       {
         "name": "StudentStauts",
-        "description": "學生狀態 Dashboard",
-        "devPort": 3013,
-        "devAddedAt": "2026-02-15T08:34:43.910Z"
+        "description": "學生狀態 Dashboard"
       }
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:34:43.910Z"
+    "updatedAt": "2026-02-15T13:59:51.402Z"
   },
   {
     "id": "hr-workshop",

@@ -30,5 +30,13 @@
     "messageCount": 1,
     "createdAt": 1771086794510,
     "lastActiveAt": 1771086797259
+  },
+  {
+    "sessionId": "4a70f956-fcfa-4903-ae23-c2a6a2c55fca",
+    "projectId": "brickverse-web",
+    "title": "優化一下專案 skill，我猜  /insforge 是不需要了吧，畢竟他已經寫在 claude.md 了，另外就是 表",
+    "messageCount": 2,
+    "createdAt": 1771163542208,
+    "lastActiveAt": 1771163712868
   }
 ]
