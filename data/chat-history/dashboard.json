@@ -139,17 +139,17 @@
     "sessionId": "93e2271a-4754-4fa8-bca3-2db49c712a50",
     "projectId": "dashboard",
     "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 找到上次 release commit：git log --onelin",
-    "messageCount": 24,
+    "messageCount": 28,
     "createdAt": 1771175854493,
-    "lastActiveAt": 1771205497294
+    "lastActiveAt": 1771206085437
   },
   {
     "sessionId": "2175bed0-0aaa-414a-a3cf-5472f155aca1",
     "projectId": "dashboard",
     "title": "現在 chat 是如何跟 claude code 串接的，為何我現在這個抽象層有很多功能好像不能實作？",
-    "messageCount": 27,
+    "messageCount": 34,
     "createdAt": 1771177259865,
-    "lastActiveAt": 1771205499188
+    "lastActiveAt": 1771206012711
   },
   {
     "sessionId": "1dcd6036-a7da-4a84-9149-f71d1863a026",
