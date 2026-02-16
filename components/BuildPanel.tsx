@@ -197,7 +197,7 @@ function PhaseStatusIcon({ status }: { status: StepStatus }) {
     case 'done':
       return <i className="fa-sharp fa-solid fa-circle-check text-xs" style={{ color: '#22c55e' }} />;
     case 'running':
-      return <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs" style={{ color: '#f59e0b' }} />;
+      return <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />;
     case 'error':
       return <i className="fa-sharp fa-solid fa-circle-xmark text-xs" style={{ color: '#ef4444' }} />;
     default:
@@ -250,7 +250,7 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
           {status === 'done' ? (
             <i className="fa-sharp fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
           ) : status === 'running' ? (
-            <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs" style={{ color: '#f59e0b' }} />
+            <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
           ) : status === 'error' ? (
             <i className="fa-sharp fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
           ) : (

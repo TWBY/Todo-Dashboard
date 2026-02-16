@@ -446,36 +446,67 @@ option {
 
 /* === Build Panel === */
 
-/* 機械執行呼吸光暈（Phase 容器） */
+/* Phase 容器 — 啟動閃光（一次性） */
+@keyframes build-ignite {
+  0% {
+    box-shadow: 0 0 30px 8px rgba(245, 158, 11, 0.15), inset 0 0 20px rgba(245, 158, 11, 0.04);
+    border-color: rgba(245, 158, 11, 0.7);
+    background-color: rgba(245, 158, 11, 0.04);
+  }
+  100% {
+    box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.04);
+    border-color: rgba(245, 158, 11, 0.35);
+    background-color: rgba(245, 158, 11, 0.01);
+  }
+}
+
+/* Phase 容器 — 持續呼吸 */
 @keyframes build-breathe {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-    border-color: rgba(245, 158, 11, 0.2);
-    background-color: rgba(245, 158, 11, 0);
+    box-shadow: 0 0 6px 1px rgba(245, 158, 11, 0.03);
+    border-color: rgba(245, 158, 11, 0.25);
+    background-color: rgba(245, 158, 11, 0.005);
   }
   50% {
-    box-shadow: 0 0 24px 4px rgba(245, 158, 11, 0.06), inset 0 0 12px rgba(245, 158, 11, 0.02);
-    border-color: rgba(245, 158, 11, 0.55);
-    background-color: rgba(245, 158, 11, 0.015);
+    box-shadow: 0 0 22px 5px rgba(245, 158, 11, 0.1), inset 0 0 10px rgba(245, 158, 11, 0.02);
+    border-color: rgba(245, 158, 11, 0.6);
+    background-color: rgba(245, 158, 11, 0.025);
   }
 }
 .build-phase-running {
-  animation: build-breathe 2.8s ease-in-out infinite;
+  animation: build-ignite 0.6s ease-out, build-breathe 2s ease-in-out 0.6s infinite;
 }
 
-/* 機械執行 step 呼吸（Step 卡片） */
-@keyframes build-step-breathe {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+/* Step 卡片 — 啟動閃光（一次性） */
+@keyframes build-step-ignite {
+  0% {
+    box-shadow: 0 0 16px 4px rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.65);
+  }
+  100% {
+    box-shadow: 0 0 4px 1px rgba(245, 158, 11, 0.04);
     border-color: rgba(245, 158, 11, 0.35);
   }
+}
+
+/* Step 卡片 — 持續呼吸 */
+@keyframes build-step-breathe {
+  0%, 100% {
+    box-shadow: 0 0 3px 0 rgba(245, 158, 11, 0.02);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
   50% {
-    box-shadow: 0 0 10px 1px rgba(245, 158, 11, 0.08);
-    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 14px 2px rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.65);
   }
 }
 .build-step-running {
-  animation: build-step-breathe 2.4s ease-in-out infinite;
+  animation: build-step-ignite 0.4s ease-out, build-step-breathe 1.8s ease-in-out 0.4s infinite;
+}
+
+/* Spinner 光暈 */
+.build-spinner-glow {
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(245, 158, 11, 0.3);
 }
 
 /* AI output 區 markdown 樣式 */
