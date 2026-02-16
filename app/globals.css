@@ -511,17 +511,17 @@ option {
 }
 
 /* AI output 區 markdown 樣式 */
-.build-ai-output p { margin: 0.15em 0; }
+.build-ai-output p { margin: 0.35em 0; }
 .build-ai-output strong { color: var(--text-primary); font-weight: 600; }
 .build-ai-output code {
-  font-size: 0.7rem;
-  padding: 0.1em 0.35em;
-  border-radius: 3px;
+  font-size: 0.8125rem;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
   background: rgba(255,255,255,0.06);
   color: var(--primary-blue-light);
 }
-.build-ai-output ul, .build-ai-output ol { padding-left: 1.2em; margin: 0.2em 0; }
-.build-ai-output li { margin: 0.1em 0; }
-.build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.3em 0; font-size: 0.7rem; }
-.build-ai-output th, .build-ai-output td { padding: 0.25em 0.5em; border: 1px solid var(--border-color); text-align: left; }
+.build-ai-output ul, .build-ai-output ol { padding-left: 1.4em; margin: 0.4em 0; }
+.build-ai-output li { margin: 0.2em 0; }
+.build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.5em 0; font-size: 0.875rem; }
+.build-ai-output th, .build-ai-output td { padding: 0.5em 0.75em; border: 1px solid var(--border-color); text-align: left; line-height: 1.6; }
 .build-ai-output th { color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.03); }

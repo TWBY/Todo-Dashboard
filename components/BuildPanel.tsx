@@ -253,7 +253,7 @@ function PhaseStatusIcon({ status }: { status: StepStatus }) {
     case 'done':
       return <i className="fa-solid fa-circle-check text-sm" style={{ color: '#22c55e' }} />;
     case 'running':
-      return <i className="fa-solid fa-spinner fa-spin text-sm build-spinner-glow" style={{ color: '#f59e0b' }} />;
+      return <i className="fa-solid fa-circle text-sm" style={{ color: '#f59e0b' }} />;
     case 'error':
       return <i className="fa-solid fa-circle-xmark text-sm" style={{ color: '#ef4444' }} />;
     default:
@@ -341,7 +341,6 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
       ref={containerRef}
       className="mt-3 rounded-md overflow-y-auto"
       style={{
-        maxHeight: '280px',
         backgroundColor: 'rgba(0,0,0,0.15)',
         border: '1px solid rgba(168,85,247,0.2)',
         padding: '10px 12px',
@@ -485,7 +484,7 @@ export default function BuildPanel() {
       style={{
         border: '1.5px solid transparent',
         borderRadius: 6,
-        padding: '8px 16px',
+        padding: '8px 24px',
       }}
     >
       {/* Header */}
@@ -530,7 +529,7 @@ export default function BuildPanel() {
       </div>
 
       {/* Content */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-2">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div className="pb-8">
           {/* Phase 0: System startup */}
           {buildState === 'running' && currentPhase === 0 && (
@@ -613,14 +612,14 @@ export default function BuildPanel() {
           {/* Result summary */}
           {buildState === 'done' && resultSummary && (
             <div
-              className="mt-5 rounded-md px-4 py-3"
+              className="mt-6 rounded-lg px-6 py-5"
               style={{ backgroundColor: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
             >
-              <div className="text-sm font-medium mb-1.5" style={{ color: '#22c55e', lineHeight: '1.6' }}>
-                <i className="fa-solid fa-circle-check mr-1.5" />
+              <div className="text-base font-semibold mb-3" style={{ color: '#22c55e', lineHeight: '1.6' }}>
+                <i className="fa-solid fa-circle-check mr-2" />
                 Build 完成
               </div>
-              <div className="text-sm build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+              <div className="build-ai-output" style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.75' }}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {resultSummary.trim()}
                 </ReactMarkdown>
