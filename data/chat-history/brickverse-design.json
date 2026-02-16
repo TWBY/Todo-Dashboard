@@ -38,5 +38,13 @@
     "messageCount": 1,
     "createdAt": 1771244846737,
     "lastActiveAt": 1771244861336
+  },
+  {
+    "sessionId": "f0a36769-c77b-4bb4-b4a3-634287e5305e",
+    "projectId": "brickverse-design",
+    "title": "簡介專案",
+    "messageCount": 1,
+    "createdAt": 1771253385516,
+    "lastActiveAt": 1771253385516
   }
 ]

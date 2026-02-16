@@ -3,9 +3,9 @@
     "sessionId": "a425c4ea-2838-46b0-95d1-3898e2f63534",
     "projectId": "dashboard",
     "title": "Untitled",
-    "messageCount": 34,
+    "messageCount": 50,
     "createdAt": 1771243957899,
-    "lastActiveAt": 1771250812474
+    "lastActiveAt": 1771254322167
   },
   {
     "sessionId": "2b4e2d58-e514-4c5a-b5f9-60d79b9382c5",
@@ -206,5 +206,77 @@
     "messageCount": 1,
     "createdAt": 1771250658547,
     "lastActiveAt": 1771250665920
+  },
+  {
+    "sessionId": "ede2a754-0328-4836-bb41-a92476892821",
+    "projectId": "dashboard",
+    "title": "我在網路上看到有人記錄他每一天的 API 模型 Token 使用量和費用。\n\n我想請問一下：\n1. 這是以 API 還是",
+    "messageCount": 6,
+    "createdAt": 1771251389136,
+    "lastActiveAt": 1771251597254
+  },
+  {
+    "sessionId": "09a5f0cd-7cf7-4c4c-8a8c-f1d2f948b14f",
+    "projectId": "dashboard",
+    "title": "當在 Chat 產生任何連結的時候，不要直接用同一個頁面開啟，它應該要用一個新的視窗開啟連結才對，也就是要開新視窗。",
+    "messageCount": 2,
+    "createdAt": 1771251787648,
+    "lastActiveAt": 1771252082776
+  },
+  {
+    "sessionId": "9e27fdd3-4626-45ff-b493-8a17c319bc28",
+    "projectId": "dashboard",
+    "title": "現在訊息漸進式揭露的方式跟效果好像沒有了，不確定是不是被移除？",
+    "messageCount": 5,
+    "createdAt": 1771252032433,
+    "lastActiveAt": 1771254477727
+  },
+  {
+    "sessionId": "8ca4ccaa-6069-4ef1-b857-fabaa3627164",
+    "projectId": "dashboard",
+    "title": "簡介專案",
+    "messageCount": 1,
+    "createdAt": 1771253229134,
+    "lastActiveAt": 1771253251988
+  },
+  {
+    "sessionId": "72722c17-480b-4d28-9877-0303c512b6ed",
+    "projectId": "dashboard",
+    "title": "簡介專案",
+    "messageCount": 1,
+    "createdAt": 1771254057439,
+    "lastActiveAt": 1771254077703
+  },
+  {
+    "sessionId": "1114ee71-da09-4385-8a7a-648038789951",
+    "projectId": "dashboard",
+    "title": "簡介專案",
+    "messageCount": 1,
+    "createdAt": 1771254545097,
+    "lastActiveAt": 1771254594501
+  },
+  {
+    "sessionId": "79e94501-1cf7-42ed-903a-d5a34146b526",
+    "projectId": "dashboard",
+    "title": "解釋 chat 技術",
+    "messageCount": 1,
+    "createdAt": 1771254606938,
+    "lastActiveAt": 1771254630428
+  },
+  {
+    "sessionId": "231bb937-659e-46f7-b2ca-b3729950be1b",
+    "projectId": "dashboard",
+    "title": "給我寫一篇 5000 字文章",
+    "messageCount": 4,
+    "createdAt": 1771254658978,
+    "lastActiveAt": 1771254692119
+  },
+  {
+    "sessionId": "7f29ee9f-2a55-456b-a928-a770cadcc3d0",
+    "projectId": "dashboard",
+    "title": "簡單介紹專案即可，不虛太深入研究",
+    "messageCount": 1,
+    "createdAt": 1771254727217,
+    "lastActiveAt": 1771254762844
   }
 ]
