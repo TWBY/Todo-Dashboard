@@ -363,7 +363,46 @@ option {
 }
 
 .streaming-status-text {
-  animation: toolCrossfade 0.3s ease-in-out;
+  animation: toolCrossfade 0.3s ease-in-out, streaming-shimmer 3s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 15%,
+    #cccccc 50%,
+    currentColor 85%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes streaming-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Chat 波浪呼吸圓點 */
+@keyframes chat-wave {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.35;
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(180, 180, 180, 0.45);
+  }
+}
+
+.chat-wave-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--dot-color, var(--text-tertiary));
+  animation: chat-wave 2s ease-in-out infinite;
 }
 
 /* 速記待辦彈窗進場動畫 */

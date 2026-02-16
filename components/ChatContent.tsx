@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import PulsingDots from '@/components/PulsingDots'
 import ProjectImagePicker from '@/components/ProjectImagePicker'
 import ChatHistory from '@/components/ChatHistory'
 import type { ChatMessage, ChatMode, TodoItem, UserQuestion } from '@/lib/claude-chat-types'
@@ -64,7 +63,7 @@ function TodoList({ todos }: { todos: TodoItem[] }) {
               <span className="text-green-400">&#10003;</span>
             )}
             {todo.status === 'in_progress' && (
-              <span className="todo-shimmer-dot" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }}>&#9679;</span>
+              <span className="todo-shimmer-dot text-[10px]" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }}>&#9679;</span>
             )}
             {todo.status === 'pending' && (
               <span className="w-3 h-3 rounded-full border border-gray-500" />
@@ -203,50 +202,69 @@ function CodeBlockWithCopy({ children, ...props }: React.ComponentPropsWithoutRe
 
 const markdownComponents = { pre: CodeBlockWithCopy }
 
-// 工具操作群組：同位置淡入淡出，點擊展開全部
-function ToolGroup({ msgs }: { msgs: ChatMessage[] }) {
+// 工具操作 Log：streaming 時展開即時顯示，結束後收合
+function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) {
   const [expanded, setExpanded] = useState(false)
-  const lastMsg = msgs[msgs.length - 1]
-  const lastDesc = lastMsg.toolDescription || ''
-  const lastLabel = lastDesc ? `${lastMsg.toolName} ${lastDesc}` : lastMsg.toolName || ''
+  const logEndRef = useRef<HTMLDivElement>(null)
   const count = msgs.length
 
-  if (expanded) {
+  // streaming 時自動捲到底部
+  useEffect(() => {
+    if (isLive && logEndRef.current) {
+      logEndRef.current.scrollIntoView({ block: 'end' })
+    }
+  }, [isLive, count])
+
+  // streaming 時強制展開
+  const showExpanded = isLive || expanded
+
+  if (!showExpanded) {
+    const lastMsg = msgs[msgs.length - 1]
+    const lastDesc = lastMsg.toolDescription || ''
+    const lastLabel = lastDesc ? `${lastMsg.toolName} ${lastDesc}` : lastMsg.toolName || ''
     return (
       <div
-        className="space-y-0.5 animate-fade-in cursor-pointer"
-        onClick={() => setExpanded(false)}
+        className="text-sm animate-fade-in cursor-pointer flex items-center gap-1.5 px-1.5 -mx-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+        onClick={() => setExpanded(true)}
+        title="點擊展開所有操作"
       >
-        {msgs.map(tm => {
-          const desc = tm.toolDescription || ''
-          return (
-            <div key={tm.id} className="text-sm" style={{ color: '#555555' }}>
-              <span style={{ color: '#666666' }}>{tm.toolName}</span>
-              {desc && <span style={{ color: '#444444' }}> {desc}</span>}
-            </div>
-          )
-        })}
+        <span key={lastMsg.id} className="tool-crossfade" style={{ color: '#666666' }}>
+          {lastLabel}
+        </span>
+        {count > 1 && (
+          <span className="text-xs px-1 py-0.5 rounded-sm" style={{ color: '#555555', backgroundColor: '#111111' }}>
+            +{count - 1}
+          </span>
+        )}
+        <span style={{ color: '#444444', fontSize: '0.75rem' }}>›</span>
       </div>
     )
   }
 
   return (
     <div
-      className="text-sm animate-fade-in cursor-pointer flex items-center gap-1.5 px-1.5 -mx-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
-      onClick={() => setExpanded(true)}
-      title="點擊展開所有操作"
+      className={`animate-fade-in text-sm ${!isLive ? 'cursor-pointer' : ''}`}
+      onClick={!isLive ? () => setExpanded(false) : undefined}
+      style={{
+        maxHeight: isLive ? '7.5rem' : undefined,
+        overflowY: isLive ? 'auto' : undefined,
+        maskImage: isLive && count > 5 ? 'linear-gradient(to bottom, transparent 0%, black 15%)' : undefined,
+        WebkitMaskImage: isLive && count > 5 ? 'linear-gradient(to bottom, transparent 0%, black 15%)' : undefined,
+      }}
     >
-      <span key={lastMsg.id} className="tool-crossfade" style={{ color: '#666666' }}>
-        {lastLabel}
-      </span>
-      {count > 1 && (
-        <span
-          className="text-xs px-1 py-0.5 rounded-sm"
-          style={{ color: '#555555', backgroundColor: '#111111' }}
-        >
-          +{count - 1}
-        </span>
-      )}
+      <div className="space-y-0.5">
+        {msgs.map((tm, i) => {
+          const desc = tm.toolDescription || ''
+          const isLast = isLive && i === msgs.length - 1
+          return (
+            <div key={tm.id} className={isLast ? 'streaming-status-text' : ''} style={{ color: isLast ? '#888888' : '#555555' }}>
+              {tm.toolName}
+              {desc && <span style={{ color: isLast ? undefined : '#444444' }}> {desc}</span>}
+            </div>
+          )
+        })}
+        <div ref={logEndRef} />
+      </div>
     </div>
   )
 }
@@ -424,6 +442,7 @@ interface ChatContentProps {
   resumeSessionId?: string
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
+  ephemeral?: boolean
   onSessionIdChange?: (sessionId: string) => void
   onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => void
   onPanelStatusChange?: (status: PanelStatus) => void
@@ -433,7 +452,7 @@ interface SkillInfo { name: string; description: string }
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   const [input, setInput] = useState('')
   const [isComposing, setIsComposing] = useState(false)
   const [mode, setMode] = useState<ChatMode>(emailMode ? 'ask' : 'plan')
@@ -453,7 +472,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
   const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
-  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error, clearError } = useClaudeChat(projectId, { model: effectiveModel })
+  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
   const { addPanel } = useChatPanels()
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
@@ -564,6 +583,21 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
   }, [messages])
 
+  // resumeSession 載入歷史後，強制捲到底部並重設 near-bottom 狀態
+  const prevSessionIdRef = useRef(sessionId)
+  useEffect(() => {
+    if (sessionId && sessionId !== prevSessionIdRef.current) {
+      prevSessionIdRef.current = sessionId
+      requestAnimationFrame(() => {
+        const el = messagesContainerRef.current
+        if (el) {
+          el.scrollTop = el.scrollHeight
+          isNearBottomRef.current = true
+        }
+      })
+    }
+  }, [sessionId, messages])
+
   // 偵測串流完成 → 綠色邊框 + 音效
   // streamStatus 由 hook 原子化設定，消除 React 狀態批次更新的 race condition
   useEffect(() => {
@@ -636,7 +670,31 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
     if (imageFiles.length > 0) {
       e.preventDefault()
+      const text = e.clipboardData.getData('text/plain')
+      if (text) {
+        const textarea = textareaRef.current
+        if (textarea) {
+          const start = textarea.selectionStart
+          const end = textarea.selectionEnd
+          setInput(prev => prev.slice(0, start) + text + prev.slice(end))
+        }
+      }
       addImages(imageFiles)
+      return
+    }
+    // 純文字：完全接管貼上（修復 Dia 瀏覽器貼上「上一次內容」的 bug）
+    e.preventDefault()
+    const text = e.clipboardData.getData('text/plain')
+    if (text) {
+      const textarea = textareaRef.current
+      if (textarea) {
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        setInput(prev => prev.slice(0, start) + text + prev.slice(end))
+        requestAnimationFrame(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + text.length
+        })
+      }
     }
   }, [addImages])
 
@@ -830,9 +888,10 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           }
 
           return groups.map((group, gi) => {
-            // 連續 low-level tools → 同位置淡入淡出，點擊展開
+            // 連續 low-level tools → streaming 時展開即時 log，結束後收合
             if (group.type === 'tool-group') {
-              return <ToolGroup key={`tg-${gi}`} msgs={group.msgs} />
+              const isLastGroup = gi === groups.length - 1
+              return <ToolGroup key={`tg-${gi}`} msgs={group.msgs} isLive={isLastGroup && isStreaming} />
             }
 
             const msg = group.msg
@@ -921,7 +980,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 )}
 
 
-                {msg.role === 'tool' && msg.toolName === 'ExitPlanMode' && msg.planApproval && !pendingPlanApproval && (
+                {msg.role === 'tool' && msg.toolName === 'ExitPlanMode' && msg.planApproval?.approved && (
                   <div className="w-full">
                     <div className="text-sm py-0.5" style={{ color: '#666666' }}>
                       已審批計畫
@@ -1003,21 +1062,17 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           })
         })()}
 
-        {isStreaming && streamingActivity && (
-          <div className="flex items-center gap-2 text-sm animate-fade-in" style={{ color: '#666666' }}>
-            <PulsingDots />
+        {isLoadingHistory && (
+          <div className="text-sm animate-fade-in">
+            <span className="streaming-status-text">載入對話紀錄...</span>
+          </div>
+        )}
+        {isStreaming && streamingActivity && streamingActivity.status !== 'tool' && (
+          <div className="text-sm animate-fade-in">
             <span className="streaming-status-text">
               {streamingActivity.status === 'connecting' && '正在連線...'}
               {streamingActivity.status === 'thinking' && '正在思考...'}
               {streamingActivity.status === 'replying' && '正在回覆...'}
-              {streamingActivity.status === 'tool' && (
-                <>
-                  正在執行 <span style={{ color: '#888888' }}>{streamingActivity.toolName}</span>
-                  {streamingActivity.toolDetail && (
-                    <span style={{ color: '#555555' }}> — {streamingActivity.toolDetail}</span>
-                  )}
-                </>
-              )}
             </span>
           </div>
         )}
@@ -1178,8 +1233,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 <button
                   key={m}
                   onClick={() => selectMode(m)}
-                  disabled={isStreaming}
-                  className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                   style={{
                     backgroundColor: isActive ? '#222222' : 'transparent',
                     color: isActive ? '#ffffff' : '#666666',
@@ -1205,8 +1259,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                     <button
                       key={m}
                       onClick={() => { setModelChoice(m); if (m !== 'auto') setAutoResolvedModel(null) }}
-                      disabled={isStreaming}
-                      className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                       style={{
                         backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : isAutoActive ? '#0a1f2d' : '#222222') : 'transparent',
                         color: isActive ? (isOpusActive ? '#f5a623' : isAutoActive ? '#60a5fa' : '#ffffff') : '#666666',
@@ -1222,41 +1275,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               </>
             )}
 
-            {!planOnly && !emailMode && projectCommands.length > 0 && (
-              <button
-                onClick={() => setSkillMenu(prev => prev === 'project' ? null : 'project')}
-                disabled={isStreaming}
-                className="h-7 px-2.5 rounded-md text-sm flex items-center gap-1 transition-all duration-150 disabled:opacity-40 ml-1"
-                style={{
-                  backgroundColor: skillMenu === 'project' ? '#222222' : 'transparent',
-                  color: skillMenu === 'project' ? '#ffffff' : '#666666',
-                  border: skillMenu === 'project' ? '1px solid #333333' : '1px solid transparent',
-                }}
-                title="專案 Commands"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                </svg>
-                /
-              </button>
-            )}
-            {!planOnly && !emailMode && (
-              <button
-                onClick={() => setSkillMenu(prev => prev === 'global' ? null : 'global')}
-                disabled={isStreaming}
-                className="w-7 h-7 rounded-md text-sm flex items-center justify-center transition-all duration-150 disabled:opacity-40"
-                style={{
-                  backgroundColor: skillMenu === 'global' ? '#222222' : 'transparent',
-                  color: skillMenu === 'global' ? '#ffffff' : '#666666',
-                  border: skillMenu === 'global' ? '1px solid #333333' : '1px solid transparent',
-                }}
-                title="全域 Skills"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
-              </button>
-            )}
 
             {!planOnly && !emailMode && (
               <button
