@@ -195,16 +195,16 @@
     "sessionId": "0c4f7416-8fbd-4122-8013-0d3fdb6a9629",
     "projectId": "dashboard",
     "title": "根據這個專案，有沒有適合的 agent team 應用組合或是場景",
-    "messageCount": 11,
+    "messageCount": 14,
     "createdAt": 1771219373404,
-    "lastActiveAt": 1771220898769
+    "lastActiveAt": 1771221512585
   },
   {
     "sessionId": "e18f039e-0aa9-4dfe-90c6-03cab93db731",
     "projectId": "dashboard",
     "title": "現在 chat 的功能在確認完計劃之後，按下執行都有按超過兩次還有反應，而且如果是打字還沒感應，超級奇怪的",
-    "messageCount": 10,
+    "messageCount": 20,
     "createdAt": 1771219821643,
-    "lastActiveAt": 1771221124333
+    "lastActiveAt": 1771222528869
   }
 ]
