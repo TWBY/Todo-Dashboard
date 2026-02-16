@@ -466,7 +466,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [globalSkills, setGlobalSkills] = useState<SkillInfo[]>([])
   const [projectCommands, setProjectCommands] = useState<SkillInfo[]>([])
   const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
-  const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high' | 'max'>('medium')
+  const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high'>('medium')
   const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -1278,8 +1278,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 {modelChoice === 'opus' && (
                   <button
                     onClick={() => {
-                      const cycle = ['low', 'medium', 'high', 'max'] as const
-                      setEffortLevel(prev => cycle[(cycle.indexOf(prev) + 1) % 4])
+                      const cycle = ['low', 'medium', 'high'] as const
+                      setEffortLevel(prev => cycle[(cycle.indexOf(prev) + 1) % 3])
                     }}
                     className="w-7 h-7 rounded-md text-xs font-semibold flex items-center justify-center transition-all duration-150"
                     style={{
@@ -1289,7 +1289,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                     }}
                     title={`Effort: ${effortLevel}`}
                   >
-                    {effortLevel === 'low' ? 'L' : effortLevel === 'medium' ? 'M' : effortLevel === 'high' ? 'H' : 'X'}
+                    {effortLevel === 'low' ? 'L' : effortLevel === 'medium' ? 'M' : 'H'}
                   </button>
                 )}
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>

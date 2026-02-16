@@ -56,7 +56,7 @@ function buildQueryOptions(
   model?: string,
   existingSessionId?: string | null,
   newSessionId?: string,
-  effort?: 'low' | 'medium' | 'high' | 'max',
+  effort?: 'low' | 'medium' | 'high',
 ): Options {
   const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'
 
@@ -102,7 +102,7 @@ export function createSDKQuery(
   model?: string,
   existingSessionId?: string | null,
   newSessionId?: string,
-  effort?: 'low' | 'medium' | 'high' | 'max',
+  effort?: 'low' | 'medium' | 'high',
 ): { queryInstance: Query; abortController: AbortController; toolStats: ToolStats } {
   const abortController = new AbortController()
   const sessionId = existingSessionId || newSessionId || 'unknown'
