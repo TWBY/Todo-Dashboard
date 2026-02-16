@@ -1,0 +1,14 @@
+[
+  {
+    "id": "2caa01ee-686a-4c7e-98c8-7663a022ed22",
+    "role": "user",
+    "content": "簡介專案",
+    "timestamp": 1771249601123
+  },
+  {
+    "id": "6482dce4-b443-43d5-bc8d-b297145fd318",
+    "role": "assistant",
+    "content": "我來為你簡介 **Todo-Dashboard** 專案。\n\n## 📋 專案概覽\n\nTodo-Dashboard 是一個基於 **Next.js 16** 的專案管理 Dashboard，整合了任務管理、開發伺服器控制和 Chat 功能。\n\n## 🛠 技術棧\n\n- **React 19** + **TypeScript 5**\n- **Next.js 16** (App Router)\n- **Tailwind CSS 4**\n- 開發伺服器預設 Port: `3000`\n\n## ⚡️ 核心功能\n\n### 1. **專案管理**\n- 管理多個 Brickverse 生態系的專案（包含 CourseFiles 下的課程專案）\n- 每個專案設定獨立的 dev server port（Port 3000-3020）\n- 支援一鍵啟動/停止開發伺服器\n\n### 2. **開發伺服器控制面板**\n- **DevServerPanel**: 視覺化控制所有專案的 dev server\n- **Pack 按鈕**: 內建 5 Phase 打包流程（智能 commit、版本判斷、發布）\n\n### 3. **Chat Panel**\n- 整合 AI 對話功能\n- 串接 chat history 和 message 資料（JSON 檔案儲存在 `data/chat-history/` 和 `data/chat-messages/`）\n- 最近剛移除了 'ask' mode，現在只保留一般對話模式\n\n### 4. **Streaming 動畫系統**\n- 使用 **StreamingTokens** 元件實現打字機效果\n- 最近剛完成 v1.18.0 版本，改進了 streaming reveal 動畫\n\n## 📂 專案結構特色\n\n```\nTodo-Dashboard/\n├── components/          # React 元件\n│   ├── ChatContent.tsx           # Chat 面板主體\n│   ├── DashboardContent.tsx      # 主 Dashboard\n│   ├── DevServerPanel.tsx        # Dev Server 控制\n│   └── StreamingTokens.tsx       # Streaming 動畫\n├── data/                # JSON 資料儲存\n│   ├── chat-history/    # 對話歷史\n│   └── chat-messages/   # 訊息內容\n├── app/                 # Next.js App Router\n└── package.json\n```\n\n## 🚀 快速啟動\n\n```bash\nnpm run dev          # 啟動開發伺服器 (Port 3000)\nnpm run build        # 建置專案\nnext start -p 4000   # 產品環境 (Port 4000)\n```\n\n## 📝 最近更新\n\n根據 git 紀錄，最近的版本是 **v1.18.0**，主要更新：\n- ✅ Streaming 動畫優化\n- ✅ useStreamingReveal hook 改進\n- ✅ 移除 'ask' mode\n- ✅ DevServerPanel 重構\n\n---\n\n這個專案是整個 Brickverse 生態系的中央控制台，負責管理其他 10+ 個專案的開發流程！需要我深入說明某個功能嗎？",
+    "timestamp": 1771249605125
+  }
+]

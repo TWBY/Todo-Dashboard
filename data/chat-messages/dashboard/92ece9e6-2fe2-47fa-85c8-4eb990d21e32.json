@@ -1,0 +1,14 @@
+[
+  {
+    "id": "025d30ad-52df-4d44-a8bd-dbf6fa73e1f9",
+    "role": "user",
+    "content": "簡介專案",
+    "timestamp": 1771249155102
+  },
+  {
+    "id": "e061f3a8-da92-40ba-847c-4d92e82b0890",
+    "role": "assistant",
+    "content": "我來為你介紹 **Todo-Dashboard** 專案。\n\n## 專案概述\n\n**Todo-Dashboard** 是一個基於 Next.js 16 的專案管理儀表板，主要用於管理和監控多個開發專案的狀態。\n\n## 技術棧\n\n- **框架**: Next.js 16\n- **前端**: React 19 + TypeScript 5\n- **樣式**: Tailwind CSS 4\n- **開發伺服器**: Port 3000\n\n## 核心功能\n\n從目錄結構和最近的 git 提交來看，這個專案包含：\n\n1. **專案管理面板** (`DashboardContent.tsx`)\n   - 顯示所有專案的狀態\n   - Dev Server 監控和控制\n\n2. **開發伺服器面板** (`DevServerPanel.tsx`)\n   - 管理各專案的開發伺服器\n   - Port 分配管理（3000-3020 範圍）\n   - **Pack 功能**：橙色按鈕執行 5 Phase 打包流程（智能 commit、版本判斷、發布）\n\n3. **聊天功能** (`ChatContent.tsx`)\n   - 內建聊天介面\n   - 串流動畫顯示（使用 `StreamingTokens.tsx`）\n   - 聊天歷史記錄保存在 `data/chat-history/` 和 `data/chat-messages/`\n\n4. **最近更新** (v1.18.0)\n   - 實作串流動畫效果\n   - 新增 `useStreamingReveal` hook\n   - 移除舊的 'ask' 模式\n\n## 專案特色\n\n- **多專案管理**：追蹤多個 Brickverse 系列專案（brickverse-web、BlogFrontend、GSC-Dashboard 等）\n- **Port 管理**：維護全域 Port 分配表，避免衝突\n- **自動化工具**：提供豐富的 Skills（audit、blog-pipeline、design-review 等）\n\n## 快速開始\n\n```bash\n# 啟動開發伺服器\nnpm run dev  # 運行在 http://localhost:3000\n\n# 生產環境\nnpm run build\nnext start -p 4000  # 運行在 http://localhost:4000\n```\n\n需要我深入介紹某個特定功能嗎？",
+    "timestamp": 1771249160806
+  }
+]
