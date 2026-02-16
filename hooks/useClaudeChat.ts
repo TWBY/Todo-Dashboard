@@ -85,6 +85,7 @@ interface StreamContext {
   hasPendingQuestions: boolean
   retryWithFreshSession: boolean
   newSessionIdForHistory: string | null
+  handledToolUseIDs: Set<string> // 已處理的 tool_use block ID（防重複）
 }
 
 // canUseTool 的 toolUseID（從 tool_use block 的 id 取得）
@@ -183,8 +184,31 @@ function processStreamEvent(
       const contentBlock = streamData.content_block as { type: string; name?: string; id?: string } | undefined
       if (contentBlock?.type === 'tool_use' && contentBlock.name) {
         // 工具開始 — 提早顯示工具名稱
+        console.debug('[chat] stream content_block_start tool_use', { name: contentBlock.name, id: contentBlock.id })
         actions.setStreamingActivity({ status: 'tool', toolName: contentBlock.name })
         ctx.currentAssistantId = null // 結束文字累積
+
+        // ExitPlanMode — 從 stream event 提早建立 pending 狀態
+        // （不等 assistant 完整訊息，避免 canUseTool 阻塞後 assistant 訊息延遲到達）
+        // 注意：AskUserQuestion 需要完整 input（questions），只能從 assistant 事件處理
+        if (contentBlock.name === 'ExitPlanMode' && contentBlock.id) {
+          if (!ctx.handledToolUseIDs.has(contentBlock.id)) {
+            ctx.handledToolUseIDs.add(contentBlock.id)
+            ctx.exitPlanModeHandled = true
+            ctx.hasPendingApproval = true
+            const pId = crypto.randomUUID()
+            actions.setPendingPlanApproval({ id: pId, toolUseID: contentBlock.id })
+            actions.setStreamingActivity(null)
+            actions.setMessages(prev => [...prev, {
+              id: pId,
+              role: 'tool',
+              content: '',
+              toolName: contentBlock.name!,
+              planApproval: { pending: true },
+              timestamp: Date.now(),
+            }])
+          }
+        }
       } else if (contentBlock?.type === 'text') {
         actions.setStreamingActivity({ status: 'replying' })
       }
@@ -240,6 +264,7 @@ function processStreamEvent(
           ))
         }
       } else if (block.type === 'tool_use') {
+        console.debug('[chat] assistant tool_use block', { name: block.name, id: block.id, hasId: 'id' in block })
         // 更新 streaming activity（所有 tool 都顯示）
         const toolDesc = extractToolDescription(block.name, block.input as Record<string, unknown>)
         actions.setStreamingActivity({ status: 'tool', toolName: block.name, toolDetail: toolDesc || undefined })
@@ -264,6 +289,9 @@ function processStreamEvent(
 
         // AskUserQuestion — canUseTool 阻塞中，SSE 不斷開
         if (block.name === 'AskUserQuestion') {
+          // 防重複：同一 tool_use block 可能從 partial + complete message 各收到一次
+          if (ctx.handledToolUseIDs.has(block.id)) return
+          ctx.handledToolUseIDs.add(block.id)
           const qInput = block.input as { questions?: UserQuestion[] }
           if (qInput.questions) {
             const qId = crypto.randomUUID()
@@ -285,6 +313,10 @@ function processStreamEvent(
 
         // ExitPlanMode — canUseTool 阻塞中，SSE 不斷開
         if (block.name === 'ExitPlanMode') {
+          console.debug('[chat] ExitPlanMode detected', { blockId: block.id, alreadyHandled: ctx.handledToolUseIDs.has(block.id) })
+          // 防重複：同一 tool_use block 可能從 partial + complete message 各收到一次
+          if (ctx.handledToolUseIDs.has(block.id)) return
+          ctx.handledToolUseIDs.add(block.id)
           ctx.exitPlanModeHandled = true
           ctx.hasPendingApproval = true
           const pId = crypto.randomUUID()
@@ -543,6 +575,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       hasPendingQuestions: false,
       retryWithFreshSession: false,
       newSessionIdForHistory: null,
+      handledToolUseIDs: new Set(),
     }
 
     const actions: StreamActions = {
@@ -708,6 +741,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   // 審批計畫 — POST 到 /answer endpoint，不開新 SSE
   const approvePlan = useCallback(async (approved: boolean, feedback?: string) => {
     const pending = pendingPlanApprovalRef.current
+    console.debug('[chat] approvePlan called', { approved, hasPending: !!pending, toolUseID: pending?.toolUseID, sessionId: sessionIdRef.current })
     if (approved) {
       setMessages(prev => prev.map(m =>
         m.planApproval?.pending ? { ...m, planApproval: { pending: false, approved: true } } : m
@@ -743,6 +777,8 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           feedback: feedback || undefined,
         }),
       })
+      const resBody = await res.json().catch(() => ({}))
+      console.debug('[chat] approvePlan response', { status: res.status, body: resBody })
       if (!res.ok) {
         // HMR fallback：pending request 遺失，改用 sendMessage 重新開 query
         console.debug('[chat] approvePlan 404 fallback → sendMessage')
