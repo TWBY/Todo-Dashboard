@@ -139,17 +139,17 @@
     "sessionId": "93e2271a-4754-4fa8-bca3-2db49c712a50",
     "projectId": "dashboard",
     "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 找到上次 release commit：git log --onelin",
-    "messageCount": 28,
+    "messageCount": 32,
     "createdAt": 1771175854493,
-    "lastActiveAt": 1771206085437
+    "lastActiveAt": 1771206887251
   },
   {
     "sessionId": "2175bed0-0aaa-414a-a3cf-5472f155aca1",
     "projectId": "dashboard",
     "title": "現在 chat 是如何跟 claude code 串接的，為何我現在這個抽象層有很多功能好像不能實作？",
-    "messageCount": 34,
+    "messageCount": 39,
     "createdAt": 1771177259865,
-    "lastActiveAt": 1771206012711
+    "lastActiveAt": 1771207293556
   },
   {
     "sessionId": "1dcd6036-a7da-4a84-9149-f71d1863a026",
@@ -174,5 +174,21 @@
     "messageCount": 1,
     "createdAt": 1771204016751,
     "lastActiveAt": 1771204103261
+  },
+  {
+    "sessionId": "777a030f-1f5a-46df-af30-f026281551e9",
+    "projectId": "dashboard",
+    "title": "現在 3000 好像處於死掉狀態，檢查一下生死",
+    "messageCount": 4,
+    "createdAt": 1771206670975,
+    "lastActiveAt": 1771207390165
+  },
+  {
+    "sessionId": "a1e168a8-68a5-4f8b-8e6d-ef525d21cb07",
+    "projectId": "dashboard",
+    "title": "現在我的系統設計在介面上設定 opus 的 hight、max、low 等等的嗎",
+    "messageCount": 2,
+    "createdAt": 1771207143322,
+    "lastActiveAt": 1771207333018
   }
 ]
