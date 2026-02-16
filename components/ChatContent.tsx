@@ -455,6 +455,7 @@ export { ContentsRate }
 export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   // input 改為 uncontrolled（不觸發 React re-render），只在送出/清空時用 ref 讀取
   const inputRef = useRef('')
+  const hasInputRef = useRef(false) // 用 ref 避免 onChange 閉包 stale
   const [hasInput, setHasInput] = useState(false) // 只在 empty↔non-empty 時更新（控制送出按鈕外觀）
   const [isComposing, setIsComposing] = useState(false)
   const [mode, setMode] = useState<ChatMode>(emailMode ? 'ask' : 'plan')
@@ -609,20 +610,27 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
   }, [streamStatus])
 
-  // 自動調整 textarea 高度（直接操作 DOM，避免 useEffect re-render cycle）
+  // 自動調整 textarea 高度（debounced，避免每次按鍵都 layout thrash）
+  const adjustTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const adjustTextareaHeight = useCallback(() => {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    const maxH = 200
-    const scrollH = el.scrollHeight
-    if (scrollH > maxH) {
-      el.style.height = maxH + 'px'
-      el.style.overflowY = 'auto'
-    } else {
-      el.style.height = scrollH + 'px'
-      el.style.overflowY = 'hidden'
-    }
+    if (adjustTimerRef.current) return // 已排程，不重複
+    adjustTimerRef.current = setTimeout(() => {
+      adjustTimerRef.current = null
+      const el = textareaRef.current
+      if (!el) return
+      // 檢查是否支援 CSS field-sizing（支援的話不需手動調整）
+      if ('fieldSizing' in el.style) return
+      el.style.height = 'auto'
+      const maxH = 200
+      const scrollH = el.scrollHeight
+      if (scrollH > maxH) {
+        el.style.height = maxH + 'px'
+        el.style.overflowY = 'auto'
+      } else {
+        el.style.height = scrollH + 'px'
+        el.style.overflowY = 'hidden'
+      }
+    }, 50)
   }, [])
 
   // 載入 skills 列表
@@ -772,6 +780,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
     sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel, modelChoice === 'opus' ? effortLevel : undefined)
     inputRef.current = ''
+    hasInputRef.current = false
     if (textareaRef.current) textareaRef.current.value = ''
     setHasInput(false)
     setImages([])
@@ -1189,7 +1198,10 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           onChange={(e) => {
             inputRef.current = e.target.value
             const nowHas = e.target.value.trim().length > 0
-            if (nowHas !== hasInput) setHasInput(nowHas)
+            if (nowHas !== hasInputRef.current) {
+              hasInputRef.current = nowHas
+              setHasInput(nowHas)
+            }
             adjustTextareaHeight()
           }}
           onKeyDown={handleKeyDown}
@@ -1202,6 +1214,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           style={{
             color: 'var(--text-primary)',
             overflowY: 'hidden',
+            fieldSizing: 'content' as unknown as undefined, // CSS field-sizing: content（Chromium 123+）
+            maxHeight: '200px',
           }}
         />
 
