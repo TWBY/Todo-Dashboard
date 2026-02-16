@@ -315,9 +315,7 @@ function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) 
 }
 
 // Plan 審批列
-function PlanApprovalBar({ onApprove, onReject, planOnly, loading }: { onApprove: () => void; onReject?: (feedback: string) => void; planOnly?: boolean; loading?: boolean }) {
-  const [showReject, setShowReject] = useState(false)
-  const [feedback, setFeedback] = useState('')
+function PlanApprovalBar({ onApprove, onReject, planOnly, loading }: { onApprove: () => void; onReject?: () => void; planOnly?: boolean; loading?: boolean }) {
   return (
     <div className="animate-fade-in space-y-1.5">
       <button
@@ -333,36 +331,13 @@ function PlanApprovalBar({ onApprove, onReject, planOnly, loading }: { onApprove
         {loading ? (planOnly ? '回存中...' : '執行中...') : planOnly ? '回存' : '執行'}
       </button>
       {!planOnly && !loading && onReject && (
-        showReject ? (
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              value={feedback}
-              onChange={e => setFeedback(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && feedback.trim()) { onReject(feedback.trim()); setShowReject(false) } }}
-              placeholder="修改建議..."
-              autoFocus
-              className="flex-1 px-2 py-1 rounded text-sm outline-none bg-transparent"
-              style={{ border: '1px solid #333', color: '#ccc' }}
-            />
-            <button
-              onClick={() => { if (feedback.trim()) { onReject(feedback.trim()); setShowReject(false) } }}
-              disabled={!feedback.trim()}
-              className="px-3 py-1 rounded text-sm transition-colors"
-              style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#f87171' }}
-            >
-              送出
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowReject(true)}
-            className="w-full py-1 rounded text-sm transition-all duration-200"
-            style={{ color: '#666' }}
-          >
-            拒絕 / 給回饋
-          </button>
-        )
+        <button
+          onClick={onReject}
+          className="w-full py-1 rounded text-sm transition-all duration-200"
+          style={{ color: '#666' }}
+        >
+          拒絕
+        </button>
       )}
     </div>
   )
@@ -608,55 +583,63 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }, [sessionId, onSessionIdChange])
 
   // 批准計畫時自動切換 mode 到 edit（planOnly 模式下不切換，改為自動存回 Scratch Pad）
+  const isApprovingRef = useRef(false)
   const handleApprovePlan = useCallback(async (approved: boolean, feedback?: string) => {
-    if (isApproving) return // 防重複點擊
+    if (isApprovingRef.current) return // 防重複點擊（用 ref 避免 closure stale）
+    isApprovingRef.current = true
     setIsApproving(true)
-    if (approved && planOnly) {
-      // planOnly: 只回存到 Scratch Pad，不讓 Claude 繼續執行
-      approvePlan(false) // 清除 pending 狀態，不發送執行指令
-      const firstUserMsg = messages.find(m => m.role === 'user')
-      // 優先從 plan file Write 工具結果擷取完整計畫
-      let plan = ''
-      const planWriteMsg = [...messages].reverse().find(
-        m => m.role === 'tool' && m.toolName === 'Write' && m.content.includes('/plans/')
-      )
-      if (planWriteMsg) {
-        try {
-          const parsed = JSON.parse(planWriteMsg.content)
-          plan = parsed.content || planWriteMsg.content
-        } catch {
-          plan = planWriteMsg.content
+    try {
+      if (approved && planOnly) {
+        // planOnly: 只回存到 Scratch Pad，不讓 Claude 繼續執行
+        approvePlan(false) // 清除 pending 狀態，不發送執行指令
+        const firstUserMsg = messages.find(m => m.role === 'user')
+        // 優先從 plan file Write 工具結果擷取完整計畫
+        let plan = ''
+        const planWriteMsg = [...messages].reverse().find(
+          m => m.role === 'tool' && m.toolName === 'Write' && m.content.includes('/plans/')
+        )
+        if (planWriteMsg) {
+          try {
+            const parsed = JSON.parse(planWriteMsg.content)
+            plan = parsed.content || planWriteMsg.content
+          } catch {
+            plan = planWriteMsg.content
+          }
+        } else {
+          // fallback: 取最後一則 assistant 訊息
+          const assistantMsgs = messages.filter(m => m.role === 'assistant' && m.content)
+          plan = assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1].content : ''
         }
-      } else {
-        // fallback: 取最後一則 assistant 訊息
-        const assistantMsgs = messages.filter(m => m.role === 'assistant' && m.content)
-        plan = assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1].content : ''
+        // 從 plan 中擷取 H1 標題作為 content，否則用原始用戶訊息
+        const h1Match = plan.match(/^#\s+(.+)$/m)
+        const content = h1Match ? h1Match[1].trim() : (firstUserMsg?.content || '未命名想法')
+        try {
+          await fetch('/api/scratch-pad', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, plan, chatSessionId: sessionId }),
+          })
+          window.dispatchEvent(new Event('scratchpad-refresh'))
+        } catch { /* ignore */ }
+        return
       }
-      // 從 plan 中擷取 H1 標題作為 content，否則用原始用戶訊息
-      const h1Match = plan.match(/^#\s+(.+)$/m)
-      const content = h1Match ? h1Match[1].trim() : (firstUserMsg?.content || '未命名想法')
-      try {
-        await fetch('/api/scratch-pad', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, plan, chatSessionId: sessionId }),
-        })
-        window.dispatchEvent(new Event('scratchpad-refresh'))
-      } catch { /* ignore */ }
-      return
+      await approvePlan(approved, feedback)
+      if (approved) {
+        setMode('edit')
+      }
+    } finally {
+      isApprovingRef.current = false
+      setIsApproving(false)
+      requestAnimationFrame(() => textareaRef.current?.focus())
     }
-    approvePlan(approved, feedback)
-    if (approved) {
-      setMode('edit')
-    }
-    // 自動 focus 回 textarea
-    requestAnimationFrame(() => textareaRef.current?.focus())
-  }, [approvePlan, planOnly, messages, sessionId, isApproving])
+  }, [approvePlan, planOnly, messages, sessionId])
 
-  // pendingPlanApproval 消失時重置 isApproving
+  // 非致命錯誤（無重試按鈕）5 秒後自動消失
   useEffect(() => {
-    if (!pendingPlanApproval) setIsApproving(false)
-  }, [pendingPlanApproval])
+    if (!error || lastFailedMessage) return // 有重試按鈕的錯誤不自動消失
+    const timer = setTimeout(() => clearError(), 5000)
+    return () => clearTimeout(timer)
+  }, [error, lastFailedMessage, clearError])
 
   // 回答問題後自動 focus 回 textarea
   const prevPendingQRef = useRef(pendingQuestions)
@@ -674,8 +657,16 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // [已移除] 重複的 initialMessage effect — 保留 line 416 的版本即可
 
+  // 區分程式性捲動 vs 用戶捲動，避免 programmatic scroll 觸發 onScroll 時誤判
+  const isProgrammaticScrollRef = useRef(false)
+
   // 判斷使用者是否在訊息區底部附近（100px 以內）
   const handleScroll = useCallback(() => {
+    // 程式性捲動觸發的 scroll event — 忽略，不更新 isNearBottomRef
+    if (isProgrammaticScrollRef.current) {
+      isProgrammaticScrollRef.current = false
+      return
+    }
     const el = messagesContainerRef.current
     if (!el) return
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
@@ -687,6 +678,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   useEffect(() => {
     const el = messagesContainerRef.current
     if (el && isNearBottomRef.current) {
+      isProgrammaticScrollRef.current = true
       el.scrollTop = el.scrollHeight
     }
   }, [messages])
@@ -699,6 +691,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       requestAnimationFrame(() => {
         const el = messagesContainerRef.current
         if (el) {
+          isProgrammaticScrollRef.current = true
           el.scrollTop = el.scrollHeight
           isNearBottomRef.current = true
         }
@@ -724,13 +717,14 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     return () => clearInterval(timer)
   }, [streamStartTime])
 
-  // 捲動到底部
+  // 捲動到底部（用戶主動點擊）
   const scrollToBottom = useCallback(() => {
     const el = messagesContainerRef.current
     if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
       isNearBottomRef.current = true
       setShowScrollBottom(false)
+      isProgrammaticScrollRef.current = true
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     }
   }, [])
 
@@ -1106,28 +1100,38 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                   </div>
                 )}
 
-                {msg.role === 'tool' && msg.toolName === 'Task' && (
-                  <div
-                    className="px-2.5 py-2 rounded text-sm"
-                    style={{
-                      backgroundColor: '#0d1117',
-                      border: '1px solid #1c2333',
-                      color: '#8b949e',
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                      </svg>
-                      <span style={{ color: '#c9d1d9' }}>
-                        {msg.toolDescription || 'Sub-agent'}
-                      </span>
-                      {isStreaming && gi === groups.length - 1 && (
-                        <span className="streaming-status-text text-xs" style={{ color: '#58a6ff' }}>running</span>
-                      )}
+                {msg.role === 'tool' && msg.toolName === 'Task' && (() => {
+                  const isRunning = isStreaming && gi === groups.length - 1
+                  return (
+                    <div
+                      className="px-2.5 py-2 rounded text-sm"
+                      style={{
+                        backgroundColor: '#0d1117',
+                        border: `1px solid ${isRunning ? '#1f3a5f' : '#1c2333'}`,
+                        color: '#8b949e',
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isRunning ? (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#58a6ff' }} />
+                            <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: '#58a6ff' }} />
+                          </span>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                          </svg>
+                        )}
+                        <span style={{ color: '#c9d1d9' }}>
+                          {msg.toolDescription || 'Sub-agent'}
+                        </span>
+                        {isRunning && (
+                          <span className="streaming-status-text text-xs" style={{ color: '#58a6ff' }}>執行中</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
 
                 {msg.role === 'tool' && msg.toolName === 'TodoWrite' && msg.todos && (
                   <div>
@@ -1241,7 +1245,13 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               {streamingActivity.status === 'connecting' && '正在連線...'}
               {streamingActivity.status === 'thinking' && '正在思考...'}
               {streamingActivity.status === 'replying' && '正在回覆...'}
-              {streamingActivity.status === 'tool' && streamingActivity.toolName}
+              {streamingActivity.status === 'tool' && (
+                streamingActivity.toolName === 'Task'
+                  ? `Agent: ${streamingActivity.toolDetail || 'running...'}`
+                  : streamingActivity.toolDetail
+                    ? `${streamingActivity.toolName} — ${streamingActivity.toolDetail}`
+                    : streamingActivity.toolName
+              )}
             </span>
             {elapsed > 0 && (
               <span style={{ color: '#555' }}>
@@ -1275,7 +1285,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       {/* 決策面板 — 在 Input 之上 */}
       {pendingPlanApproval && (
         <ActionOverlay>
-          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} onReject={(fb) => handleApprovePlan(false, fb)} planOnly={planOnly} loading={isApproving} />
+          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} onReject={() => handleApprovePlan(false)} planOnly={planOnly} loading={isApproving} />
         </ActionOverlay>
       )}
       {pendingQuestions && (

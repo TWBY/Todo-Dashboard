@@ -531,16 +531,20 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           body: formData,
         })
         if (!uploadRes.ok) {
-          const errData = await uploadRes.json()
-          console.error('[chat] image upload failed:', errData)
-          setError(errData.error || '圖片上傳失敗')
+          let errMsg = '圖片上傳失敗'
+          try {
+            const errData = await uploadRes.json()
+            if (errData.error) errMsg = errData.error
+          } catch { /* response 非 JSON */ }
+          console.error('[chat] image upload failed:', errMsg)
+          setError(errMsg)
           return
         }
         const uploadData = await uploadRes.json()
         imagePaths = uploadData.paths
       } catch (uploadErr) {
         console.error('[chat] image upload error:', uploadErr)
-        setError('圖片上傳失敗')
+        setError('圖片上傳失敗：' + (uploadErr instanceof Error ? uploadErr.message : '網路錯誤'))
         return
       }
     }
