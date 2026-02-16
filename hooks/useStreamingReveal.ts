@@ -1,49 +1,60 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 /**
  * 漸進式文字揭露 hook
  *
- * 用 setInterval 定時批次 flush，而非逐字即時顯示。
- * 兩次 flush 之間，不論收到多少 SSE delta，UI 都不更新。
- * 每次 flush 時一次揭露累積的所有文字 —「拉開布幕」效果。
+ * 用 rAF 動畫讓 displayText 平滑追趕 fullText，
+ * 而非逐字即時顯示。效果：文字以「一批一批」的方式揭露。
  */
-
-const FLUSH_INTERVAL = 300 // ms
-
 export function useStreamingReveal(
   fullText: string,
   isStreaming: boolean,
 ): string {
-  const [displayText, setDisplayText] = useState(fullText)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const fullTextRef = useRef(fullText)
+  const [displayLength, setDisplayLength] = useState(0)
+  const targetLenRef = useRef(fullText.length)
+  const rafRef = useRef<number>(0)
+  const isStreamingRef = useRef(isStreaming)
 
-  // 持續追蹤最新 fullText（不觸發 re-render）
-  fullTextRef.current = fullText
+  // 持續更新 target（不觸發 effect re-run）
+  targetLenRef.current = fullText.length
+  isStreamingRef.current = isStreaming
 
-  // streaming 開始：啟動定時 flush
+  // streaming 結束時，立即顯示全部
+  useEffect(() => {
+    if (!isStreaming) {
+      cancelAnimationFrame(rafRef.current)
+      setDisplayLength(fullText.length)
+    }
+  }, [isStreaming, fullText.length])
+
+  // streaming 開始時，啟動 rAF 追趕迴圈（只在 isStreaming 變化時觸發）
   useEffect(() => {
     if (!isStreaming) return
 
-    intervalRef.current = setInterval(() => {
-      setDisplayText(fullTextRef.current)
-    }, FLUSH_INTERVAL)
+    const animate = () => {
+      const target = targetLenRef.current
+
+      setDisplayLength(prev => {
+        if (prev >= target) return prev
+
+        // 差距越大追越快，最少每幀 3 字
+        const gap = target - prev
+        const step = Math.max(3, Math.ceil(gap * 0.25))
+        return Math.min(prev + step, target)
+      })
+
+      // 只在 streaming 期間繼續動畫
+      if (isStreamingRef.current) {
+        rafRef.current = requestAnimationFrame(animate)
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(animate)
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      cancelAnimationFrame(rafRef.current)
     }
   }, [isStreaming])
 
-  // streaming 結束：立即 flush 剩餘文字
-  useEffect(() => {
-    if (!isStreaming) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-      setDisplayText(fullText)
-    }
-  }, [isStreaming, fullText])
-
-  return displayText
+  return fullText.slice(0, displayLength)
 }
