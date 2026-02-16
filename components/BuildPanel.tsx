@@ -25,14 +25,16 @@ Phase 3 — 版本判斷（AI 介入）
 6. git log <上次release>..HEAD --oneline 列出所有新 commit
 7. 根據 commit 內容決定版本升級幅度（嚴格遵守 SemVer 語意）
 
-Phase 4 — Build（機械執行）
-8. npm version <判斷結果> --no-git-tag-version
+Phase 4 — 版本升級與打包（機械執行）
+8. 讀取 version.json，將 development 版本升級（patch/minor/major），然後將升級後的版本號同步到 production
 9. npm run build
 
 Phase 5 — Release Commit（機械執行）
-10. git add package.json package-lock.json
-11. git commit -m "release: vX.Y.Z — 一行功能摘要"
-12. 回報新版本號和本次變更摘要`;
+10. git add version.json
+11. git commit -m "release: P-X.Y.Z — 一行功能摘要"（P 代表 Production 版本）
+12. 將 development 版本升級為下一個 patch-dev（例如從 1.15.5 變成 1.15.6-dev）
+13. git add version.json && git commit -m "chore: bump dev version to X.Y.Z-dev"
+14. 回報新版本號和本次變更摘要`;
 
 // --- Types & Data ---
 
@@ -84,10 +86,10 @@ const PHASES: PhaseData[] = [
   },
   {
     phase: 'Phase 4',
-    title: 'Build',
+    title: '版本升級與打包',
     type: 'mechanical',
     steps: [
-      { command: 'npm version <patch|minor|major> --no-git-tag-version', description: '更新 package.json 版本號' },
+      { command: 'version.json 版本同步', description: 'development → production' },
       { command: 'npm run build', description: '打包專案產生 .next/ 資料夾' },
     ],
   },
@@ -96,8 +98,10 @@ const PHASES: PhaseData[] = [
     title: 'Release Commit',
     type: 'mechanical',
     steps: [
-      { command: 'git add package.json package-lock.json', description: '暫存版本號變更' },
-      { command: 'git commit -m "release: vX.Y.Z — 摘要"', description: '建立 release commit' },
+      { command: 'git add version.json', description: '暫存 Production 版本' },
+      { command: 'git commit -m "release: P-X.Y.Z — 摘要"', description: '建立 release commit' },
+      { command: 'Development 版本升級為下一個 patch-dev', description: '例如 1.15.6-dev' },
+      { command: 'git add version.json && git commit -m "chore: bump dev"', description: '提交新 Dev 版本' },
     ],
   },
 ];
@@ -136,8 +140,8 @@ function detectPhase(messages: ChatMessage[]): number {
       if (desc.includes('..head') || content.includes('..head')) {
         lastPhase = Math.max(lastPhase, 3);
       }
-      // Phase 4: npm version, npm run build
-      if (desc.includes('npm version') || content.includes('npm version') || desc.includes('npm run build') || content.includes('npm run build')) {
+      // Phase 4: version.json update, npm run build
+      if (desc.includes('version.json') || content.includes('version.json') || desc.includes('npm run build') || content.includes('npm run build')) {
         lastPhase = Math.max(lastPhase, 4);
       }
       // Phase 5: release commit
