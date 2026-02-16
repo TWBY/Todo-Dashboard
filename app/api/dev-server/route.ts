@@ -70,6 +70,19 @@ interface ExternalProcess {
   memoryMB: number;
 }
 
+// 取得系統 CPU 使用率（macOS top -l 1）
+async function getSystemCpu(): Promise<number | null> {
+  try {
+    const { stdout } = await execAsync('top -l 1 -n 0 -s 0 | grep "CPU usage"');
+    // "CPU usage: 12.5% user, 8.3% sys, 79.1% idle"
+    const m = stdout.match(/([\d.]+)%\s+idle/);
+    if (!m) return null;
+    return Math.round((100 - parseFloat(m[1])) * 10) / 10;
+  } catch {
+    return null;
+  }
+}
+
 // 取得系統記憶體資訊（macOS vm_stat + sysctl）
 async function getSystemMemory(): Promise<SystemMemory | null> {
   try {
@@ -265,9 +278,10 @@ export async function GET() {
       })
     );
 
-    // 取得系統記憶體 + 外部軟體記憶體（並行）
-    const [systemMemory, topProcesses] = await Promise.all([
+    // 取得系統記憶體 + CPU + 外部軟體記憶體（並行）
+    const [systemMemory, systemCpu, topProcesses] = await Promise.all([
       getSystemMemory(),
+      getSystemCpu(),
       getTopProcesses(),
     ]);
     if (systemMemory) {
@@ -282,7 +296,7 @@ export async function GET() {
       }
     }
 
-    const responseData = { data: statuses, systemMemory };
+    const responseData = { data: statuses, systemMemory, systemCpu };
     cachedGetResponse = { data: responseData, timestamp: Date.now() };
     return NextResponse.json(responseData);
   } catch (error) {

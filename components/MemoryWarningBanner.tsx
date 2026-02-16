@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+
 interface ExternalProcess {
   name: string;
   memoryMB: number;
@@ -15,20 +16,10 @@ interface SystemMemory {
   topProcesses: ExternalProcess[];
 }
 
-// 每個 pressureLevel 對應的色調（低調小色塊）
 const LEVEL_COLORS = {
-  normal: {
-    dot: '#22c55e',
-    bar: '#22c55e',
-  },
-  warning: {
-    dot: '#facc15',
-    bar: '#facc15',
-  },
-  critical: {
-    dot: '#ef4444',
-    bar: '#ef4444',
-  },
+  normal: { dot: '#22c55e', bar: '#22c55e' },
+  warning: { dot: '#facc15', bar: '#facc15' },
+  critical: { dot: '#ef4444', bar: '#ef4444' },
 } as const;
 
 const LEVEL_LABELS = {
@@ -41,7 +32,21 @@ function formatMB(mb: number): string {
   return mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${mb}MB`;
 }
 
-export default function MemoryWarningBanner() {
+// ── Shared Context ─────────────────────────────────────────
+
+interface MemoryContextValue {
+  systemMemory: SystemMemory | null;
+  killingApps: Set<string>;
+  handleKillApp: (appName: string) => void;
+}
+
+const MemoryContext = createContext<MemoryContextValue>({
+  systemMemory: null,
+  killingApps: new Set(),
+  handleKillApp: () => {},
+});
+
+export function MemoryProvider({ children }: { children: React.ReactNode }) {
   const [systemMemory, setSystemMemory] = useState<SystemMemory | null>(null);
   const [killingApps, setKillingApps] = useState<Set<string>>(new Set());
   const failCountRef = useRef(0);
@@ -70,7 +75,7 @@ export default function MemoryWarningBanner() {
     };
   }, [fetchData]);
 
-  const handleKillApp = async (appName: string) => {
+  const handleKillApp = useCallback(async (appName: string) => {
     setKillingApps(prev => new Set(prev).add(appName));
     try {
       await fetch('/api/dev-server', {
@@ -78,7 +83,6 @@ export default function MemoryWarningBanner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'kill-app', appName }),
       });
-      // 等待一下讓系統回收記憶體
       await new Promise(resolve => setTimeout(resolve, 1000));
       await fetchData();
     } catch { /* ignore */ }
@@ -87,16 +91,26 @@ export default function MemoryWarningBanner() {
       next.delete(appName);
       return next;
     });
-  };
+  }, [fetchData]);
+
+  return (
+    <MemoryContext.Provider value={{ systemMemory, killingApps, handleKillApp }}>
+      {children}
+    </MemoryContext.Provider>
+  );
+}
+
+// ── Memory Bar (compact) ───────────────────────────────────
+
+export default function MemoryWarningBanner() {
+  const { systemMemory } = useContext(MemoryContext);
 
   if (!systemMemory) return null;
 
   const colors = LEVEL_COLORS[systemMemory.pressureLevel];
-  const hasTopProcesses = systemMemory.topProcesses?.length > 0;
 
   return (
-    <div className="space-y-2.5">
-      {/* Header: dot + label + usage */}
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span
@@ -111,7 +125,6 @@ export default function MemoryWarningBanner() {
           {systemMemory.usedGB} / {systemMemory.totalGB} GB ({systemMemory.usedPercent}%)
         </span>
       </div>
-      {/* Memory bar */}
       <div
         className="w-full h-1 rounded-full overflow-hidden"
         style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
@@ -124,38 +137,45 @@ export default function MemoryWarningBanner() {
           }}
         />
       </div>
+    </div>
+  );
+}
 
-      {/* 外部軟體按鈕卡片 */}
-      {hasTopProcesses && (
-        <div className="flex flex-wrap gap-1.5">
-          {systemMemory.topProcesses.map(proc => (
-            <button
-              key={proc.name}
-              onClick={() => handleKillApp(proc.name)}
-              disabled={killingApps.has(proc.name)}
-              className="flex flex-col items-start px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 cursor-pointer min-w-[90px]"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-              title={`點擊關閉 ${proc.name}`}
-            >
-              <span
-                className="font-medium truncate max-w-full text-xs"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {killingApps.has(proc.name) ? 'Closing...' : proc.name}
-              </span>
-              <span
-                className="font-mono text-xs mt-0.5"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                {formatMB(proc.memoryMB)}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+// ── Process Kill Buttons (independent) ─────────────────────
+
+export function ProcessKillButtons() {
+  const { systemMemory, killingApps, handleKillApp } = useContext(MemoryContext);
+
+  if (!systemMemory?.topProcesses?.length) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {systemMemory.topProcesses.map(proc => (
+        <button
+          key={proc.name}
+          onClick={() => handleKillApp(proc.name)}
+          disabled={killingApps.has(proc.name)}
+          className="flex flex-col items-start px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 cursor-pointer min-w-[90px]"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+          title={`點擊關閉 ${proc.name}`}
+        >
+          <span
+            className="font-medium truncate max-w-full text-xs"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {killingApps.has(proc.name) ? 'Closing...' : proc.name}
+          </span>
+          <span
+            className="font-mono text-xs mt-0.5"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            {formatMB(proc.memoryMB)}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

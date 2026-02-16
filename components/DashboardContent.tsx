@@ -9,10 +9,8 @@ import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
 import ClaudeUsagePanel from './ClaudeUsagePanel';
 import ResizableLayout from './ResizableLayout';
-import MemoryWarningBanner from './MemoryWarningBanner';
+import MemoryWarningBanner, { MemoryProvider, ProcessKillButtons } from './MemoryWarningBanner';
 import ProductionMonitor from './ProductionMonitor';
-import BuildPanel from './BuildPanel';
-import { useBuildPanel } from '@/contexts/BuildPanelContext';
 
 interface DashboardContentProps {
   initialProjects: Project[];
@@ -50,7 +48,6 @@ export default function DashboardContent({
   initialCourseFiles,
   initialUtilityTools,
 }: DashboardContentProps) {
-  const { buildState } = useBuildPanel();
   const [projects, setProjects] = useState(initialProjects);
   const [courseFiles, setCourseFiles] = useState(initialCourseFiles);
   const [utilityTools, setUtilityTools] = useState(initialUtilityTools);
@@ -94,13 +91,19 @@ export default function DashboardContent({
           <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
             <div className="space-y-4">
               <DevServerPanel projects={allProjects} onUpdate={updateProject} />
-              {buildState !== 'idle' && <BuildPanel />}
             </div>
-            <div className="space-y-4">
-              <ClaudeUsagePanel />
-              <MemoryWarningBanner />
-              <ProductionMonitor />
-            </div>
+            <MemoryProvider>
+              <div className="space-y-4">
+                <ClaudeUsagePanel />
+                {/* Memory + CPU side by side */}
+                <div className="grid grid-cols-2 gap-4">
+                  <MemoryWarningBanner />
+                  <ProductionMonitor />
+                </div>
+                {/* Process kill buttons — independent section */}
+                <ProcessKillButtons />
+              </div>
+            </MemoryProvider>
           </div>
           <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
