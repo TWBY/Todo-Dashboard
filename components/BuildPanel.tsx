@@ -27,12 +27,11 @@ Phase 3 — 版本判斷（AI 介入）
 
 Phase 4 — Build（機械執行）
 8. npm version <判斷結果> --no-git-tag-version
-9. npm run build
 
 Phase 5 — Release Commit（機械執行）
-10. git add package.json package-lock.json
-11. git commit -m "release: vX.Y.Z — 一行功能摘要"
-12. 回報新版本號和本次變更摘要`;
+9. git add package.json package-lock.json
+10. git commit -m "release: vX.Y.Z — 一行功能摘要"
+11. 回報新版本號和本次變更摘要`;
 
 // --- Types & Data ---
 
@@ -88,7 +87,6 @@ const PHASES: PhaseData[] = [
     type: 'mechanical',
     steps: [
       { command: 'npm version <patch|minor|major> --no-git-tag-version', description: '更新 package.json 版本號' },
-      { command: 'npm run build', description: '執行 Next.js 產品建置' },
     ],
   },
   {
@@ -138,9 +136,6 @@ function detectPhase(messages: ChatMessage[]): number {
       }
       // Phase 4: npm version, npm run build
       if (desc.includes('npm version') || content.includes('npm version')) {
-        lastPhase = Math.max(lastPhase, 4);
-      }
-      if (desc.includes('npm run build') || content.includes('npm run build')) {
         lastPhase = Math.max(lastPhase, 4);
       }
       // Phase 5: release commit
@@ -450,11 +445,11 @@ export default function BuildPanel() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+      <div className="flex items-center justify-between py-2 mb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-2">
           <button
             onClick={close}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
+            className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
             style={{ color: 'var(--text-secondary)' }}
             title="返回"
           >
@@ -479,15 +474,35 @@ export default function BuildPanel() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {buildState === 'idle' && (
+            <button
+              onClick={handleStartBuild}
+              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:brightness-110 flex items-center gap-1.5"
+              style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
+            >
+              <i className="fa-sharp fa-regular fa-play text-xs" />
+              開始建立
+            </button>
+          )}
           {buildState === 'running' && (
             <button
               onClick={stopStreaming}
-              className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-red-500/20"
-              style={{ color: '#ef4444' }}
-              title="停止"
+              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20 flex items-center gap-1.5"
+              style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
             >
-              <i className="fa-sharp fa-solid fa-stop" />
+              <i className="fa-sharp fa-solid fa-stop text-xs" />
+              停止
+            </button>
+          )}
+          {(buildState === 'done' || buildState === 'error') && (
+            <button
+              onClick={handleReset}
+              className="h-8 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-white/10 flex items-center gap-1.5"
+              style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+            >
+              <i className="fa-sharp fa-regular fa-rotate-right text-xs" />
+              重新執行
             </button>
           )}
           <button
@@ -586,54 +601,12 @@ export default function BuildPanel() {
               </div>
               <div className="text-xs build-ai-output" style={{ color: 'var(--text-secondary)' }}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}
+                  {resultSummary.trim()}
                 </ReactMarkdown>
               </div>
             </div>
           )}
 
-          {/* Action button */}
-          {buildState === 'idle' && (
-            <button
-              onClick={handleStartBuild}
-              className="w-full mt-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
-              style={{
-                backgroundColor: '#332815',
-                color: '#f59e0b',
-                border: '1px solid #4a3520',
-              }}
-            >
-              <i className="fa-sharp fa-regular fa-play mr-1.5" />
-              確認開始建立
-            </button>
-          )}
-
-          {(buildState === 'done' || buildState === 'error') && (
-            <button
-              onClick={handleReset}
-              className="w-full mt-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <i className="fa-sharp fa-regular fa-rotate-right mr-1.5" />
-              重新執行
-            </button>
-          )}
-
-          {/* 關閉面板（底部） */}
-          {buildState !== 'running' && (
-            <button
-              onClick={close}
-              className="w-full mt-3 py-2 text-xs transition-colors cursor-pointer hover:underline"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
-              <i className="fa-sharp fa-regular fa-arrow-left mr-1" />
-              關閉面板
-            </button>
-          )}
         </div>
       </div>
     </div>
