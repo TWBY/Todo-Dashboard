@@ -8,7 +8,6 @@ import PulsingDots from '@/components/PulsingDots';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { formatPort } from '@/lib/format';
-import versionConfig from '@/version.json';
 
 interface PortStatus {
   projectId: string;
@@ -48,10 +47,12 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
   const [currentPort, setCurrentPort] = useState<number>(0);
+  const [versionConfig, setVersionConfig] = useState({ development: '', production: '' });
 
-  // 偵測當前瀏覽器 port
+  // 偵測當前瀏覽器 port + runtime 讀取版本
   useEffect(() => {
     setCurrentPort(parseInt(window.location.port) || 80);
+    fetch('/api/version').then(r => r.json()).then(setVersionConfig).catch(() => {});
   }, []);
 
   // ResizeObserver: 偵測按鈕區寬度，切換 compact 模式
