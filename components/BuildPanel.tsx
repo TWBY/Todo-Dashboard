@@ -108,10 +108,17 @@ const PHASES: PhaseData[] = [
 
 // --- Phase detection logic ---
 
-/** Detect which phase is currently active based on messages from AI */
-function detectPhase(messages: ChatMessage[]): number {
-  // Scan tool messages to figure out progress
-  let lastPhase = 0;
+interface StepProgress {
+  phase: number;
+  step: number; // 0-indexed
+}
+
+/** Detect current phase and step based on messages from AI */
+function detectProgress(messages: ChatMessage[]): StepProgress {
+  let currentPhase = 0;
+  let currentStep = -1;
+
+  const completedSteps = new Map<number, Set<number>>(); // phase -> Set of completed step indices
 
   for (const msg of messages) {
     if (msg.role !== 'tool' || !msg.toolName) continue;
@@ -119,39 +126,87 @@ function detectPhase(messages: ChatMessage[]): number {
     const content = (msg.content || '').toLowerCase();
 
     if (msg.toolName === 'Bash') {
-      // Phase 1: git status, git log --grep="release:"
+      // Phase 1
       if (desc.includes('git status') || content.includes('git status')) {
-        lastPhase = Math.max(lastPhase, 1);
+        currentPhase = 1;
+        if (!completedSteps.has(1)) completedSteps.set(1, new Set());
+        completedSteps.get(1)!.add(0);
+        currentStep = 0;
       }
-      if (desc.includes('git log') && desc.includes('release:')) {
-        lastPhase = Math.max(lastPhase, 1);
+      if (desc.includes('git log') && (desc.includes('release:') || desc.includes('--grep'))) {
+        currentPhase = 1;
+        if (!completedSteps.has(1)) completedSteps.set(1, new Set());
+        completedSteps.get(1)!.add(1);
+        currentStep = 1;
       }
-      // Phase 2: git diff, git add, git commit (but not release commit)
+
+      // Phase 2
       if (desc.includes('git diff') || content.includes('git diff')) {
-        lastPhase = Math.max(lastPhase, 2);
+        currentPhase = 2;
+        if (!completedSteps.has(2)) completedSteps.set(2, new Set());
+        completedSteps.get(2)!.add(0);
+        currentStep = 0;
       }
       if ((desc.includes('git add') || desc.includes('git commit')) && !desc.includes('release:') && !content.includes('release:')) {
-        // Distinguish Phase 2 commits from Phase 5 release commit
-        if (lastPhase < 4) {
-          lastPhase = Math.max(lastPhase, 2);
+        if (currentPhase < 4) { // Distinguish Phase 2 commits from Phase 5
+          currentPhase = 2;
+          if (!completedSteps.has(2)) completedSteps.set(2, new Set());
+          completedSteps.get(2)!.add(2);
+          currentStep = 2;
         }
       }
-      // Phase 3: git log <hash>..HEAD
+
+      // Phase 3
       if (desc.includes('..head') || content.includes('..head')) {
-        lastPhase = Math.max(lastPhase, 3);
+        currentPhase = 3;
+        if (!completedSteps.has(3)) completedSteps.set(3, new Set());
+        completedSteps.get(3)!.add(0);
+        currentStep = 0;
       }
-      // Phase 4: version.json update, npm run build
-      if (desc.includes('version.json') || content.includes('version.json') || desc.includes('npm run build') || content.includes('npm run build')) {
-        lastPhase = Math.max(lastPhase, 4);
+
+      // Phase 4
+      if ((desc.includes('version.json') || content.includes('version.json')) && !desc.includes('git add')) {
+        currentPhase = 4;
+        if (!completedSteps.has(4)) completedSteps.set(4, new Set());
+        completedSteps.get(4)!.add(0);
+        currentStep = 0;
       }
-      // Phase 5: release commit
+      if (desc.includes('npm run build') || content.includes('npm run build')) {
+        currentPhase = 4;
+        if (!completedSteps.has(4)) completedSteps.set(4, new Set());
+        completedSteps.get(4)!.add(1);
+        currentStep = 1;
+      }
+
+      // Phase 5
+      if (desc.includes('git add') && (desc.includes('version.json') || content.includes('version.json'))) {
+        currentPhase = 5;
+        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
+        completedSteps.get(5)!.add(0);
+        currentStep = 0;
+      }
       if ((desc.includes('release:') || content.includes('release:')) && (desc.includes('git commit') || content.includes('git commit'))) {
-        lastPhase = Math.max(lastPhase, 5);
+        currentPhase = 5;
+        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
+        completedSteps.get(5)!.add(1);
+        currentStep = 1;
+      }
+      if (desc.includes('bump dev') || content.includes('bump dev')) {
+        currentPhase = 5;
+        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
+        completedSteps.get(5)!.add(2);
+        completedSteps.get(5)!.add(3);
+        currentStep = 3;
       }
     }
   }
 
-  return lastPhase;
+  return { phase: currentPhase, step: currentStep };
+}
+
+/** Legacy: Detect which phase is currently active (for backward compat) */
+function detectPhase(messages: ChatMessage[]): number {
+  return detectProgress(messages).phase;
 }
 
 // --- Sub-components ---
@@ -341,12 +396,14 @@ export default function BuildPanel() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentPhase, setCurrentPhase] = useState(0); // 0 = idle, 1-5 = phase number
+  const [currentStep, setCurrentStep] = useState(-1); // current step index within phase
 
-  // Detect phase from messages
+  // Detect phase and step from messages
   useEffect(() => {
     if (buildState !== 'running') return;
-    const detected = detectPhase(messages);
-    setCurrentPhase(detected);
+    const progress = detectProgress(messages);
+    setCurrentPhase(progress.phase);
+    setCurrentStep(progress.step);
   }, [messages, buildState]);
 
   // Detect completion or error
@@ -504,13 +561,28 @@ export default function BuildPanel() {
 
                 <PhaseHeader phase={phase.phase} title={phase.title} type={phase.type} status={phaseStatus} />
                 <div className="pl-5">
-                  {phase.steps.map((step, i) => {
+                  {phase.steps.map((step, stepIdx) => {
                     let stepStatus: StepStatus = 'pending';
-                    if (phaseStatus === 'done') stepStatus = 'done';
-                    else if (phaseStatus === 'running') stepStatus = 'running';
-                    else if (phaseStatus === 'error') stepStatus = 'error';
 
-                    return <StepNode key={`${phaseIdx}-${i}`} step={step} status={stepStatus} />;
+                    if (phaseStatus === 'done') {
+                      stepStatus = 'done';
+                    } else if (phaseStatus === 'running') {
+                      // Fine-grained step status
+                      const currentPhaseNum = phaseIdx + 1;
+                      if (currentPhaseNum === currentPhase) {
+                        if (stepIdx < currentStep) stepStatus = 'done';
+                        else if (stepIdx === currentStep) stepStatus = 'running';
+                        else stepStatus = 'pending';
+                      } else if (currentPhaseNum < currentPhase) {
+                        stepStatus = 'done';
+                      } else {
+                        stepStatus = 'pending';
+                      }
+                    } else if (phaseStatus === 'error') {
+                      stepStatus = 'error';
+                    }
+
+                    return <StepNode key={`${phaseIdx}-${stepIdx}`} step={step} status={stepStatus} />;
                   })}
 
                   {/* Inline AI output for Phase 2/3 when active */}
