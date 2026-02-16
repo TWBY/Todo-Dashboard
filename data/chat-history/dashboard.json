@@ -139,9 +139,9 @@
     "sessionId": "93e2271a-4754-4fa8-bca3-2db49c712a50",
     "projectId": "dashboard",
     "title": "直接依序執行以下打包流程，不要詢問確認：\n1. 找到上次 release commit：git log --onelin",
-    "messageCount": 32,
+    "messageCount": 36,
     "createdAt": 1771175854493,
-    "lastActiveAt": 1771206887251
+    "lastActiveAt": 1771207841727
   },
   {
     "sessionId": "2175bed0-0aaa-414a-a3cf-5472f155aca1",
@@ -179,16 +179,16 @@
     "sessionId": "777a030f-1f5a-46df-af30-f026281551e9",
     "projectId": "dashboard",
     "title": "現在 3000 好像處於死掉狀態，檢查一下生死",
-    "messageCount": 4,
+    "messageCount": 10,
     "createdAt": 1771206670975,
-    "lastActiveAt": 1771207390165
+    "lastActiveAt": 1771208082521
   },
   {
     "sessionId": "a1e168a8-68a5-4f8b-8e6d-ef525d21cb07",
     "projectId": "dashboard",
     "title": "現在我的系統設計在介面上設定 opus 的 hight、max、low 等等的嗎",
-    "messageCount": 2,
+    "messageCount": 9,
     "createdAt": 1771207143322,
-    "lastActiveAt": 1771207333018
+    "lastActiveAt": 1771208152270
   }
 ]
