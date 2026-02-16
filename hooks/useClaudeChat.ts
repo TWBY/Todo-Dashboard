@@ -194,7 +194,7 @@ function processStreamEvent(
 
   // 工具統計事件
   if (event.type === 'tool_stats') {
-    const stats = event.stats as Record<string, { count: number; totalDurationMs: number }>
+    const stats = event.stats as Record<string, { count: number }>
     actions.setSessionMeta(prev => ({ ...prev, toolStats: stats }))
     return
   }
@@ -411,8 +411,8 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     _setSessionId(id)
   }, [])
   const [error, setError] = useState<string | null>(null)
-  const [pendingQuestions, setPendingQuestions] = useState<PendingQuestionsState | null>(null)
-  const [pendingPlanApproval, setPendingPlanApproval] = useState<PendingPlanApprovalState | null>(null)
+  const [pendingQuestions, _setPendingQuestions] = useState<PendingQuestionsState | null>(null)
+  const [pendingPlanApproval, _setPendingPlanApproval] = useState<PendingPlanApprovalState | null>(null)
   const [streamingActivity, setStreamingActivity] = useState<StreamingActivity | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [sessionMeta, setSessionMeta] = useState<SessionMeta>({
@@ -423,6 +423,22 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   })
   const abortRef = useRef<AbortController | null>(null)
   const currentModeRef = useRef<ChatMode>('plan')
+  const pendingQuestionsRef = useRef<PendingQuestionsState | null>(null)
+  const pendingPlanApprovalRef = useRef<PendingPlanApprovalState | null>(null)
+  const setPendingQuestions = useCallback((v: PendingQuestionsState | null | ((prev: PendingQuestionsState | null) => PendingQuestionsState | null)) => {
+    _setPendingQuestions(prev => {
+      const next = typeof v === 'function' ? v(prev) : v
+      pendingQuestionsRef.current = next
+      return next
+    })
+  }, [])
+  const setPendingPlanApproval = useCallback((v: PendingPlanApprovalState | null | ((prev: PendingPlanApprovalState | null) => PendingPlanApprovalState | null)) => {
+    _setPendingPlanApproval(prev => {
+      const next = typeof v === 'function' ? v(prev) : v
+      pendingPlanApprovalRef.current = next
+      return next
+    })
+  }, [])
 
   const stopStreaming = useCallback(() => {
     console.debug('[chat] stopStreaming called')
@@ -438,6 +454,12 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   const sendMessage = useCallback(async (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus') => {
     if (!message.trim() && (!images || images.length === 0)) {
       console.debug('[chat] sendMessage skipped: empty message')
+      return
+    }
+
+    // canUseTool 阻塞期間，阻擋新訊息（避免 abort 掉等待中的 SSE）
+    if (pendingQuestionsRef.current || pendingPlanApprovalRef.current) {
+      console.debug('[chat] sendMessage blocked: pending canUseTool interaction')
       return
     }
 
@@ -640,15 +662,14 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   }, [projectId, config?.model, setSessionId])
 
   // 回答 AskUserQuestion — POST 到 /answer endpoint，不開新 SSE
-  const answerQuestion = useCallback((answers: Record<string, string>) => {
-    const pending = pendingQuestions
+  const answerQuestion = useCallback(async (answers: Record<string, string>) => {
+    const pending = pendingQuestionsRef.current
     setPendingQuestions(null)
     if (!pending) return
 
     const sid = sessionIdRef.current
     if (!sid) return
 
-    // 在 message 中顯示用戶的回答
     const answerText = Object.entries(answers)
       .map(([q, a]) => `${q}: ${a}`)
       .join('\n')
@@ -660,24 +681,33 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     }])
     setStreamingActivity({ status: 'thinking' })
 
-    fetch('/api/claude-chat/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: sid,
-        toolUseID: pending.toolUseID,
-        type: 'question',
-        answers,
-      }),
-    }).catch(err => {
+    try {
+      const res = await fetch('/api/claude-chat/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sid,
+          toolUseID: pending.toolUseID,
+          type: 'question',
+          answers,
+        }),
+      })
+      if (!res.ok) {
+        // HMR fallback：pending request 遺失，改用 sendMessage 重新開 query
+        console.debug('[chat] answerQuestion 404 fallback → sendMessage')
+        setStreamingActivity(null)
+        sendMessage(answerText)
+      }
+    } catch (err) {
       console.error('[chat] answerQuestion POST failed:', err)
-      setError('回答傳送失敗，請重試')
-    })
-  }, [pendingQuestions])
+      setStreamingActivity(null)
+      sendMessage(answerText)
+    }
+  }, [sendMessage])
 
   // 審批計畫 — POST 到 /answer endpoint，不開新 SSE
-  const approvePlan = useCallback((approved: boolean, feedback?: string) => {
-    const pending = pendingPlanApproval
+  const approvePlan = useCallback(async (approved: boolean, feedback?: string) => {
+    const pending = pendingPlanApprovalRef.current
     if (approved) {
       setMessages(prev => prev.map(m =>
         m.planApproval?.pending ? { ...m, planApproval: { pending: false, approved: true } } : m
@@ -693,7 +723,6 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     const sid = sessionIdRef.current
     if (!sid) return
 
-    // 顯示用戶的回應
     setMessages(prev => [...prev, {
       id: crypto.randomUUID(),
       role: 'user',
@@ -702,21 +731,38 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     }])
     setStreamingActivity({ status: 'thinking' })
 
-    fetch('/api/claude-chat/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: sid,
-        toolUseID: pending.toolUseID,
-        type: 'planApproval',
-        approved,
-        feedback: feedback || undefined,
-      }),
-    }).catch(err => {
+    try {
+      const res = await fetch('/api/claude-chat/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sid,
+          toolUseID: pending.toolUseID,
+          type: 'planApproval',
+          approved,
+          feedback: feedback || undefined,
+        }),
+      })
+      if (!res.ok) {
+        // HMR fallback：pending request 遺失，改用 sendMessage 重新開 query
+        console.debug('[chat] approvePlan 404 fallback → sendMessage')
+        setStreamingActivity(null)
+        if (approved) {
+          sendMessage('yes, 請開始執行計畫', 'edit')
+        } else if (feedback) {
+          sendMessage(feedback, 'plan')
+        }
+      }
+    } catch (err) {
       console.error('[chat] approvePlan POST failed:', err)
-      setError('計畫審批傳送失敗，請重試')
-    })
-  }, [pendingPlanApproval])
+      setStreamingActivity(null)
+      if (approved) {
+        sendMessage('yes, 請開始執行計畫', 'edit')
+      } else if (feedback) {
+        sendMessage(feedback, 'plan')
+      }
+    }
+  }, [sendMessage])
 
   const clearChat = useCallback(() => {
     console.debug('[chat] clearChat called', { hasAbortRef: !!abortRef.current })

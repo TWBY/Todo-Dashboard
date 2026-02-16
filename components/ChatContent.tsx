@@ -606,21 +606,21 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
   }, [streamStatus])
 
-  // 自動調整 textarea 高度
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      const maxH = 200
-      const scrollH = textareaRef.current.scrollHeight
-      if (scrollH > maxH) {
-        textareaRef.current.style.height = maxH + 'px'
-        textareaRef.current.style.overflowY = 'auto'
-      } else {
-        textareaRef.current.style.height = scrollH + 'px'
-        textareaRef.current.style.overflowY = 'hidden'
-      }
+  // 自動調整 textarea 高度（直接操作 DOM，避免 useEffect re-render cycle）
+  const adjustTextareaHeight = useCallback(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const maxH = 200
+    const scrollH = el.scrollHeight
+    if (scrollH > maxH) {
+      el.style.height = maxH + 'px'
+      el.style.overflowY = 'auto'
+    } else {
+      el.style.height = scrollH + 'px'
+      el.style.overflowY = 'hidden'
     }
-  }, [input])
+  }, [])
 
   // 載入 skills 列表
   useEffect(() => {
@@ -670,32 +670,9 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
     if (imageFiles.length > 0) {
       e.preventDefault()
-      const text = e.clipboardData.getData('text/plain')
-      if (text) {
-        const textarea = textareaRef.current
-        if (textarea) {
-          const start = textarea.selectionStart
-          const end = textarea.selectionEnd
-          setInput(prev => prev.slice(0, start) + text + prev.slice(end))
-        }
-      }
       addImages(imageFiles)
-      return
     }
-    // 純文字：完全接管貼上（修復 Dia 瀏覽器貼上「上一次內容」的 bug）
-    e.preventDefault()
-    const text = e.clipboardData.getData('text/plain')
-    if (text) {
-      const textarea = textareaRef.current
-      if (textarea) {
-        const start = textarea.selectionStart
-        const end = textarea.selectionEnd
-        setInput(prev => prev.slice(0, start) + text + prev.slice(end))
-        requestAnimationFrame(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + text.length
-        })
-      }
-    }
+    // 純文字：不攔截，交回瀏覽器原生處理
   }, [addImages])
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -792,6 +769,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel)
     setInput('')
     setImages([])
+    // 重置 textarea 高度
+    requestAnimationFrame(adjustTextareaHeight)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1201,7 +1180,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         <textarea
           ref={textareaRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => { setInput(e.target.value); adjustTextareaHeight() }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           onCompositionStart={() => setIsComposing(true)}
