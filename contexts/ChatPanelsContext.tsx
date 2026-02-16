@@ -15,6 +15,7 @@ export interface ChatPanelState {
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
   model?: string
+  ephemeral?: boolean
 }
 
 interface AddPanelOpts {
@@ -24,6 +25,7 @@ interface AddPanelOpts {
   initialMessage?: string
   initialMode?: 'plan' | 'edit' | 'ask'
   model?: string
+  ephemeral?: boolean
 }
 
 /** 持久化時排除一次性欄位 */
@@ -59,9 +61,11 @@ function loadPanels(): ChatPanelState[] {
 }
 
 function savePanels(panels: ChatPanelState[]) {
-  const persisted: PersistedPanelState[] = panels.map(({ panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId }) => ({
-    panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId,
-  }))
+  const persisted: PersistedPanelState[] = panels
+    .filter(p => !p.ephemeral)
+    .map(({ panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId }) => ({
+      panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId,
+    }))
   localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
 }
 

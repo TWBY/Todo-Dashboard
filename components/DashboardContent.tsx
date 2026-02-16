@@ -10,6 +10,7 @@ import ScratchPad from './ScratchPad';
 import ClaudeUsagePanel from './ClaudeUsagePanel';
 import ResizableLayout from './ResizableLayout';
 import MemoryWarningBanner from './MemoryWarningBanner';
+import ProductionMonitor from './ProductionMonitor';
 
 interface DashboardContentProps {
   initialProjects: Project[];
@@ -92,6 +93,7 @@ export default function DashboardContent({
             <div className="space-y-4">
               <ClaudeUsagePanel />
               <MemoryWarningBanner />
+              <ProductionMonitor />
             </div>
           </div>
           <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />

@@ -15,34 +15,19 @@ interface SystemMemory {
   topProcesses: ExternalProcess[];
 }
 
-// 每個 pressureLevel 對應的色調
+// 每個 pressureLevel 對應的色調（低調小色塊）
 const LEVEL_COLORS = {
   normal: {
-    border: 'rgba(34, 197, 94, 0.15)',
-    bg: 'rgba(22, 101, 52, 0.08)',
-    text: '#86efac',
+    dot: '#22c55e',
     bar: '#22c55e',
-    btnBg: '#14532d',
-    btnText: '#86efac',
-    btnBorder: '#166534',
   },
   warning: {
-    border: 'rgba(202, 138, 4, 0.15)',
-    bg: 'rgba(113, 63, 18, 0.10)',
-    text: '#b8a472',
+    dot: '#facc15',
     bar: '#facc15',
-    btnBg: '#5c4a20',
-    btnText: '#fde68a',
-    btnBorder: '#78350f',
   },
   critical: {
-    border: 'rgba(239, 68, 68, 0.2)',
-    bg: 'rgba(127, 29, 29, 0.12)',
-    text: '#d4a0a0',
+    dot: '#ef4444',
     bar: '#ef4444',
-    btnBg: '#5c2020',
-    btnText: '#fca5a5',
-    btnBorder: '#7f1d1d',
   },
 } as const;
 
@@ -110,28 +95,26 @@ export default function MemoryWarningBanner() {
   const hasTopProcesses = systemMemory.topProcesses?.length > 0;
 
   return (
-    <div
-      className={`p-3 rounded-lg border transition-all ${
-        systemMemory.pressureLevel === 'critical' ? 'animate-memory-warning' : ''
-      }`}
-      style={{
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-      }}
-    >
-      {/* Header: label + usage */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold" style={{ color: colors.text }}>
-          {LEVEL_LABELS[systemMemory.pressureLevel]}
-        </span>
-        <span className="text-sm font-mono" style={{ color: colors.text }}>
+    <div className="space-y-2.5">
+      {/* Header: dot + label + usage */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: colors.dot }}
+          />
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            {LEVEL_LABELS[systemMemory.pressureLevel]}
+          </span>
+        </div>
+        <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>
           {systemMemory.usedGB} / {systemMemory.totalGB} GB ({systemMemory.usedPercent}%)
         </span>
       </div>
       {/* Memory bar */}
       <div
-        className="w-full h-1.5 rounded-full overflow-hidden mb-2"
-        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+        className="w-full h-1 rounded-full overflow-hidden"
+        style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
       >
         <div
           className="h-full rounded-full transition-all duration-500"
@@ -144,21 +127,21 @@ export default function MemoryWarningBanner() {
 
       {/* 外部軟體按鈕卡片 */}
       {hasTopProcesses && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {systemMemory.topProcesses.map(proc => (
             <button
               key={proc.name}
               onClick={() => handleKillApp(proc.name)}
               disabled={killingApps.has(proc.name)}
-              className="flex flex-col items-start px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 cursor-pointer min-w-[100px]"
+              className="flex flex-col items-start px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 cursor-pointer min-w-[90px]"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.06)',
               }}
               title={`點擊關閉 ${proc.name}`}
             >
               <span
-                className="font-medium truncate max-w-full"
+                className="font-medium truncate max-w-full text-xs"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {killingApps.has(proc.name) ? 'Closing...' : proc.name}
