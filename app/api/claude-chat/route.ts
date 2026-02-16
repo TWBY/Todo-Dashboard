@@ -135,6 +135,7 @@ export async function POST(request: Request) {
 
             // stream_event — 逐字串流（includePartialMessages: true）
             if (sdkMsg.type === 'stream_event') {
+              hasResult = true
               const streamMsg = sdkMsg as {
                 type: 'stream_event'
                 event: Record<string, unknown>
@@ -147,7 +148,8 @@ export async function POST(request: Request) {
               continue
             }
 
-            // 其他事件類型（user replays, status, tool_progress 等）跳過
+            // 其他事件類型 — log 以便 debug
+            console.log('[claude-chat] unhandled SDK message type:', sdkMsg.type, JSON.stringify(sdkMsg).slice(0, 500))
           }
         } catch (err) {
           if (err instanceof Error && err.name !== 'AbortError') {

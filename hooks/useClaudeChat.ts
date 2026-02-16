@@ -358,10 +358,11 @@ function processStreamEvent(
     if (streamEvent.is_error || (streamEvent.subtype && streamEvent.subtype !== 'success')) {
       const errorsDetail = streamEvent.errors?.join('; ') || ''
       const errorText = errorsDetail || streamEvent.result || `Claude 執行失敗 (${streamEvent.subtype})`
-      // Session 不存在 → 標記重試
+      // Session 不可用（不存在或 process crash）→ 標記重試
       const isSessionNotFound = streamEvent.errors?.some(e => e.includes('No conversation found'))
-      if (isSessionNotFound && actions.currentSessionId) {
-        console.debug('[chat] session not found, will retry with fresh session')
+      const isProcessCrash = errorText.includes('exited with code')
+      if ((isSessionNotFound || isProcessCrash) && actions.currentSessionId) {
+        console.debug('[chat] session unusable, will retry with fresh session', { isSessionNotFound, isProcessCrash })
         actions.setSessionId(null)
         ctx.newSessionIdForHistory = null
         ctx.retryWithFreshSession = true
