@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 interface OAuthCredentials {
   accessToken: string;
@@ -12,11 +15,12 @@ interface OAuthCredentials {
  * `security find-generic-password -w` may return hex-encoded data
  * depending on the stored content type.
  */
-function readKeychainCredentials(): OAuthCredentials {
-  const raw = execSync(
+async function readKeychainCredentials(): Promise<OAuthCredentials> {
+  const { stdout } = await execAsync(
     'security find-generic-password -s "Claude Code-credentials" -w',
     { encoding: 'utf-8', timeout: 5000 }
-  ).trim();
+  );
+  const raw = stdout.trim();
 
   // Try direct JSON parse first
   let decoded: string;
@@ -96,7 +100,7 @@ async function getValidAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const creds = readKeychainCredentials();
+  const creds = await readKeychainCredentials();
 
   // If token expires in > 5 minutes, use it directly
   if (creds.expiresAt > Date.now() + bufferMs) {
