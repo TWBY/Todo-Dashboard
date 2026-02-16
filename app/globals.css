@@ -443,3 +443,53 @@ option {
 .chat-panel-cell[data-exiting="true"] {
   opacity: 0;
 }
+
+/* === Build Panel === */
+
+/* 機械執行呼吸光暈（Phase 容器） */
+@keyframes build-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    border-color: rgba(245, 158, 11, 0.2);
+    background-color: rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px 4px rgba(245, 158, 11, 0.06), inset 0 0 12px rgba(245, 158, 11, 0.02);
+    border-color: rgba(245, 158, 11, 0.55);
+    background-color: rgba(245, 158, 11, 0.015);
+  }
+}
+.build-phase-running {
+  animation: build-breathe 2.8s ease-in-out infinite;
+}
+
+/* 機械執行 step 呼吸（Step 卡片） */
+@keyframes build-step-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 10px 1px rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+}
+.build-step-running {
+  animation: build-step-breathe 2.4s ease-in-out infinite;
+}
+
+/* AI output 區 markdown 樣式 */
+.build-ai-output p { margin: 0.15em 0; }
+.build-ai-output strong { color: var(--text-primary); font-weight: 600; }
+.build-ai-output code {
+  font-size: 0.7rem;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  color: var(--primary-blue-light);
+}
+.build-ai-output ul, .build-ai-output ol { padding-left: 1.2em; margin: 0.2em 0; }
+.build-ai-output li { margin: 0.1em 0; }
+.build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.3em 0; font-size: 0.7rem; }
+.build-ai-output th, .build-ai-output td { padding: 0.25em 0.5em; border: 1px solid var(--border-color); text-align: left; }
+.build-ai-output th { color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.03); }

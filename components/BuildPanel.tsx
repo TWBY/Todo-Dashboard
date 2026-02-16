@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useClaudeChat } from '@/hooks/useClaudeChat';
 import PulsingDots from '@/components/PulsingDots';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ChatMessage, StreamingActivity } from '@/lib/claude-chat-types';
 
 // --- Build Prompt ---
@@ -235,7 +237,7 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
 
   return (
     <div
-      className="rounded-md"
+      className={`rounded-md${status === 'running' ? ' build-step-running' : ''}`}
       style={{
         backgroundColor: bgColor,
         border: `1px solid ${borderColor}`,
@@ -332,8 +334,10 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
 
       {/* AI messages */}
       {aiMessages.slice(-3).map(msg => (
-        <div key={msg.id} className="text-xs mb-1 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
-          {msg.content.length > 300 ? msg.content.slice(-300) + '…' : msg.content}
+        <div key={msg.id} className="text-xs mb-1 build-ai-output" style={{ color: 'var(--text-secondary)' }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {msg.content.length > 500 ? msg.content.slice(-500) : msg.content}
+          </ReactMarkdown>
         </div>
       ))}
     </div>
@@ -448,6 +452,14 @@ export default function BuildPanel() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
+          <button
+            onClick={close}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
+            style={{ color: 'var(--text-secondary)' }}
+            title="返回"
+          >
+            <i className="fa-sharp fa-regular fa-arrow-left" />
+          </button>
           <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--text-primary)' }}>
             Build 流程
           </h2>
@@ -505,7 +517,7 @@ export default function BuildPanel() {
 
                 <PhaseHeader phase={phase.phase} title={phase.title} type={phase.type} status={phaseStatus} />
                 <div
-                  className="rounded-md p-3"
+                  className={`rounded-md p-3${phaseStatus === 'running' ? ' build-phase-running' : ''}`}
                   style={{
                     border: phaseStatus === 'running' ? '1px solid rgba(245,158,11,0.3)'
                       : phaseStatus === 'done' ? '1px solid rgba(34,197,94,0.2)'
@@ -572,8 +584,10 @@ export default function BuildPanel() {
                 <i className="fa-sharp fa-solid fa-circle-check mr-1" />
                 Build 完成
               </div>
-              <div className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
-                {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}
+              <div className="text-xs build-ai-output" style={{ color: 'var(--text-secondary)' }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}
+                </ReactMarkdown>
               </div>
             </div>
           )}
@@ -606,6 +620,18 @@ export default function BuildPanel() {
             >
               <i className="fa-sharp fa-regular fa-rotate-right mr-1.5" />
               重新執行
+            </button>
+          )}
+
+          {/* 關閉面板（底部） */}
+          {buildState !== 'running' && (
+            <button
+              onClick={close}
+              className="w-full mt-3 py-2 text-xs transition-colors cursor-pointer hover:underline"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <i className="fa-sharp fa-regular fa-arrow-left mr-1" />
+              關閉面板
             </button>
           )}
         </div>
