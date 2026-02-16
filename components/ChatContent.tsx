@@ -333,10 +333,13 @@ function PlanApprovalBar({ onApprove, onReject, planOnly, loading }: { onApprove
       {!planOnly && !loading && onReject && (
         <button
           onClick={onReject}
-          className="w-full py-1 rounded text-sm transition-all duration-200"
-          style={{ color: '#666' }}
+          className="w-full py-2 rounded text-base font-medium transition-all duration-200"
+          style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            color: '#f87171',
+          }}
         >
-          拒絕
+          我還有要補充
         </button>
       )}
     </div>
@@ -736,8 +739,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       adjustTimerRef.current = null
       const el = textareaRef.current
       if (!el) return
-      // 檢查是否支援 CSS field-sizing（支援的話不需手動調整）
-      if ('fieldSizing' in el.style) return
+      // 統一使用 JS 方案控制高度（移除 fieldSizing 依賴）
       el.style.height = 'auto'
       const maxH = 200
       const scrollH = el.scrollHeight
@@ -1434,8 +1436,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           className="w-full px-4 pt-3 pb-1 text-lg outline-none resize-none bg-transparent"
           style={{
             color: 'var(--text-primary)',
-            overflowY: 'hidden',
-            fieldSizing: 'content' as unknown as undefined, // CSS field-sizing: content（Chromium 123+）
             maxHeight: '200px',
             opacity: (pendingPlanApproval || pendingQuestions) ? 0.4 : 1,
             transition: 'opacity 0.2s',
