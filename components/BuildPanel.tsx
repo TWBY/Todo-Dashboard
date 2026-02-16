@@ -508,7 +508,7 @@ export default function BuildPanel() {
           <button
             onClick={close}
             className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-red-500/20"
-            style={{ color: 'var(--text-tertiary)' }}
+            style={{ color: 'var(--text-secondary)' }}
             title="關閉"
           >
             <i className="fa-sharp fa-regular fa-xmark" />
