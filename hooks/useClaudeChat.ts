@@ -728,17 +728,16 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
         }),
       })
       if (!res.ok) {
-        // HMR fallback：pending request 遺失，改用 sendMessage 重新開 query
-        console.debug('[chat] answerQuestion 404 fallback → sendMessage')
+        console.error('[chat] answerQuestion failed:', await res.json().catch(() => ({})))
         setStreamingActivity(null)
-        sendMessage(answerText)
+        setError('回答提交失敗，請重試')
       }
     } catch (err) {
       console.error('[chat] answerQuestion POST failed:', err)
       setStreamingActivity(null)
-      sendMessage(answerText)
+      setError('回答提交失敗，請重試')
     }
-  }, [sendMessage])
+  }, [])
 
   // 審批計畫 — POST 到 /answer endpoint，不開新 SSE
   const approvePlan = useCallback(async (approved: boolean, feedback?: string) => {
@@ -782,25 +781,16 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       const resBody = await res.json().catch(() => ({}))
       console.debug('[chat] approvePlan response', { status: res.status, body: resBody })
       if (!res.ok) {
-        // HMR fallback：pending request 遺失，改用 sendMessage 重新開 query
-        console.debug('[chat] approvePlan 404 fallback → sendMessage')
+        console.error('[chat] approvePlan failed:', resBody)
         setStreamingActivity(null)
-        if (approved) {
-          sendMessage('yes, 請開始執行計畫', 'edit')
-        } else if (feedback) {
-          sendMessage(feedback, 'plan')
-        }
+        setError('計畫審批失敗，請重試')
       }
     } catch (err) {
       console.error('[chat] approvePlan POST failed:', err)
       setStreamingActivity(null)
-      if (approved) {
-        sendMessage('yes, 請開始執行計畫', 'edit')
-      } else if (feedback) {
-        sendMessage(feedback, 'plan')
-      }
+      setError('計畫審批失敗，請重試')
     }
-  }, [sendMessage])
+  }, [])
 
   const clearChat = useCallback(() => {
     console.debug('[chat] clearChat called', { hasAbortRef: !!abortRef.current })

@@ -14,11 +14,22 @@ export async function POST(request: Request) {
     const key = `${sessionId}:${toolUseID}`
     console.log('[claude-chat/answer] received', { key, type, approved, hasPending: hasPendingRequest(key) })
 
+    // 輪詢等待 pending request（解決 timing race：前端從 stream 偵測到 ExitPlanMode
+    // 早於 server 端 canUseTool callback 建立 pending request）
     if (!hasPendingRequest(key)) {
-      return new Response(JSON.stringify({ error: 'No pending request found', key }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      const maxWait = 5000
+      const interval = 200
+      let waited = 0
+      while (!hasPendingRequest(key) && waited < maxWait) {
+        await new Promise(r => setTimeout(r, interval))
+        waited += interval
+      }
+      if (!hasPendingRequest(key)) {
+        return new Response(JSON.stringify({ error: 'No pending request found', key }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     let resolved = false
