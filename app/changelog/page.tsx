@@ -46,12 +46,6 @@ export default function ChangelogPage() {
             </svg>
           </button>
           <h1 className="text-xl font-semibold">Changelog</h1>
-          <span
-            className="text-xs px-1.5 py-0.5 rounded-full"
-            style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
-          >
-            P-{versionConfig.production}
-          </span>
         </div>
       </div>
 
@@ -66,7 +60,7 @@ export default function ChangelogPage() {
             尚無 release 記錄
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative ml-16">
             {/* Timeline line */}
             <div
               className="absolute left-[7px] top-3 bottom-3"
@@ -80,6 +74,24 @@ export default function ChangelogPage() {
 
                 return (
                   <div key={entry.hash} className={`relative pl-8 ${isRelease ? 'pb-8' : 'pb-4'}`}>
+                    {/* Version tags (only for first release) */}
+                    {isRelease && isFirst && (
+                      <div className="absolute -left-16 top-0 flex flex-col gap-1">
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
+                        >
+                          DEV
+                        </span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}
+                        >
+                          PROD
+                        </span>
+                      </div>
+                    )}
+
                     {/* Timeline dot */}
                     <div
                       className={`absolute left-0 ${isRelease ? 'top-1.5 w-4 h-4' : 'top-1.5 w-3 h-3 ml-0.5'} rounded-full`}
