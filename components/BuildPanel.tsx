@@ -296,7 +296,6 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
         <div className="flex items-center gap-2 mb-1">
           {streamingActivity.status === 'tool' ? (
             <span className="text-xs font-mono" style={{ color: '#a855f7' }}>
-              <i className="fa-regular fa-terminal mr-1" />
               {streamingActivity.toolName}
               {streamingActivity.toolDetail && (
                 <span style={{ color: 'var(--text-tertiary)' }}> — {streamingActivity.toolDetail}</span>
@@ -453,7 +452,7 @@ export default function BuildPanel() {
           )}
           {buildState === 'running' && (
             <button
-              onClick={stopStreaming}
+              onClick={() => { stopStreaming(); setBuildState('error'); }}
               className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20"
               style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
             >
