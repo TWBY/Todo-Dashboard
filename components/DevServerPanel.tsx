@@ -6,6 +6,7 @@ import type { Project } from '@/lib/types';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import PulsingDots from '@/components/PulsingDots';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
+import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { formatPort } from '@/lib/format';
 import pkg from '@/package.json';
 
@@ -16,6 +17,7 @@ interface PortStatus {
   pid?: number;
   projectPath?: string;
   memoryMB?: number;
+  cpuPercent?: number;
 }
 
 interface DevServerPanelProps {
@@ -42,6 +44,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const [prodLoading, setProdLoading] = useState(false);
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
+  const { toggle: toggleBuildPanel } = useBuildPanel();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
   const [currentPort, setCurrentPort] = useState<number>(0);
@@ -146,9 +149,55 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   }, [showToast]);
 
-  const handleProdOpen = useCallback(() => {
-    window.open('http://localhost:4000', '_blank');
-  }, []);
+  const handleProdReload = useCallback(async () => {
+    setProdLoading(true);
+    try {
+      // Step 1: Stop
+      const stopCtrl = new AbortController();
+      const stopTimeout = setTimeout(() => stopCtrl.abort(), 10000);
+      const stopRes = await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: 'dashboard', action: 'stop-production' }),
+        signal: stopCtrl.signal,
+      });
+      clearTimeout(stopTimeout);
+      if (!stopRes.ok) {
+        const d = await stopRes.json();
+        showToast(d.error || 'Reload 失敗（stop 階段）', 'error');
+        return;
+      }
+      setProdRunning(false);
+      // Step 2: Start
+      const startCtrl = new AbortController();
+      const startTimeout = setTimeout(() => startCtrl.abort(), 15000);
+      const startRes = await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: 'dashboard', action: 'start-production' }),
+        signal: startCtrl.signal,
+      });
+      clearTimeout(startTimeout);
+      const startData = await startRes.json();
+      if (startRes.ok) {
+        setProdRunning(true);
+        showToast(startData.message || 'Production 已重新啟動', 'success');
+        // 等 server 就緒後重整 4000 頁面
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showToast(startData.error || 'Reload 失敗（start 階段）', 'error');
+      }
+    } catch (error) {
+      showToast(
+        error instanceof Error && error.name === 'AbortError'
+          ? 'Reload 逾時（API 無回應）'
+          : 'Production Reload 請求失敗',
+        'error',
+      );
+    } finally {
+      setProdLoading(false);
+    }
+  }, [showToast]);
 
   const fetchStatuses = useCallback(async (signal?: AbortSignal) => {
     setIsRefreshing(true);
@@ -363,8 +412,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         </h2>
         <div className="flex items-center gap-1.5 relative">
           <button
-            onClick={handleProdOpen}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center ${
+            onClick={handleProdReload}
+            disabled={prodLoading}
+            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 flex items-center ${
               prodRunning && !prodLoading ? '' : 'hidden'
             }`}
             style={{
@@ -376,24 +426,25 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
               letterSpacing: 'var(--tracking-ui)',
               border: '1px solid #333333',
             }}
-            title="開啟 Production 版本 (localhost:4000)"
+            title="重新啟動 Production (stop → start)"
           >
-            {compact ? 'O' : 'Open'}
+            {compact ? 'R' : 'Reload'}
           </button>
+          {!(isProdSelf && prodRunning) && (
           <button
-            onClick={isProdSelf && prodRunning ? undefined : (prodRunning ? handleProdStop : handleProdStart)}
-            disabled={prodLoading || (isProdSelf && prodRunning)}
+            onClick={prodRunning ? handleProdStop : handleProdStart}
+            disabled={prodLoading}
             className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
-              backgroundColor: prodLoading ? '#333333' : isProdSelf && prodRunning ? '#1a1a2e' : prodRunning ? '#3d1515' : '#15332a',
-              color: prodLoading ? '#999999' : isProdSelf && prodRunning ? '#7c7cff' : prodRunning ? '#ef4444' : '#10b981',
+              backgroundColor: prodLoading ? '#333333' : prodRunning ? '#3d1515' : '#15332a',
+              color: prodLoading ? '#999999' : prodRunning ? '#ef4444' : '#10b981',
               fontSize: 'var(--text-sm)',
               fontWeight: 'var(--font-weight-semibold)',
               lineHeight: 'var(--leading-compact)',
               letterSpacing: 'var(--tracking-ui)',
-              border: prodLoading ? '1px solid #444444' : isProdSelf && prodRunning ? '1px solid #3a3a5c' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+              border: prodLoading ? '1px solid #444444' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
             }}
-            title={isProdSelf && prodRunning ? '無法停止自己' : prodRunning ? '停止 Production server' : '啟動 Production server'}
+            title={prodRunning ? '停止 Production server' : '啟動 Production server'}
           >
             {prodLoading ? (
               <>
@@ -403,19 +454,11 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                 </svg>
                 {!compact && <span className="ml-1">{prodRunning ? '停止中' : '啟動中'}</span>}
               </>
-            ) : isProdSelf && prodRunning ? (
-              compact ? 'P' : 'Pro'
             ) : compact ? (prodRunning ? 'S' : 'S') : (prodRunning ? 'Stop' : 'Start')}
           </button>
+          )}
           <button
-            onClick={() => addPanel('dashboard', 'Todo-Dashboard', { initialMessage: `直接依序執行以下打包流程，不要詢問確認：
-1. 執行 git log --oneline 查看自上次 release commit 以來的變更
-2. 根據 commit 內容判斷版本升級幅度（major/minor/patch）
-3. 執行 npm version <判斷結果> --no-git-tag-version
-4. 執行 npm run build
-5. Build 成功後執行 git add package.json package-lock.json 然後 git commit -m "release: vX.Y.Z — 一行功能摘要"
-6. 回報新版本號和本次變更摘要
-7. 最後用 AskUserQuestion 工具詢問「是否需要備份到 GitHub？」，提供兩個選項：(a) 備份 (b) 不用。如果選擇備份則執行 git push。如果選擇「不用」，你必須立即停止，不要再輸出任何文字、不要總結、不要呼叫任何工具，直接結束。`, initialMode: 'edit', model: 'haiku' })}
+            onClick={toggleBuildPanel}
             className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
               backgroundColor: '#332815',
@@ -479,7 +522,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             const isLoading = loading[project.id] || false;
             const isRecentlyStarted = recentlyStarted[project.id] || false;
             const isRemoving = removingIds.has(project.id);
-            const isSelf = project.devPort === currentPort || (currentPort === 4000 && project.devPort === 3000);
+            const isSelf = project.devPort === currentPort;
 
             return (
               <div
@@ -516,21 +559,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                       >
                         {formatPort(project.devPort!)}
                       </span>
-                      {isRunning && status?.memoryMB && (
-                        <span
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded hidden @[360px]:inline-flex"
-                          style={{
-                            backgroundColor: (status.memoryMB >= 512)
-                              ? 'rgba(239, 68, 68, 0.15)' : 'var(--background-tertiary)',
-                            color: (status.memoryMB >= 512)
-                              ? '#fca5a5' : 'var(--text-tertiary)',
-                          }}
-                        >
-                          {status.memoryMB >= 1024
-                            ? `${(status.memoryMB / 1024).toFixed(1)}G`
-                            : `${status.memoryMB}M`}
-                        </span>
-                      )}
                       {isLoading && (
                         <span className="text-sm px-2 py-0.5 rounded-full animate-pulse"
                           style={{ backgroundColor: 'rgba(250, 204, 21, 0.2)', color: '#facc15' }}>
@@ -562,31 +590,27 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                     <span className="@[420px]:hidden">O</span>
                     <span className="hidden @[420px]:inline">Open</span>
                   </button>
+                  {!(isSelf && isRunning) && (
                   <button
-                    onClick={isSelf && isRunning ? undefined : () => handleAction(project.id, isRunning ? 'stop' : 'start')}
-                    disabled={isLoading || (isSelf && isRunning)}
+                    onClick={() => handleAction(project.id, isRunning ? 'stop' : 'start')}
+                    disabled={isLoading}
                     className="px-2.5 py-1.5 rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2 justify-center hover:shadow-md hover:scale-[1.02]"
                     style={{
-                      backgroundColor: isLoading ? '#333333' : isSelf && isRunning ? '#1a1a2e' : isRunning ? '#3d1515' : '#15332a',
-                      color: isLoading ? '#999999' : isSelf && isRunning ? '#7c7cff' : isRunning ? '#ef4444' : '#10b981',
+                      backgroundColor: isLoading ? '#333333' : isRunning ? '#3d1515' : '#15332a',
+                      color: isLoading ? '#999999' : isRunning ? '#ef4444' : '#10b981',
                       fontSize: 'var(--text-sm)',
                       fontWeight: 'var(--font-weight-semibold)',
                       lineHeight: 'var(--leading-compact)',
                       letterSpacing: 'var(--tracking-ui)',
-                      border: isLoading ? '1px solid #444444' : isSelf && isRunning ? '1px solid #3a3a5c' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+                      border: isLoading ? '1px solid #444444' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
                     }}
-                    title={isSelf && isRunning ? '無法停止自己' : isRunning ? '停止' : '啟動'}
+                    title={isRunning ? '停止' : '啟動'}
                   >
                     {isLoading ? (
                       <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                    ) : isSelf && isRunning ? (
-                      <>
-                        <span className="@[420px]:hidden">P</span>
-                        <span className="hidden @[420px]:inline">pro</span>
-                      </>
                     ) : isRunning ? (
                       <>
                         <span className="@[420px]:hidden">S</span>
@@ -599,6 +623,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                       </>
                     )}
                   </button>
+                  )}
                   <button
                     onClick={() => addPanel(project.id, project.displayName || project.name)}
                     className="px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"

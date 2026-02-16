@@ -49,6 +49,7 @@ interface PortStatus {
   pid?: number;
   projectPath?: string;
   memoryMB?: number;
+  cpuPercent?: number;
 }
 
 interface SystemMemory {
@@ -181,6 +182,18 @@ async function getProcessMemory(pid: number): Promise<number | undefined> {
   }
 }
 
+// 取得單一 process 的 CPU 使用率（%）
+async function getProcessCpu(pid: number): Promise<number | undefined> {
+  try {
+    const { stdout } = await execAsync(`ps -o %cpu= -p ${pid}`);
+    const cpu = parseFloat(stdout.trim());
+    if (isNaN(cpu)) return undefined;
+    return Math.round(cpu * 10) / 10; // 精確到小數點後一位
+  } catch {
+    return undefined;
+  }
+}
+
 // Check if a port is in use and get process info
 async function checkPort(port: number): Promise<{ isRunning: boolean; pid?: number; pgid?: number; cwd?: string }> {
   try {
@@ -223,8 +236,10 @@ export async function GET() {
       if (project.devPort) {
         const portInfo = await checkPort(project.devPort);
         let memoryMB: number | undefined;
+        let cpuPercent: number | undefined;
         if (portInfo.isRunning && portInfo.pid) {
           memoryMB = await getProcessMemory(portInfo.pid);
+          cpuPercent = await getProcessCpu(portInfo.pid);
         }
         statuses.push({
           projectId: project.id,
@@ -233,6 +248,7 @@ export async function GET() {
           pid: portInfo.pid,
           projectPath: project.path,
           memoryMB,
+          cpuPercent,
         });
       }
     }
@@ -508,10 +524,18 @@ export async function POST(request: Request) {
       // 檢查 Production server 狀態
       const PROD_PORT = 4000;
       const prodPortInfo = await checkPort(PROD_PORT);
+      let memoryMB: number | undefined;
+      let cpuPercent: number | undefined;
+      if (prodPortInfo.isRunning && prodPortInfo.pid) {
+        memoryMB = await getProcessMemory(prodPortInfo.pid);
+        cpuPercent = await getProcessCpu(prodPortInfo.pid);
+      }
       return NextResponse.json({
         isRunning: prodPortInfo.isRunning,
         pid: prodPortInfo.pid,
         port: PROD_PORT,
+        memoryMB,
+        cpuPercent,
       });
 
     } else {
