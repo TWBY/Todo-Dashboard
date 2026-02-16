@@ -22,5 +22,13 @@
     "messageCount": 2,
     "createdAt": 1771172262545,
     "lastActiveAt": 1771172374093
+  },
+  {
+    "sessionId": "b2548c3a-d372-4208-b5b1-d533a84c82ae",
+    "projectId": "brickverse-design",
+    "title": "測試",
+    "messageCount": 1,
+    "createdAt": 1771210078855,
+    "lastActiveAt": 1771210085258
   }
 ]
