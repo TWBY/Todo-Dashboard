@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     }
 
     const key = `${sessionId}:${toolUseID}`
+    console.log('[claude-chat/answer] received', { key, type, approved, hasPending: hasPendingRequest(key) })
 
     if (!hasPendingRequest(key)) {
       return new Response(JSON.stringify({ error: 'No pending request found', key }), {
