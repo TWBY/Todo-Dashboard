@@ -468,6 +468,9 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
     return () => window.removeEventListener('layout-reset', handleLayoutReset)
   }, [openPanels.length, clampRightPct])
 
+  // 是否顯示空狀態提示（左側收合 + 無 Chat 面板）
+  const showEmptyState = leftCollapsed && virtualPanelCount === 0
+
   return (
     <div ref={containerRef} className="h-screen flex">
       {/* 左側主內容 — 不用條件式 style，完全由 GSAP 控制 */}
@@ -490,6 +493,31 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)' }}
         title="展開專案列表"
       />
+
+      {/* 空狀態提示 — 左側收合且無 Chat 時顯示 */}
+      {showEmptyState && (
+        <div className="flex-1 flex items-center justify-center">
+          <button
+            onClick={toggleLeft}
+            className="flex items-center gap-3 px-6 py-4 rounded-lg cursor-pointer transition-colors"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              color: 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }}
+          >
+            <i className="fa-solid fa-arrow-left" style={{ fontSize: '1.25rem', fontWeight: 900 }} />
+            <span style={{ fontSize: '1rem' }}>請開啟左側面板開始</span>
+          </button>
+        </div>
+      )}
 
       {/* 左右分隔拖曳條 — 始終在 DOM 中，靠 GSAP 控制 */}
       <Divider dividerRef={dividerRef} onMouseDown={handleDividerMouseDown} />

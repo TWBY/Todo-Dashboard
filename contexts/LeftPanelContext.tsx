@@ -12,7 +12,9 @@ const LeftPanelContext = createContext<LeftPanelContextValue>({ collapsed: false
 export function LeftPanelProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
-    return localStorage.getItem('dashboard-left-collapsed') === 'true'
+    const stored = localStorage.getItem('dashboard-left-collapsed')
+    // 預設為展開（false），只有明確設定為 'true' 時才收合
+    return stored === 'true'
   })
 
   const toggle = useCallback(() => {
