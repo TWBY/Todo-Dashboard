@@ -81,7 +81,11 @@ function buildQueryOptions(
     additionalDirectories: [projectPath],
     permissionMode,
     settingSources: ['user', 'project'],
-    systemPrompt: { type: 'preset', preset: 'claude_code' },
+    systemPrompt: {
+      type: 'preset',
+      preset: 'claude_code',
+      append: 'IMPORTANT: When your ExitPlanMode tool call is approved, the user has already confirmed they want you to proceed. Start implementing immediately without summarizing the plan again or asking for confirmation. Do NOT say things like "準備開始實作嗎？" or "Ready to start?" — just begin working.',
+    },
     includePartialMessages: true,
     env: {
       HOME: process.env.HOME || '',
