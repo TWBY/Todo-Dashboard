@@ -261,6 +261,16 @@ function TableWrapper({ children, ...rest }: React.HTMLAttributes<HTMLTableEleme
 const markdownComponents = {
   pre: CodeBlockWithCopy,
   table: TableWrapper,
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline hover:opacity-80 transition-opacity"
+    >
+      {children}
+    </a>
+  ),
 }
 
 // 共用 Markdown 排版 className（基於 Brick Design 設計系統）
@@ -280,14 +290,16 @@ const MARKDOWN_PROSE = `prose prose-invert max-w-none overflow-hidden break-word
   [&_pre]:my-3 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:bg-[#111111] [&_pre]:border [&_pre]:border-[#222222]
   [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:bg-[#111111]
   [&_pre_code]:p-0 [&_pre_code]:bg-transparent
-  [&_strong]:font-bold [&_a]:underline
+  [&_strong]:font-bold
   [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-[#111111] [&_th]:text-sm [&_th]:font-semibold
   [&_td]:px-3 [&_td]:py-2 [&_td]:text-sm
   [&_tr]:border-b [&_tr]:border-[#222222] [&_tr:last-child]:border-0
   [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-[#999]
   [&_hr]:border-[#333333] [&_hr]:my-4`
 
-// Streaming 中的 assistant 訊息：透過 useStreamingReveal 實作漸進式文字揭露
+// Streaming 中的 assistant 訊息：diff-chunk 漸進式揭露（FlowToken 風格）
+// 每次 SSE 送來新文字 → 新 chunk mount → CSS fade-in 動畫
+// Streaming 結束後外層會切回 ReactMarkdown 渲染完整 Markdown
 function StreamingAssistantMessage({
   msg,
   emailMode,
@@ -295,17 +307,22 @@ function StreamingAssistantMessage({
   msg: ChatMessage
   emailMode: boolean
 }) {
-  const displayText = useStreamingReveal(msg.content, true)
+  const { chunks } = useStreamingReveal(msg.content, true)
 
   return (
     <div className="group/msg relative">
       <div
-        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
+        className="text-base leading-[1.75] tracking-[0em] whitespace-pre-wrap"
         style={{ color: '#ffffff' }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-          {displayText}
-        </ReactMarkdown>
+        {chunks.map((chunk) => (
+          <span
+            key={chunk.id}
+            className={chunk.id >= 0 ? 'streaming-word-reveal' : undefined}
+          >
+            {chunk.text}
+          </span>
+        ))}
       </div>
       {emailMode && msg.content.length > 20 && (
         <div className="mt-1.5">
