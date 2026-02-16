@@ -195,17 +195,17 @@
     "sessionId": "0c4f7416-8fbd-4122-8013-0d3fdb6a9629",
     "projectId": "dashboard",
     "title": "根據這個專案，有沒有適合的 agent team 應用組合或是場景",
-    "messageCount": 18,
+    "messageCount": 44,
     "createdAt": 1771219373404,
-    "lastActiveAt": 1771231946783
+    "lastActiveAt": 1771236390965
   },
   {
     "sessionId": "e18f039e-0aa9-4dfe-90c6-03cab93db731",
     "projectId": "dashboard",
     "title": "現在 chat 的功能在確認完計劃之後，按下執行都有按超過兩次還有反應，而且如果是打字還沒感應，超級奇怪的",
-    "messageCount": 37,
+    "messageCount": 50,
     "createdAt": 1771219821643,
-    "lastActiveAt": 1771231244148
+    "lastActiveAt": 1771236141755
   },
   {
     "sessionId": "d6a16f7c-83ca-4871-9044-bd93adcbfbc5",
@@ -219,8 +219,40 @@
     "sessionId": "9e93ccc2-2ed8-4f9d-8bef-4c052ccc61f8",
     "projectId": "dashboard",
     "title": "關於 Pack 的流程，我們之前有一度是使用類似於 Chat 的功能，它是擺在最右邊的位置，會開一個跟 Chat 大小一",
-    "messageCount": 9,
+    "messageCount": 11,
     "createdAt": 1771230372896,
-    "lastActiveAt": 1771231847695
+    "lastActiveAt": 1771232670020
+  },
+  {
+    "sessionId": "8552bcc8-8134-4ac0-ab59-f5f96ca0e73d",
+    "projectId": "dashboard",
+    "title": "簡單介紹這個專案",
+    "messageCount": 1,
+    "createdAt": 1771234115506,
+    "lastActiveAt": 1771234234655
+  },
+  {
+    "sessionId": "d3b9e021-9e5c-4fe0-a92e-34859fae1cfd",
+    "projectId": "dashboard",
+    "title": "簡單介紹專案",
+    "messageCount": 1,
+    "createdAt": 1771234769350,
+    "lastActiveAt": 1771234784695
+  },
+  {
+    "sessionId": "f4407558-182e-4b02-bdab-4b668cae3791",
+    "projectId": "dashboard",
+    "title": "簡單介紹專案",
+    "messageCount": 1,
+    "createdAt": 1771234811762,
+    "lastActiveAt": 1771234811762
+  },
+  {
+    "sessionId": "026f82b1-d970-4fd8-a84b-d858e2a06e0e",
+    "projectId": "dashboard",
+    "title": "我在修改部落格流水線，有兩點需求：\n\n1. 調整標題點擊行為：\n   當我按下標題時，只要將斜線後面的那段英文文字調整為",
+    "messageCount": 1,
+    "createdAt": 1771236476450,
+    "lastActiveAt": 1771236525255
   }
 ]
