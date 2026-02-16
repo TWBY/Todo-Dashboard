@@ -59,24 +59,25 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
     setIsClearing(false)
   }, [isClearing])
 
-  const effectiveTheme = theme
-
   return (
     <div
-      className={`h-full flex flex-col min-w-0 ${panelStatus === 'waiting' ? (effectiveTheme === 'green' ? 'panel-breathing-green' : 'panel-breathing') : ''}`}
+      className="h-full flex flex-col min-w-0"
       style={{
-        border: panelStatus === 'waiting'
-          ? `1.5px solid ${effectiveTheme === 'green' ? '#22c55e' : '#facc15'}`
-          : panelStatus === 'completed' ? '1.5px solid #22c55e'
-          : `1.5px solid ${effectiveTheme === 'green' ? 'rgba(34,197,94,0.15)' : 'transparent'}`,
         borderRadius: 6,
-        transition: panelStatus === 'waiting' ? 'none' : 'border-color 0.3s ease',
         padding: '6px 8px',
       }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--text-primary)' }}>
+        <h2
+          className={`font-semibold text-lg truncate ${panelStatus === 'streaming' ? 'shimmer-text' : ''}`}
+          style={{
+            color: panelStatus === 'completed' ? '#22c55e'
+              : panelStatus === 'waiting' ? '#facc15'
+              : 'var(--text-primary)',
+            transition: panelStatus === 'streaming' ? 'none' : 'color 0.3s ease',
+          }}
+        >
           {emailMode ? 'Email 回覆' : projectName}
         </h2>
         <div className="flex items-center gap-1 flex-shrink-0">
