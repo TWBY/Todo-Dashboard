@@ -1264,7 +1264,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 {modelChoice === 'opus' && (
                   <button
                     onClick={() => {
-                      const cycle = ['high', 'max', 'low', 'medium'] as const
+                      const cycle = ['low', 'medium', 'high', 'max'] as const
                       setEffortLevel(prev => cycle[(cycle.indexOf(prev) + 1) % 4])
                     }}
                     className="w-7 h-7 rounded-md text-xs font-semibold flex items-center justify-center transition-all duration-150"

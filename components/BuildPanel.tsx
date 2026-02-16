@@ -27,11 +27,12 @@ Phase 3 — 版本判斷（AI 介入）
 
 Phase 4 — Build（機械執行）
 8. npm version <判斷結果> --no-git-tag-version
+9. npm run build
 
 Phase 5 — Release Commit（機械執行）
-9. git add package.json package-lock.json
-10. git commit -m "release: vX.Y.Z — 一行功能摘要"
-11. 回報新版本號和本次變更摘要`;
+10. git add package.json package-lock.json
+11. git commit -m "release: vX.Y.Z — 一行功能摘要"
+12. 回報新版本號和本次變更摘要`;
 
 // --- Types & Data ---
 
@@ -87,6 +88,7 @@ const PHASES: PhaseData[] = [
     type: 'mechanical',
     steps: [
       { command: 'npm version <patch|minor|major> --no-git-tag-version', description: '更新 package.json 版本號' },
+      { command: 'npm run build', description: '打包專案產生 .next/ 資料夾' },
     ],
   },
   {
@@ -135,7 +137,7 @@ function detectPhase(messages: ChatMessage[]): number {
         lastPhase = Math.max(lastPhase, 3);
       }
       // Phase 4: npm version, npm run build
-      if (desc.includes('npm version') || content.includes('npm version')) {
+      if (desc.includes('npm version') || content.includes('npm version') || desc.includes('npm run build') || content.includes('npm run build')) {
         lastPhase = Math.max(lastPhase, 4);
       }
       // Phase 5: release commit
