@@ -9,15 +9,15 @@ import type { ChatMessage, ChatMode, TodoItem, UserQuestion } from '@/lib/claude
 import { useClaudeChat } from '@/hooks/useClaudeChat'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
+import { useStreamingReveal } from '@/hooks/useStreamingReveal'
 
 
 const MODE_CONFIG: Record<ChatMode, { label: string; prefix: string; placeholder: string }> = {
   plan: { label: 'Plan mode', prefix: 'P', placeholder: '規劃任務...（Claude 不會編輯檔案）' },
   edit: { label: 'Edit', prefix: 'E', placeholder: '描述需要 Claude 做的變更...' },
-  ask: { label: 'Ask', prefix: 'A', placeholder: '向 Claude 詢問問題...' },
 }
 
-const MODE_CYCLE: ChatMode[] = ['plan', 'edit', 'ask']
+const MODE_CYCLE: ChatMode[] = ['plan', 'edit']
 
 // ContentsRate 進度條元件
 function ContentsRate({ inputTokens, outputTokens, lastDurationMs }: { inputTokens: number; outputTokens: number; lastDurationMs?: number }) {
@@ -283,6 +283,38 @@ const MARKDOWN_PROSE = `prose prose-invert max-w-none overflow-hidden break-word
   [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-[#999]
   [&_hr]:border-[#333333] [&_hr]:my-4`
 
+// Streaming 中的 assistant 訊息：透過 useStreamingReveal 實作漸進式文字揭露
+function StreamingAssistantMessage({
+  msg,
+  emailMode,
+}: {
+  msg: ChatMessage
+  emailMode: boolean
+}) {
+  const displayText = useStreamingReveal(msg.content, true)
+
+  return (
+    <div className="group/msg relative">
+      <div
+        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
+        style={{ color: '#ffffff' }}
+      >
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          {displayText}
+        </ReactMarkdown>
+      </div>
+      {emailMode && msg.content.length > 20 && (
+        <div className="mt-1.5">
+          <EmailCopyButton content={msg.content} />
+        </div>
+      )}
+      {!emailMode && msg.content.length > 20 && (
+        <AssistantCopyButton content={msg.content} />
+      )}
+    </div>
+  )
+}
+
 // 工具操作 Log：streaming 時展開即時顯示，結束後收合
 function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) {
   const [expanded, setExpanded] = useState(false)
@@ -536,7 +568,7 @@ interface ChatContentProps {
   model?: string
   resumeSessionId?: string
   initialMessage?: string
-  initialMode?: 'plan' | 'edit' | 'ask'
+  initialMode?: 'plan' | 'edit'
   ephemeral?: boolean
   onSessionIdChange?: (sessionId: string) => void
   onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => void
@@ -553,7 +585,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const hasInputRef = useRef(false) // 用 ref 避免 onChange 閉包 stale
   const [hasInput, setHasInput] = useState(false) // 只在 empty↔non-empty 時更新（控制送出按鈕外觀）
   const [isComposing, setIsComposing] = useState(false)
-  const [mode, setMode] = useState<ChatMode>(emailMode ? 'ask' : 'plan')
+  const [mode, setMode] = useState<ChatMode>('plan')
   const [images, setImages] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [showImagePicker, setShowImagePicker] = useState(false)
@@ -561,12 +593,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [projectCommands, setProjectCommands] = useState<SkillInfo[]>([])
   const [slashFilter, setSlashFilter] = useState<string | null>(null)
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0)
-  const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
+  const [modelChoice, setModelChoice] = useState<'haiku' | 'sonnet' | 'opus'>('sonnet')
   const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high'>('medium')
-  const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
   const [isApproving, setIsApproving] = useState(false)
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [autoResolvedModel, setAutoResolvedModel] = useState<string | null>(null)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -586,8 +618,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     return allSkills.filter(s => s.name.toLowerCase().includes(slashFilter.toLowerCase()))
   }, [allSkills, slashFilter])
 
-  // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
-  const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
+  const effectiveModel = modelProp || modelChoice
   const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
   const { addPanel } = useChatPanels()
 
@@ -900,26 +931,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
     let messageToSend = currentInput.trim()
 
-    // Auto 模式：先用 Haiku 分類決定模型
-    let resolvedModel: 'sonnet' | 'opus' | undefined
-    if (modelChoice === 'auto' && !modelProp) {
-      try {
-        const res = await fetch('/api/claude-chat/classify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: messageToSend }),
-        })
-        if (res.ok) {
-          const { model } = await res.json()
-          resolvedModel = model === 'opus' ? 'opus' : 'sonnet'
-        } else {
-          resolvedModel = 'sonnet'
-        }
-      } catch {
-        resolvedModel = 'sonnet'
-      }
-      setAutoResolvedModel(resolvedModel)
-    }
 
     // emailMode 且是第一則訊息：加上 Email 回覆系統指示前綴
     if (emailMode && messages.filter(m => m.role === 'user').length === 0) {
@@ -957,7 +968,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       messageToSend = emailSystemPrompt + messageToSend
     }
 
-    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel, modelChoice === 'opus' ? effortLevel : undefined)
+    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined)
     inputRef.current = ''
     hasInputRef.current = false
     if (textareaRef.current) textareaRef.current.value = ''
@@ -1140,24 +1151,30 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                   </div>
                 )}
 
-                {msg.role === 'assistant' && (
-                  <div className="group/msg relative">
-                    <div
-                      className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
-                      style={{ color: '#ffffff' }}
-                    >
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
-                    </div>
-                    {emailMode && msg.content.length > 20 && (
-                      <div className="mt-1.5">
-                        <EmailCopyButton content={msg.content} />
+                {msg.role === 'assistant' && (() => {
+                  const isStreamingMsg = isStreaming && gi === groups.length - 1
+                  if (isStreamingMsg) {
+                    return <StreamingAssistantMessage msg={msg} emailMode={!!emailMode} />
+                  }
+                  return (
+                    <div className="group/msg relative">
+                      <div
+                        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
+                        style={{ color: '#ffffff' }}
+                      >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
                       </div>
-                    )}
-                    {!emailMode && msg.content.length > 20 && (
-                      <AssistantCopyButton content={msg.content} />
-                    )}
-                  </div>
-                )}
+                      {emailMode && msg.content.length > 20 && (
+                        <div className="mt-1.5">
+                          <EmailCopyButton content={msg.content} />
+                        </div>
+                      )}
+                      {!emailMode && msg.content.length > 20 && (
+                        <AssistantCopyButton content={msg.content} />
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {msg.role === 'tool' && msg.toolName === 'Task' && (() => {
                   const isRunning = isStreaming && gi === groups.length - 1
@@ -1526,22 +1543,21 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             {!planOnly && !emailMode && (
               <>
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>
-                {(['sonnet', 'auto', 'opus'] as const).map(m => {
+                {(['sonnet', 'opus'] as const).map(m => {
                   const isActive = modelChoice === m
-                  const label = m === 'sonnet' ? 'S' : m === 'auto' ? 'A' : 'O'
+                  const label = m === 'sonnet' ? 'S' : 'O'
                   const isOpusActive = m === 'opus' && isActive
-                  const isAutoActive = m === 'auto' && isActive
                   return (
                     <button
                       key={m}
-                      onClick={() => { setModelChoice(m); if (m !== 'auto') setAutoResolvedModel(null) }}
+                      onClick={() => { setModelChoice(m); setAutoResolvedModel(null) }}
                       className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                       style={{
-                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : isAutoActive ? '#0a1f2d' : '#222222') : 'transparent',
-                        color: isActive ? (isOpusActive ? '#f5a623' : isAutoActive ? '#60a5fa' : '#ffffff') : '#666666',
-                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : isAutoActive ? '1px solid #60a5fa' : '1px solid #333333') : '1px solid transparent',
+                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : '#222222') : 'transparent',
+                        color: isActive ? (isOpusActive ? '#f5a623' : '#ffffff') : '#666666',
+                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : '1px solid #333333') : '1px solid transparent',
                       }}
-                      title={m === 'sonnet' ? 'Sonnet (default)' : m === 'auto' ? `Auto (Haiku 預分類)${autoResolvedModel ? ` → ${autoResolvedModel}` : ''}` : `Opus (effort: ${effortLevel})`}
+                      title={m === 'sonnet' ? 'Sonnet (default)' : `Opus (effort: ${effortLevel})`}
                     >
                       {label}
                     </button>
