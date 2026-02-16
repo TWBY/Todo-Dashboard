@@ -6,6 +6,12 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> }
 ) {
   const { name } = await params
+
+  // Validate skill name to prevent path traversal
+  if (name.includes('..') || name.includes('/') || name.includes('\\')) {
+    return Response.json({ error: 'Invalid skill name' }, { status: 400 })
+  }
+
   const homeDir = process.env.HOME || ''
   const skillPath = join(homeDir, '.claude', 'skills', name, 'SKILL.md')
 

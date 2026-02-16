@@ -1,11 +1,14 @@
 function SubBox({ title, subtitle, className }: { title: string; subtitle: string; className?: string }) {
+  // Replace &middot; entity with actual · character for safe rendering
+  const safeSubtitle = subtitle.replace(/&middot;/g, '·');
+
   return (
     <div
       className={`px-4 py-3 rounded-[var(--radius-medium)] border text-center ${className || ''}`}
       style={{ borderColor: 'var(--border-color)' }}
     >
       <div className="font-medium text-base">{title}</div>
-      <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }} dangerouslySetInnerHTML={{ __html: subtitle }} />
+      <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{safeSubtitle}</div>
     </div>
   );
 }

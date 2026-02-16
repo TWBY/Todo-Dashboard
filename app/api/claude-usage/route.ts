@@ -117,8 +117,14 @@ async function getValidAccessToken(): Promise<string> {
   return newCreds.accessToken;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Restrict access to localhost only
+    const host = request.headers.get('host') || '';
+    if (!host.startsWith('localhost') && !host.startsWith('127.0.0.1')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const token = await getValidAccessToken();
 
     const res = await fetch('https://api.anthropic.com/api/oauth/usage', {

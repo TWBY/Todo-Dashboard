@@ -300,7 +300,8 @@ export async function POST(request: Request) {
     // 關閉外部應用（不需要 projectId）
     if (action === 'kill-app') {
       const appName = body.appName as string;
-      if (!appName || /[;&|`$]/.test(appName)) {
+      // Whitelist validation: only allow alphanumeric, spaces, hyphens, and dots
+      if (!appName || !/^[a-zA-Z0-9\s\-\.]+$/.test(appName)) {
         return NextResponse.json({ error: 'Invalid app name' }, { status: 400 });
       }
       try {
@@ -466,6 +467,13 @@ export async function POST(request: Request) {
       const projectPath = project.devPath || project.path;
       const port = project.devPort;
       const devCmd = project.devCommand || `npx next dev -p ${port}`;
+
+      // Validate projectPath to prevent path traversal
+      const allowedBases = ['/Users/ruanbaiye/Documents/Brickverse'];
+      const resolved = path.resolve(projectPath);
+      if (!allowedBases.some(base => resolved.startsWith(base))) {
+        return NextResponse.json({ error: 'Invalid project path' }, { status: 403 });
+      }
 
       // 用 bash -c 執行：先殺掉 port 上的 process，等 1 秒再重新啟動
       const script = `
