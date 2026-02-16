@@ -34,7 +34,7 @@ Phase 5 — Release Commit（機械執行）
 11. git commit -m "release: vX.Y.Z — 一行功能摘要"（使用 production 版本號，不加前綴）
 12. 將 development 版本升級為下一個 patch-dev（例如 production 是 1.15.7，則 development 改為 1.15.8-dev）
 13. git add version.json && git commit -m "chore: bump dev version to X.Y.Z-dev"
-14. 回報新版本號和本次變更摘要`;
+14. 回報新版本號和本次變更摘要（所有中文標點使用全形，例如冒號用「：」不用「:」）`;
 
 // --- Types & Data ---
 
@@ -251,32 +251,32 @@ function TypeBadge({ type }: { type: 'mechanical' | 'ai' }) {
 function PhaseStatusIcon({ status }: { status: StepStatus }) {
   switch (status) {
     case 'done':
-      return <i className="fa-solid fa-circle-check text-sm" style={{ color: '#22c55e' }} />;
+      return <i className="fa-solid fa-circle-check text-base" style={{ color: '#22c55e' }} />;
     case 'running':
-      return <i className="fa-solid fa-circle text-sm" style={{ color: '#f59e0b' }} />;
+      return <i className="fa-solid fa-circle text-base" style={{ color: '#f59e0b' }} />;
     case 'error':
-      return <i className="fa-solid fa-circle-xmark text-sm" style={{ color: '#ef4444' }} />;
+      return <i className="fa-solid fa-circle-xmark text-base" style={{ color: '#ef4444' }} />;
     default:
-      return <i className="fa-regular fa-circle text-sm" style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />;
+      return <i className="fa-regular fa-circle text-base" style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />;
   }
 }
 
 function PhaseHeader({ phase, title, type, status }: { phase: string; title: string; type: 'mechanical' | 'ai'; status: StepStatus }) {
   return (
-    <div className="flex items-center gap-2.5 mb-3">
+    <div className="flex items-center gap-3 mb-3">
       <PhaseStatusIcon status={status} />
       <span
-        className="text-sm font-semibold px-2 py-0.5 rounded"
+        className="text-base font-semibold px-2.5 py-1 rounded"
         style={{
           backgroundColor: status === 'running' ? 'rgba(245,158,11,0.15)' : status === 'done' ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.06)',
           color: status === 'running' ? '#f59e0b' : status === 'done' ? '#22c55e' : 'var(--text-secondary)',
           transition: 'all 0.3s',
-          lineHeight: '1.6',
+          lineHeight: '1.7',
         }}
       >
         {phase}
       </span>
-      <span className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: '1.6' }}>{title}</span>
+      <span className="text-base" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>{title}</span>
       <TypeBadge type={type} />
     </div>
   );
@@ -284,21 +284,21 @@ function PhaseHeader({ phase, title, type, status }: { phase: string; title: str
 
 function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
   return (
-    <div className="flex items-start gap-2.5 py-2">
-      <span className="shrink-0 mt-0.5">
+    <div className="flex items-start gap-3 py-2.5">
+      <span className="shrink-0 mt-1">
         {status === 'done' ? (
-          <i className="fa-solid fa-check text-sm" style={{ color: '#22c55e' }} />
+          <i className="fa-solid fa-check text-base" style={{ color: '#22c55e' }} />
         ) : status === 'running' ? (
-          <i className="fa-solid fa-spinner fa-spin text-sm build-spinner-glow" style={{ color: '#f59e0b' }} />
+          <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
         ) : status === 'error' ? (
-          <i className="fa-solid fa-xmark text-sm" style={{ color: '#ef4444' }} />
+          <i className="fa-solid fa-xmark text-base" style={{ color: '#ef4444' }} />
         ) : (
-          <i className="fa-regular fa-circle text-sm" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+          <i className="fa-regular fa-circle text-base" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
         )}
       </span>
-      <div className="flex-1 min-w-0" style={{ lineHeight: '1.6' }}>
+      <div className="flex-1 min-w-0" style={{ lineHeight: '1.7' }}>
         <span
-          className="text-sm font-mono"
+          className="text-base font-mono"
           style={{
             color: status === 'done' ? '#22c55e'
               : status === 'running' ? '#f59e0b'
@@ -308,7 +308,7 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
         >
           {step.command}
         </span>
-        <span className="text-sm ml-2" style={{ color: 'var(--text-tertiary)' }}>
+        <span className="text-base ml-2.5" style={{ color: 'var(--text-tertiary)' }}>
           {step.description}
         </span>
       </div>
@@ -348,20 +348,20 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
     >
       {/* Activity indicator */}
       {isStreaming && streamingActivity && (
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex items-center gap-2 mb-2">
           {streamingActivity.status === 'tool' ? (
-            <span className="text-sm font-mono" style={{ color: '#a855f7', lineHeight: '1.6' }}>
+            <span className="text-base font-mono" style={{ color: '#a855f7', lineHeight: '1.7' }}>
               {streamingActivity.toolName}
               {streamingActivity.toolDetail && (
                 <span style={{ color: 'var(--text-tertiary)' }}> — {streamingActivity.toolDetail}</span>
               )}
             </span>
           ) : streamingActivity.status === 'thinking' ? (
-            <span className="text-sm flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.6' }}>
+            <span className="text-base flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>
               <PulsingDots color="#a855f7" /> 思考中
             </span>
           ) : streamingActivity.status === 'replying' ? (
-            <span className="text-sm flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.6' }}>
+            <span className="text-base flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>
               <PulsingDots color="#a855f7" /> 回應中
             </span>
           ) : null}
@@ -370,7 +370,7 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
 
       {/* AI messages */}
       {aiMessages.slice(-3).map(msg => (
-        <div key={msg.id} className="text-sm mb-1.5 build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+        <div key={msg.id} className="text-base mb-2 build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {msg.content.length > 500 ? msg.content.slice(-500) : msg.content}
           </ReactMarkdown>
@@ -533,20 +533,20 @@ export default function BuildPanel() {
         <div className="pb-8">
           {/* Phase 0: System startup */}
           {buildState === 'running' && currentPhase === 0 && (
-            <div className="mb-5">
-              <div className="flex items-center gap-2.5 mb-3">
-                <i className="fa-solid fa-spinner fa-spin text-sm build-spinner-glow" style={{ color: '#f59e0b' }} />
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <i className="fa-solid fa-circle text-base" style={{ color: '#f59e0b' }} />
                 <span
-                  className="text-sm font-semibold px-2 py-0.5 rounded"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', lineHeight: '1.6' }}
+                  className="text-base font-semibold px-2.5 py-1 rounded"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', lineHeight: '1.7' }}
                 >
                   Phase 0
                 </span>
-                <span className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: '1.6' }}>系統啟動</span>
+                <span className="text-base" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>系統啟動</span>
               </div>
-              <div className="pl-6 flex items-center gap-2.5 py-2">
-                <i className="fa-solid fa-spinner fa-spin text-sm build-spinner-glow" style={{ color: '#f59e0b' }} />
-                <span className="text-sm font-mono" style={{ color: '#f59e0b', lineHeight: '1.6' }}>系統準備中</span>
+              <div className="pl-7 flex items-center gap-3 py-2.5">
+                <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
+                <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>系統準備中</span>
               </div>
             </div>
           )}
@@ -557,10 +557,10 @@ export default function BuildPanel() {
             const isActiveAiPhase = isAiPhase && phaseStatus === 'running';
 
             return (
-              <div key={phase.phase} className={phaseIdx > 0 ? 'mt-5' : ''} data-phase={phaseIdx + 1}>
+              <div key={phase.phase} className={phaseIdx > 0 ? 'mt-6' : ''} data-phase={phaseIdx + 1}>
 
                 <PhaseHeader phase={phase.phase} title={phase.title} type={phase.type} status={phaseStatus} />
-                <div className="pl-6">
+                <div className="pl-7">
                   {phase.steps.map((step, stepIdx) => {
                     let stepStatus: StepStatus = 'pending';
 
@@ -601,25 +601,22 @@ export default function BuildPanel() {
           {/* Error display */}
           {error && (
             <div
-              className="mt-5 rounded-md px-4 py-3 text-sm"
-              style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', lineHeight: '1.6' }}
+              className="mt-6 rounded-md px-5 py-4 text-base"
+              style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', lineHeight: '1.7' }}
             >
-              <i className="fa-regular fa-triangle-exclamation mr-1.5" />
+              <i className="fa-regular fa-triangle-exclamation mr-2" />
               {error}
             </div>
           )}
 
           {/* Result summary */}
           {buildState === 'done' && resultSummary && (
-            <div
-              className="mt-6 rounded-lg px-6 py-5"
-              style={{ backgroundColor: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
-            >
-              <div className="text-base font-semibold mb-3" style={{ color: '#22c55e', lineHeight: '1.6' }}>
+            <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border-color)' }}>
+              <div className="text-lg font-semibold mb-4" style={{ color: '#22c55e', lineHeight: '1.7' }}>
                 <i className="fa-solid fa-circle-check mr-2" />
                 Build 完成
               </div>
-              <div className="build-ai-output" style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.75' }}>
+              <div className="build-ai-output" style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.8' }}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {resultSummary.trim()}
                 </ReactMarkdown>
