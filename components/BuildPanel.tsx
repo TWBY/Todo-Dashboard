@@ -1,0 +1,615 @@
+'use client';
+
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useClaudeChat } from '@/hooks/useClaudeChat';
+import PulsingDots from '@/components/PulsingDots';
+import type { ChatMessage, StreamingActivity } from '@/lib/claude-chat-types';
+
+// --- Build Prompt ---
+
+const BUILD_PROMPT = `直接依序執行以下打包流程，不要詢問確認：
+
+Phase 1 — 偵察（機械執行）
+1. git status 查看未提交的變更（modified + untracked）
+2. git log --oneline --grep="^release:" -1 找到上次 release commit hash
+
+Phase 2 — 智能 Commit（AI 介入）
+3. 查看 git diff + untracked files，判斷哪些文件該 commit
+4. 按功能/模組將變更智能分組成多次 commit（同一功能放一個 commit，資料更新另一個，UI 調整又一個）
+5. 逐組執行 git add <files> + git commit -m "描述"
+
+Phase 3 — 版本判斷（AI 介入）
+6. git log <上次release>..HEAD --oneline 列出所有新 commit
+7. 根據 commit 內容決定版本升級幅度（嚴格遵守 SemVer 語意）
+
+Phase 4 — Build（機械執行）
+8. npm version <判斷結果> --no-git-tag-version
+9. npm run build
+
+Phase 5 — Release Commit（機械執行）
+10. git add package.json package-lock.json
+11. git commit -m "release: vX.Y.Z — 一行功能摘要"
+12. 回報新版本號和本次變更摘要`;
+
+// --- Types & Data ---
+
+type StepStatus = 'pending' | 'running' | 'done' | 'error';
+
+interface StepData {
+  command: string;
+  description: string;
+  ai?: boolean;
+}
+
+interface PhaseData {
+  phase: string;
+  title: string;
+  type: 'mechanical' | 'ai';
+  steps: StepData[];
+  note?: string;
+}
+
+const PHASES: PhaseData[] = [
+  {
+    phase: 'Phase 1',
+    title: '偵察',
+    type: 'mechanical',
+    steps: [
+      { command: 'git status', description: '查看未提交的變更（modified + untracked）' },
+      { command: 'git log --oneline --grep="^release:" -1', description: '找到上次 release commit hash' },
+    ],
+  },
+  {
+    phase: 'Phase 2',
+    title: '智能 Commit',
+    type: 'ai',
+    steps: [
+      { command: 'git diff + untracked files', description: 'AI 查看所有變更內容', ai: true },
+      { command: '智能分組', description: '按功能/模組將變更分成多次 commit', ai: true },
+      { command: 'git add <files> + git commit', description: '逐組執行 add 和 commit', ai: true },
+    ],
+    note: 'AI 根據檔案變更的關聯性分組：同一功能的修改放一個 commit，資料更新另一個，UI 調整又一個',
+  },
+  {
+    phase: 'Phase 3',
+    title: '版本判斷',
+    type: 'ai',
+    steps: [
+      { command: 'git log <上次release>..HEAD --oneline', description: '列出所有新 commit' },
+      { command: 'SemVer 判斷', description: 'AI 根據 commit 內容決定 patch / minor / major', ai: true },
+    ],
+  },
+  {
+    phase: 'Phase 4',
+    title: 'Build',
+    type: 'mechanical',
+    steps: [
+      { command: 'npm version <patch|minor|major> --no-git-tag-version', description: '更新 package.json 版本號' },
+      { command: 'npm run build', description: '執行 Next.js 產品建置' },
+    ],
+  },
+  {
+    phase: 'Phase 5',
+    title: 'Release Commit',
+    type: 'mechanical',
+    steps: [
+      { command: 'git add package.json package-lock.json', description: '暫存版本號變更' },
+      { command: 'git commit -m "release: vX.Y.Z — 摘要"', description: '建立 release commit' },
+    ],
+  },
+];
+
+// --- Phase detection logic ---
+
+/** Detect which phase is currently active based on messages from AI */
+function detectPhase(messages: ChatMessage[]): number {
+  // Scan tool messages to figure out progress
+  let lastPhase = 0;
+
+  for (const msg of messages) {
+    if (msg.role !== 'tool' || !msg.toolName) continue;
+    const desc = (msg.toolDescription || '').toLowerCase();
+    const content = (msg.content || '').toLowerCase();
+
+    if (msg.toolName === 'Bash') {
+      // Phase 1: git status, git log --grep="release:"
+      if (desc.includes('git status') || content.includes('git status')) {
+        lastPhase = Math.max(lastPhase, 1);
+      }
+      if (desc.includes('git log') && desc.includes('release:')) {
+        lastPhase = Math.max(lastPhase, 1);
+      }
+      // Phase 2: git diff, git add, git commit (but not release commit)
+      if (desc.includes('git diff') || content.includes('git diff')) {
+        lastPhase = Math.max(lastPhase, 2);
+      }
+      if ((desc.includes('git add') || desc.includes('git commit')) && !desc.includes('release:') && !content.includes('release:')) {
+        // Distinguish Phase 2 commits from Phase 5 release commit
+        if (lastPhase < 4) {
+          lastPhase = Math.max(lastPhase, 2);
+        }
+      }
+      // Phase 3: git log <hash>..HEAD
+      if (desc.includes('..head') || content.includes('..head')) {
+        lastPhase = Math.max(lastPhase, 3);
+      }
+      // Phase 4: npm version, npm run build
+      if (desc.includes('npm version') || content.includes('npm version')) {
+        lastPhase = Math.max(lastPhase, 4);
+      }
+      if (desc.includes('npm run build') || content.includes('npm run build')) {
+        lastPhase = Math.max(lastPhase, 4);
+      }
+      // Phase 5: release commit
+      if ((desc.includes('release:') || content.includes('release:')) && (desc.includes('git commit') || content.includes('git commit'))) {
+        lastPhase = Math.max(lastPhase, 5);
+      }
+    }
+  }
+
+  return lastPhase;
+}
+
+// --- Sub-components ---
+
+function VArrow({ status }: { status: StepStatus }) {
+  const color = status === 'done' ? '#22c55e'
+    : status === 'running' ? '#f59e0b'
+    : 'var(--text-tertiary)';
+
+  return (
+    <div className="flex flex-col items-center" style={{ height: '24px', margin: '2px 0' }}>
+      <div style={{ width: 2, height: 14, backgroundColor: color, transition: 'background-color 0.3s' }} />
+      <div
+        style={{
+          width: 0, height: 0,
+          borderLeft: '4px solid transparent',
+          borderRight: '4px solid transparent',
+          borderTop: `5px solid ${color}`,
+          transition: 'border-top-color 0.3s',
+        }}
+      />
+    </div>
+  );
+}
+
+function TypeBadge({ type }: { type: 'mechanical' | 'ai' }) {
+  const config = type === 'mechanical'
+    ? { bg: 'rgba(34,197,94,0.1)', fg: '#22c55e', border: 'rgba(34,197,94,0.2)', icon: 'fa-gear', label: '機械執行' }
+    : { bg: 'rgba(168,85,247,0.1)', fg: '#a855f7', border: 'rgba(168,85,247,0.2)', icon: 'fa-sparkles', label: 'AI 介入' };
+
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1"
+      style={{ backgroundColor: config.bg, color: config.fg, border: `1px solid ${config.border}` }}
+    >
+      <i className={`fa-sharp fa-regular ${config.icon} text-xs`} />
+      {config.label}
+    </span>
+  );
+}
+
+function PhaseStatusIcon({ status }: { status: StepStatus }) {
+  switch (status) {
+    case 'done':
+      return <i className="fa-sharp fa-solid fa-circle-check text-xs" style={{ color: '#22c55e' }} />;
+    case 'running':
+      return <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs" style={{ color: '#f59e0b' }} />;
+    case 'error':
+      return <i className="fa-sharp fa-solid fa-circle-xmark text-xs" style={{ color: '#ef4444' }} />;
+    default:
+      return <i className="fa-sharp fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />;
+  }
+}
+
+function PhaseHeader({ phase, title, type, status }: { phase: string; title: string; type: 'mechanical' | 'ai'; status: StepStatus }) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <PhaseStatusIcon status={status} />
+      <span
+        className="text-xs font-semibold px-1.5 py-0.5 rounded"
+        style={{
+          backgroundColor: status === 'running' ? 'rgba(245,158,11,0.15)' : status === 'done' ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.06)',
+          color: status === 'running' ? '#f59e0b' : status === 'done' ? '#22c55e' : 'var(--text-secondary)',
+          transition: 'all 0.3s',
+        }}
+      >
+        {phase}
+      </span>
+      <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{title}</span>
+      <TypeBadge type={type} />
+    </div>
+  );
+}
+
+function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
+  const borderColor = status === 'done' ? 'rgba(34,197,94,0.4)'
+    : status === 'running' ? 'rgba(245,158,11,0.5)'
+    : status === 'error' ? 'rgba(239,68,68,0.4)'
+    : step.ai ? 'rgba(168,85,247,0.3)' : 'var(--border-color)';
+
+  const bgColor = status === 'running' ? 'rgba(245,158,11,0.05)'
+    : status === 'done' ? 'rgba(34,197,94,0.03)'
+    : 'var(--background-tertiary)';
+
+  return (
+    <div
+      className="rounded-md"
+      style={{
+        backgroundColor: bgColor,
+        border: `1px solid ${borderColor}`,
+        padding: '8px 10px',
+        transition: 'all 0.3s',
+      }}
+    >
+      <div className="flex items-start gap-1.5">
+        <span className="shrink-0 mt-0.5">
+          {status === 'done' ? (
+            <i className="fa-sharp fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
+          ) : status === 'running' ? (
+            <i className="fa-sharp fa-solid fa-spinner-third fa-spin text-xs" style={{ color: '#f59e0b' }} />
+          ) : status === 'error' ? (
+            <i className="fa-sharp fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
+          ) : (
+            <i className="fa-sharp fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+          )}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div
+            className="text-xs font-mono"
+            style={{
+              color: status === 'done' ? '#22c55e'
+                : status === 'running' ? '#f59e0b'
+                : step.ai ? '#a855f7' : 'var(--primary-blue-light)',
+              transition: 'color 0.3s',
+            }}
+          >
+            {step.command}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+            {step.description}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Inline AI output area — shows streaming messages within Phase 2/3 */
+function AiOutputArea({ messages, isStreaming, streamingActivity }: {
+  messages: ChatMessage[];
+  isStreaming: boolean;
+  streamingActivity: StreamingActivity | null;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages, streamingActivity]);
+
+  // Filter to only assistant text messages (skip tool messages for cleaner view)
+  const aiMessages = messages.filter(m => m.role === 'assistant' && m.content.trim());
+
+  if (aiMessages.length === 0 && !isStreaming) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      className="mt-2 rounded-md overflow-y-auto"
+      style={{
+        maxHeight: '160px',
+        backgroundColor: 'rgba(0,0,0,0.15)',
+        border: '1px solid rgba(168,85,247,0.2)',
+        padding: '8px 10px',
+      }}
+    >
+      {/* Activity indicator */}
+      {isStreaming && streamingActivity && (
+        <div className="flex items-center gap-2 mb-1">
+          {streamingActivity.status === 'tool' ? (
+            <span className="text-xs font-mono" style={{ color: '#a855f7' }}>
+              <i className="fa-sharp fa-regular fa-terminal mr-1" />
+              {streamingActivity.toolName}
+              {streamingActivity.toolDetail && (
+                <span style={{ color: 'var(--text-tertiary)' }}> — {streamingActivity.toolDetail}</span>
+              )}
+            </span>
+          ) : streamingActivity.status === 'thinking' ? (
+            <span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+              <PulsingDots color="#a855f7" /> 思考中
+            </span>
+          ) : streamingActivity.status === 'replying' ? (
+            <span className="text-xs flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+              <PulsingDots color="#a855f7" /> 回應中
+            </span>
+          ) : null}
+        </div>
+      )}
+
+      {/* AI messages */}
+      {aiMessages.slice(-3).map(msg => (
+        <div key={msg.id} className="text-xs mb-1 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+          {msg.content.length > 300 ? msg.content.slice(-300) + '…' : msg.content}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// --- Main Panel ---
+
+export default function BuildPanel() {
+  const { close, buildState, setBuildState, resetBuild } = useBuildPanel();
+  const {
+    messages,
+    isStreaming,
+    streamingActivity,
+    streamStatus,
+    sendMessage,
+    stopStreaming,
+    error,
+  } = useClaudeChat('dashboard', { ephemeral: true });
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentPhase, setCurrentPhase] = useState(0); // 0 = idle, 1-5 = phase number
+
+  // Detect phase from messages
+  useEffect(() => {
+    if (buildState !== 'running') return;
+    const detected = detectPhase(messages);
+    setCurrentPhase(detected);
+  }, [messages, buildState]);
+
+  // Detect completion or error
+  useEffect(() => {
+    if (buildState !== 'running') return;
+
+    if (streamStatus === 'completed' && !isStreaming) {
+      // Check if we reached Phase 5 (success) or if there was an error
+      const phase = detectPhase(messages);
+      if (phase >= 5) {
+        setBuildState('done');
+        setCurrentPhase(5);
+      } else {
+        // Stream completed but didn't finish all phases — could be partial or error
+        const hasError = messages.some(m => m.isError);
+        if (hasError) {
+          setBuildState('error');
+        } else {
+          setBuildState('done');
+        }
+      }
+    }
+
+    if (streamStatus === 'error') {
+      setBuildState('error');
+    }
+  }, [streamStatus, isStreaming, messages, buildState, setBuildState]);
+
+  // Compute phase statuses
+  const phaseStatuses: StepStatus[] = useMemo(() => {
+    return PHASES.map((_, i) => {
+      const phaseNum = i + 1;
+      if (buildState === 'idle') return 'pending';
+      if (buildState === 'error' && phaseNum === currentPhase) return 'error';
+      if (phaseNum < currentPhase) return 'done';
+      if (phaseNum === currentPhase) return 'running';
+      return 'pending';
+    });
+  }, [currentPhase, buildState]);
+
+  // When done, mark all phases done
+  const finalStatuses: StepStatus[] = useMemo(() => {
+    if (buildState === 'done') return PHASES.map(() => 'done');
+    return phaseStatuses;
+  }, [buildState, phaseStatuses]);
+
+  // Auto-scroll to active phase
+  useEffect(() => {
+    if (currentPhase > 0 && scrollRef.current) {
+      const phaseEl = scrollRef.current.querySelector(`[data-phase="${currentPhase}"]`);
+      if (phaseEl) {
+        phaseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentPhase]);
+
+  // Extract result summary from last assistant message
+  const resultSummary = useMemo(() => {
+    if (buildState !== 'done') return null;
+    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && m.content.trim());
+    return lastAssistant?.content || null;
+  }, [buildState, messages]);
+
+  const handleStartBuild = async () => {
+    setBuildState('running');
+    setCurrentPhase(1);
+    await sendMessage(BUILD_PROMPT, 'edit');
+  };
+
+  const handleReset = () => {
+    resetBuild();
+    setCurrentPhase(0);
+  };
+
+  return (
+    <div
+      className="h-full flex flex-col min-w-0"
+      style={{
+        border: '1.5px solid transparent',
+        borderRadius: 6,
+        padding: '6px 8px',
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--text-primary)' }}>
+            Build 流程
+          </h2>
+          {buildState === 'running' && (
+            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+              執行中
+            </span>
+          )}
+          {buildState === 'done' && (
+            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+              完成
+            </span>
+          )}
+          {buildState === 'error' && (
+            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+              錯誤
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {buildState === 'running' && (
+            <button
+              onClick={stopStreaming}
+              className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-red-500/20"
+              style={{ color: '#ef4444' }}
+              title="停止"
+            >
+              <i className="fa-sharp fa-solid fa-stop" />
+            </button>
+          )}
+          <button
+            onClick={close}
+            className="w-8 h-8 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-red-500/20"
+            style={{ color: 'var(--text-tertiary)' }}
+            title="關閉"
+          >
+            <i className="fa-sharp fa-regular fa-xmark" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-1">
+        <div className="pb-8">
+          {PHASES.map((phase, phaseIdx) => {
+            const phaseStatus = finalStatuses[phaseIdx];
+            const isAiPhase = phase.type === 'ai';
+            const isActiveAiPhase = isAiPhase && phaseStatus === 'running';
+
+            return (
+              <div key={phase.phase} data-phase={phaseIdx + 1}>
+                {phaseIdx > 0 && (
+                  <VArrow status={phaseIdx < currentPhase ? 'done' : phaseIdx === currentPhase ? 'running' : 'pending'} />
+                )}
+
+                <PhaseHeader phase={phase.phase} title={phase.title} type={phase.type} status={phaseStatus} />
+                <div
+                  className="rounded-md p-3"
+                  style={{
+                    border: phaseStatus === 'running' ? '1px solid rgba(245,158,11,0.3)'
+                      : phaseStatus === 'done' ? '1px solid rgba(34,197,94,0.2)'
+                      : '1px solid var(--border-color)',
+                    transition: 'border-color 0.3s',
+                  }}
+                >
+                  {phase.steps.map((step, i) => {
+                    // Compute individual step status based on phase status
+                    let stepStatus: StepStatus = 'pending';
+                    if (phaseStatus === 'done') stepStatus = 'done';
+                    else if (phaseStatus === 'running') stepStatus = 'running'; // All steps in a running phase show as running
+                    else if (phaseStatus === 'error') stepStatus = 'error';
+
+                    return (
+                      <div key={`${phaseIdx}-${i}`}>
+                        {i > 0 && <VArrow status={stepStatus === 'done' ? 'done' : 'pending'} />}
+                        <StepNode step={step} status={stepStatus} />
+                      </div>
+                    );
+                  })}
+
+                  {phase.note && phaseStatus === 'pending' && (
+                    <div
+                      className="text-xs mt-2 px-2.5 py-1.5 rounded"
+                      style={{ backgroundColor: 'rgba(168,85,247,0.06)', color: 'var(--text-tertiary)' }}
+                    >
+                      <i className="fa-sharp fa-regular fa-circle-info text-xs mr-1" style={{ color: '#a855f7' }} />
+                      {phase.note}
+                    </div>
+                  )}
+
+                  {/* Inline AI output for Phase 2/3 when active */}
+                  {isActiveAiPhase && (
+                    <AiOutputArea
+                      messages={messages}
+                      isStreaming={isStreaming}
+                      streamingActivity={streamingActivity}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Error display */}
+          {error && (
+            <div
+              className="mt-4 rounded-md px-3 py-2 text-xs"
+              style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+            >
+              <i className="fa-sharp fa-regular fa-triangle-exclamation mr-1" />
+              {error}
+            </div>
+          )}
+
+          {/* Result summary */}
+          {buildState === 'done' && resultSummary && (
+            <div
+              className="mt-4 rounded-md px-3 py-2.5"
+              style={{ backgroundColor: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
+            >
+              <div className="text-xs font-medium mb-1" style={{ color: '#22c55e' }}>
+                <i className="fa-sharp fa-solid fa-circle-check mr-1" />
+                Build 完成
+              </div>
+              <div className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}
+              </div>
+            </div>
+          )}
+
+          {/* Action button */}
+          {buildState === 'idle' && (
+            <button
+              onClick={handleStartBuild}
+              className="w-full mt-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
+              style={{
+                backgroundColor: '#332815',
+                color: '#f59e0b',
+                border: '1px solid #4a3520',
+              }}
+            >
+              <i className="fa-sharp fa-regular fa-play mr-1.5" />
+              確認開始建立
+            </button>
+          )}
+
+          {(buildState === 'done' || buildState === 'error') && (
+            <button
+              onClick={handleReset}
+              className="w-full mt-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <i className="fa-sharp fa-regular fa-rotate-right mr-1.5" />
+              重新執行
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
