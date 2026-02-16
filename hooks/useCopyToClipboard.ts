@@ -37,6 +37,8 @@ export function useCopyToClipboard(timeout = 2000) {
           'text/plain': blobText,
         }),
       ]);
+      // 補寫 writeText 確保 text/plain 層同步（修復 Dia/Chromium paste bug）
+      await navigator.clipboard.writeText(markdown);
       setCopiedValue(markdown);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setCopiedValue(null), timeout);
