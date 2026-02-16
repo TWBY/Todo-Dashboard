@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { Project } from '@/lib/types';
 import DirectoryTree from './DirectoryTree';
-import ArchitectureOverview from './ArchitectureOverview';
 import SkillArchitecture from './SkillArchitecture';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
@@ -130,11 +129,6 @@ export default function DashboardContent({
           <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
           <SkillArchitecture />
 
-          <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
-          <div>
-            <h2 className="text-lg font-semibold mb-4">架構關係</h2>
-            <ArchitectureOverview />
-          </div>
         </div>
       }
     />

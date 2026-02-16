@@ -418,52 +418,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         </h2>
         <div className="flex items-center gap-1.5 relative">
           <button
-            onClick={handleProdReload}
-            disabled={prodLoading}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 flex items-center ${
-              prodRunning && !prodLoading ? '' : 'hidden'
-            }`}
-            style={{
-              backgroundColor: '#222222',
-              color: '#cccccc',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              lineHeight: 'var(--leading-compact)',
-              letterSpacing: 'var(--tracking-ui)',
-              border: '1px solid #333333',
-            }}
-            title="重新啟動 Production (stop → start)"
-          >
-            {compact ? 'R' : 'Reload'}
-          </button>
-          {!(isProdSelf && prodRunning) && (
-          <button
-            onClick={prodRunning ? handleProdStop : handleProdStart}
-            disabled={prodLoading}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 hover:shadow-md hover:scale-[1.02] flex items-center`}
-            style={{
-              backgroundColor: prodLoading ? '#333333' : prodRunning ? '#3d1515' : '#15332a',
-              color: prodLoading ? '#999999' : prodRunning ? '#ef4444' : '#10b981',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              lineHeight: 'var(--leading-compact)',
-              letterSpacing: 'var(--tracking-ui)',
-              border: prodLoading ? '1px solid #444444' : prodRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
-            }}
-            title={prodRunning ? '停止 Production server' : '啟動 Production server'}
-          >
-            {prodLoading ? (
-              <>
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                {!compact && <span className="ml-1">{prodRunning ? '停止中' : '啟動中'}</span>}
-              </>
-            ) : compact ? (prodRunning ? 'S' : 'S') : (prodRunning ? 'Stop' : 'Start')}
-          </button>
-          )}
-          <button
             onClick={toggleBuildPanel}
             className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
             style={{
