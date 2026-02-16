@@ -4,9 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import gsap from 'gsap'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
 import { useLeftPanel } from '@/contexts/LeftPanelContext'
-import { useBuildPanel } from '@/contexts/BuildPanelContext'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
-import BuildPanel from '@/components/BuildPanel'
 
 // — M3 Easing Utilities —
 function bezierPoint(p1: number, p2: number, t: number): number {
@@ -62,7 +60,6 @@ function Divider({ onMouseDown, dividerRef }: { onMouseDown: (e: React.MouseEven
 export default function ResizableLayout({ left }: ResizableLayoutProps) {
   const { openPanels, removePanel } = useChatPanels()
   const { collapsed: leftCollapsed, toggle: toggleLeft } = useLeftPanel()
-  const { open: buildPanelOpen } = useBuildPanel()
   const [rightPct, setRightPct] = useState(DEFAULT_RIGHT_PCT)
   const isDragging = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -118,7 +115,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
     if (!panel || !expandBtn || !divider) return
 
     const content = contentRef.current
-    const noPanels = openPanels.length === 0 && !buildPanelOpen
+    const noPanels = openPanels.length === 0
 
     if (leftCollapsed) {
       gsap.set(panel, { width: 0, padding: 0, overflow: 'hidden' })
@@ -294,7 +291,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
   }, [leftCollapsed])
 
   // Chat / Build 面板增減時的佈局動畫（漸進式空間讓渡）
-  const virtualPanelCount = Math.max(openPanels.length, buildPanelOpen ? 1 : 0)
+  const virtualPanelCount = openPanels.length
   useEffect(() => {
     if (!hasMounted.current) return
     const prevCount = panelCountRef.current
@@ -438,7 +435,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
       const divider = dividerRef.current
       if (!panel || !divider) return
 
-      const noPanels = openPanels.length === 0 && !buildPanelOpen
+      const noPanels = openPanels.length === 0
 
       // 停止左側面板和 divider 的動畫
       gsap.killTweensOf([panel, divider])
@@ -561,12 +558,6 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           </div>
         ))}
 
-        {/* Build 面板 — 覆蓋在 Chat 面板之上 */}
-        {buildPanelOpen && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 10, backgroundColor: 'var(--background-primary)' }}>
-            <BuildPanel />
-          </div>
-        )}
       </div>
     </div>
   )
