@@ -183,7 +183,12 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         setProdRunning(true);
         showToast(startData.message || 'Production 已重新啟動', 'success');
         // 等 server 就緒後重整 4000 頁面
-        setTimeout(() => window.location.reload(), 1500);
+        setTimeout(() => {
+          // Hard reload：加 cache-busting query 繞過快取
+          const url = new URL(window.location.href);
+          url.searchParams.set('_t', Date.now().toString());
+          window.location.replace(url.toString());
+        }, 1500);
       } else {
         showToast(startData.error || 'Reload 失敗（start 階段）', 'error');
       }
