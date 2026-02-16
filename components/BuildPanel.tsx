@@ -477,9 +477,21 @@ export default function BuildPanel() {
         <div className="pb-8">
           {/* Phase 0: System startup */}
           {buildState === 'running' && currentPhase === 0 && (
-            <div className="flex items-center gap-2 mb-4">
-              <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
-              <span className="text-xs" style={{ color: '#f59e0b' }}>系統準備中</span>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
+                <span
+                  className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}
+                >
+                  Phase 0
+                </span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>系統啟動</span>
+              </div>
+              <div className="pl-5 flex items-center gap-2 py-1.5">
+                <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
+                <span className="text-xs font-mono" style={{ color: '#f59e0b' }}>系統準備中</span>
+              </div>
             </div>
           )}
 
