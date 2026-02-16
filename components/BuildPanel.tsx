@@ -227,53 +227,34 @@ function PhaseHeader({ phase, title, type, status }: { phase: string; title: str
 }
 
 function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
-  const borderColor = status === 'done' ? 'rgba(34,197,94,0.4)'
-    : status === 'running' ? 'rgba(245,158,11,0.5)'
-    : status === 'error' ? 'rgba(239,68,68,0.4)'
-    : step.ai ? 'rgba(168,85,247,0.3)' : 'var(--border-color)';
-
-  const bgColor = status === 'running' ? 'rgba(245,158,11,0.05)'
-    : status === 'done' ? 'rgba(34,197,94,0.03)'
-    : 'var(--background-tertiary)';
-
   return (
-    <div
-      className={`rounded-md${status === 'running' ? ' build-step-running' : ''}`}
-      style={{
-        backgroundColor: bgColor,
-        border: `1px solid ${borderColor}`,
-        padding: '8px 10px',
-        transition: 'all 0.3s',
-      }}
-    >
-      <div className="flex items-start gap-1.5">
-        <span className="shrink-0 mt-0.5">
-          {status === 'done' ? (
-            <i className="fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
-          ) : status === 'running' ? (
-            <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
-          ) : status === 'error' ? (
-            <i className="fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
-          ) : (
-            <i className="fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
-          )}
+    <div className="flex items-start gap-2 py-1.5">
+      <span className="shrink-0 mt-0.5">
+        {status === 'done' ? (
+          <i className="fa-solid fa-check text-xs" style={{ color: '#22c55e' }} />
+        ) : status === 'running' ? (
+          <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
+        ) : status === 'error' ? (
+          <i className="fa-solid fa-xmark text-xs" style={{ color: '#ef4444' }} />
+        ) : (
+          <i className="fa-regular fa-circle text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+        )}
+      </span>
+      <div className="flex-1 min-w-0">
+        <span
+          className="text-xs font-mono"
+          style={{
+            color: status === 'done' ? '#22c55e'
+              : status === 'running' ? '#f59e0b'
+              : step.ai ? '#a855f7' : 'var(--text-secondary)',
+            transition: 'color 0.3s',
+          }}
+        >
+          {step.command}
         </span>
-        <div className="flex-1 min-w-0">
-          <div
-            className="text-xs font-mono"
-            style={{
-              color: status === 'done' ? '#22c55e'
-                : status === 'running' ? '#f59e0b'
-                : step.ai ? '#a855f7' : 'var(--primary-blue-light)',
-              transition: 'color 0.3s',
-            }}
-          >
-            {step.command}
-          </div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-            {step.description}
-          </div>
-        </div>
+        <span className="text-xs ml-2" style={{ color: 'var(--text-tertiary)' }}>
+          {step.description}
+        </span>
       </div>
     </div>
   );
@@ -432,7 +413,7 @@ export default function BuildPanel() {
 
   const handleStartBuild = async () => {
     setBuildState('running');
-    setCurrentPhase(1);
+    setCurrentPhase(0);
     await sendMessage(BUILD_PROMPT, 'edit');
   };
 
@@ -494,51 +475,32 @@ export default function BuildPanel() {
       {/* Content */}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-1">
         <div className="pb-8">
+          {/* Phase 0: System startup */}
+          {buildState === 'running' && currentPhase === 0 && (
+            <div className="flex items-center gap-2 mb-4">
+              <i className="fa-solid fa-spinner fa-spin text-xs build-spinner-glow" style={{ color: '#f59e0b' }} />
+              <span className="text-xs" style={{ color: '#f59e0b' }}>系統準備中</span>
+            </div>
+          )}
+
           {PHASES.map((phase, phaseIdx) => {
             const phaseStatus = finalStatuses[phaseIdx];
             const isAiPhase = phase.type === 'ai';
             const isActiveAiPhase = isAiPhase && phaseStatus === 'running';
 
             return (
-              <div key={phase.phase} data-phase={phaseIdx + 1}>
-                {phaseIdx > 0 && (
-                  <VArrow status={phaseIdx < currentPhase ? 'done' : phaseIdx === currentPhase ? 'running' : 'pending'} />
-                )}
+              <div key={phase.phase} className={phaseIdx > 0 ? 'mt-4' : ''} data-phase={phaseIdx + 1}>
 
                 <PhaseHeader phase={phase.phase} title={phase.title} type={phase.type} status={phaseStatus} />
-                <div
-                  className={`rounded-md p-3${phaseStatus === 'running' ? ' build-phase-running' : ''}`}
-                  style={{
-                    border: phaseStatus === 'running' ? '1px solid rgba(245,158,11,0.3)'
-                      : phaseStatus === 'done' ? '1px solid rgba(34,197,94,0.2)'
-                      : '1px solid var(--border-color)',
-                    transition: 'border-color 0.3s',
-                  }}
-                >
+                <div className="pl-5">
                   {phase.steps.map((step, i) => {
-                    // Compute individual step status based on phase status
                     let stepStatus: StepStatus = 'pending';
                     if (phaseStatus === 'done') stepStatus = 'done';
-                    else if (phaseStatus === 'running') stepStatus = 'running'; // All steps in a running phase show as running
+                    else if (phaseStatus === 'running') stepStatus = 'running';
                     else if (phaseStatus === 'error') stepStatus = 'error';
 
-                    return (
-                      <div key={`${phaseIdx}-${i}`}>
-                        {i > 0 && <VArrow status={stepStatus === 'done' ? 'done' : 'pending'} />}
-                        <StepNode step={step} status={stepStatus} />
-                      </div>
-                    );
+                    return <StepNode key={`${phaseIdx}-${i}`} step={step} status={stepStatus} />;
                   })}
-
-                  {phase.note && phaseStatus === 'pending' && (
-                    <div
-                      className="text-xs mt-2 px-2.5 py-1.5 rounded"
-                      style={{ backgroundColor: 'rgba(168,85,247,0.06)', color: 'var(--text-tertiary)' }}
-                    >
-                      <i className="fa-regular fa-circle-info text-xs mr-1" style={{ color: '#a855f7' }} />
-                      {phase.note}
-                    </div>
-                  )}
 
                   {/* Inline AI output for Phase 2/3 when active */}
                   {isActiveAiPhase && (
