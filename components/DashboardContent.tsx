@@ -92,10 +92,12 @@ export default function DashboardContent({
           <ScratchPad />
           <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
           <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
-            <DevServerPanel projects={allProjects} onUpdate={updateProject} />
+            <div className="space-y-4">
+              <DevServerPanel projects={allProjects} onUpdate={updateProject} />
+              {buildState !== 'idle' && <BuildPanel />}
+            </div>
             <div className="space-y-4">
               <ClaudeUsagePanel />
-              {buildState !== 'idle' && <BuildPanel />}
               <MemoryWarningBanner />
               <ProductionMonitor />
             </div>
