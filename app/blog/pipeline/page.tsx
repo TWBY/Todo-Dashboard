@@ -25,22 +25,32 @@ const PHASE_1: NodeData = {
   description: '收斂對話中的素材，整理成結構化素材包後啟動流水線',
 };
 
-const PHASE_2: NodeData[] = [
+const PHASE_2_BEFORE: NodeData[] = [
   { command: '/blog-outline-architect', label: 'outline-architect', model: 'opus', role: '大綱架構師', description: '將靈感收斂為文章骨架' },
   { command: '/blog-pitfall-recorder', label: 'pitfall-recorder', model: 'sonnet', role: '踩坑記錄員', description: '補充技術坑點', conditional: '僅技術文' },
   { command: '/blog-beginner-reviewer', label: 'beginner-reviewer', model: 'sonnet', role: '小白審查員', description: '用初學者視角找出看不懂的地方' },
   { command: '/blog-visual-advisor', label: 'visual-advisor', model: 'sonnet', role: '視覺顧問', description: '建議圖片、表格、callout 的位置' },
   { command: '/blog-professional-editor', label: 'professional-editor', model: 'sonnet', role: '專業編輯', description: '文字潤色、用詞統一、排版規範' },
-  { command: '/blog-seo-specialist', label: 'seo-specialist', model: 'sonnet', role: 'SEO 專家', description: '標題、關鍵詞、meta description、內鏈推薦（讀取既有語意索引）' },
-  { command: '/blog-ai-quoter', label: 'ai-quoter', model: 'opus', role: 'AI 引用優化師', description: '讓文章更容易被 AI 搜尋引擎引用（讀取既有語意索引）' },
-  { command: '/blog-engagement-designer', label: 'engagement-designer', model: 'sonnet', role: '互動設計師', description: 'CTA、延伸閱讀推薦（讀取既有語意索引）' },
+];
+
+const PHASE_2_MIDPOINT: NodeData = {
+  command: '',
+  label: '提前寫入 + 語意計算',
+  role: '單向模式',
+  description: '將文章以 draft 寫入 Insforge，觸發 bge-m3 embedding 計算（skipBidirectional），讓後續 Skill 能取得 ML 推薦',
+};
+
+const PHASE_2_AFTER: NodeData[] = [
+  { command: '/blog-seo-specialist', label: 'seo-specialist', model: 'sonnet', role: 'SEO 專家', description: '標題、關鍵詞、meta description、內鏈推薦（讀取語意索引）' },
+  { command: '/blog-ai-quoter', label: 'ai-quoter', model: 'opus', role: 'AI 引用優化師', description: '讓文章更容易被 AI 搜尋引擎引用（讀取語意索引）' },
+  { command: '/blog-engagement-designer', label: 'engagement-designer', model: 'sonnet', role: '互動設計師', description: 'CTA、延伸閱讀推薦（讀取語意索引）' },
 ];
 
 const PHASE_5: NodeData = {
   command: '',
-  label: '語意索引更新',
+  label: '語意索引雙向更新',
   role: '發布後觸發',
-  description: '幫新文章做「小紙條」— 計算語意向量，找出跟它最像的 5 篇文章',
+  description: '完整雙向更新 — 讓其他文章的推薦清單也能「看見」這篇新文章',
 };
 
 const UTILITIES: NodeData[] = [
@@ -121,11 +131,11 @@ function SkillNode({ node, index, copy, isCopied }: {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-mono" style={{ color: hasCmd ? 'var(--primary-blue-light)' : 'var(--text-primary)' }}>
-                {hasCmd ? node.command : node.label}
+                {hasCmd
+                  ? <>/{copied ? <span style={{ color: '#22c55e' }}>已複製</span> : node.label}</>
+                  : node.label
+                }
               </span>
-              {copied && (
-                <span className="text-sm shrink-0" style={{ color: '#22c55e' }}>已複製！</span>
-              )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {node.conditional && (
@@ -139,10 +149,10 @@ function SkillNode({ node, index, copy, isCopied }: {
               {node.model && <ModelBadge model={node.model} />}
             </div>
           </div>
-          {node.role && !copied && (
+          {node.role && (
             <div className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{node.role}</div>
           )}
-          {node.description && !copied && (
+          {node.description && (
             <div className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{node.description}</div>
           )}
         </div>
@@ -187,8 +197,6 @@ export default function BlogPipelinePage() {
   const router = useRouter();
   const { copy, isCopied } = useCopyToClipboard(1000);
 
-  const leftCol = PHASE_2.slice(0, 4);
-  const rightCol = PHASE_2.slice(4, 8);
 
   return (
       <div
@@ -235,36 +243,68 @@ export default function BlogPipelinePage() {
 
             {/* Phase 2 */}
             <PhaseHeader phase="Phase 2" title="流水線（依序執行）" />
-            <div className="rounded-lg p-4" style={{ border: '1px solid var(--border-color)' }}>
-              {PHASE_2.map((node, i) => (
-                <div key={node.command}>
-                  {i > 0 && <VArrow dashed={node.conditional !== undefined} />}
-                  <SkillNode node={node} index={i} copy={copy} isCopied={isCopied} />
-                  {/* 小紙條提示 */}
-                  {(i === 5 || i === 6 || i === 7) && (
-                    <div className="mt-1.5 ml-6 text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.6 }}>
-                      <i className="fa-sharp fa-regular fa-bookmark mr-1" style={{ color: '#a855f7' }} />
-                      讀取小紙條（Insforge `article_similarities` 表）
-                    </div>
-                  )}
+            {/* Steps 1-5: outline → pitfall → beginner → visual → editor */}
+            {PHASE_2_BEFORE.map((node, i) => (
+              <div key={node.command}>
+                {i > 0 && <VArrow dashed={node.conditional !== undefined} />}
+                <SkillNode node={node} index={i} copy={copy} isCopied={isCopied} />
+              </div>
+            ))}
+
+            <VArrow />
+
+            {/* Midpoint: 提前寫入 + 語意計算 */}
+            <div
+              className="rounded-lg px-4 py-3"
+              style={{ border: '1px dashed rgba(168,85,247,0.4)', backgroundColor: 'rgba(168,85,247,0.04)' }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <i className="fa-sharp fa-regular fa-brain-circuit text-sm" style={{ color: '#a855f7' }} />
+                  <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>
+                    {PHASE_2_MIDPOINT.label}
+                  </span>
                 </div>
-              ))}
+                <span
+                  className="text-sm px-1.5 py-0.5 rounded shrink-0"
+                  style={{ backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)' }}
+                >
+                  bge-m3 模型
+                </span>
+              </div>
+              <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {PHASE_2_MIDPOINT.description}
+              </div>
             </div>
 
             <VArrow />
 
+            {/* Steps 6-8: seo → ai-quoter → engagement */}
+            {PHASE_2_AFTER.map((node, i) => (
+              <div key={node.command}>
+                {i > 0 && <VArrow />}
+                <SkillNode node={node} index={PHASE_2_BEFORE.length + i} copy={copy} isCopied={isCopied} />
+                <div className="mt-1.5 ml-6 text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.6 }}>
+                  <i className="fa-sharp fa-regular fa-bookmark mr-1" style={{ color: '#a855f7' }} />
+                  讀取小紙條（Insforge `article_similarities` 表）
+                </div>
+              </div>
+            ))}
+
+            <VArrow />
+
             {/* Phase 3 */}
-            <PhaseHeader phase="Phase 3" title="入庫" />
+            <PhaseHeader phase="Phase 3" title="更新入庫" />
             <div
               className="rounded-lg px-4 py-3"
               style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>Insforge DB</span>
-                <StatusBadge label="draft" color="green" />
+                <StatusBadge label="PATCH 更新" color="green" />
               </div>
               <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                以 draft 狀態寫入資料庫
+                將最終版內容 PATCH 更新到資料庫（文章已在流水線中提前寫入）
               </div>
             </div>
 
@@ -292,7 +332,7 @@ export default function BlogPipelinePage() {
 
             {/* Phase 5 */}
             <div className="mt-2">
-            <PhaseHeader phase="Phase 5" title="語意索引（發布後手動觸發）" />
+            <PhaseHeader phase="Phase 5" title="語意索引雙向更新（發布後手動觸發）" />
             <div
               className="rounded-lg px-4 py-3"
               style={{ backgroundColor: 'var(--background-tertiary)', border: '1px dashed rgba(168,85,247,0.4)' }}
@@ -322,7 +362,7 @@ export default function BlogPipelinePage() {
                   <span className="font-medium" style={{ color: '#a855f7' }}>回饋循環</span>
                 </div>
                 <div style={{ color: 'var(--text-tertiary)' }}>
-                  索引更新後，下次寫新文章時 ⑥⑦⑧ 就能「看見」這篇文章來推薦內鏈；前台讀者也會看到延伸閱讀
+                  流水線中已做單向計算（新文章知道跟誰像）；發布後按「更新此篇」做雙向更新，讓其他文章也能推薦這篇
                 </div>
               </div>
             </div>
@@ -342,7 +382,7 @@ export default function BlogPipelinePage() {
                 className="text-sm font-mono px-4 py-2.5 rounded-lg mt-3"
                 style={{ color: 'var(--text-tertiary)', border: '1px dashed var(--border-color)' }}
               >
-                ⑥⑦⑧ 優先讀取語意索引推薦相關文章，/blog-articles 作為補充（完整文章清單）
+                ⑥⑦⑧ 讀取流水線中提前計算的語意索引推薦相關文章，/blog-articles 作為補充
               </div>
             </div>
           </div>
