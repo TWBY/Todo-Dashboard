@@ -453,7 +453,9 @@ interface SkillInfo { name: string; description: string }
 export { ContentsRate }
 
 export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
-  const [input, setInput] = useState('')
+  // input 改為 uncontrolled（不觸發 React re-render），只在送出/清空時用 ref 讀取
+  const inputRef = useRef('')
+  const [hasInput, setHasInput] = useState(false) // 只在 empty↔non-empty 時更新（控制送出按鈕外觀）
   const [isComposing, setIsComposing] = useState(false)
   const [mode, setMode] = useState<ChatMode>(emailMode ? 'ask' : 'plan')
   const [images, setImages] = useState<File[]>([])
@@ -703,11 +705,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }, [addImages])
 
   const handleSend = async () => {
-    if (!input.trim() && images.length === 0) return
-    console.debug('[chat-ui] handleSend', { inputLen: input.trim().length, mode, imagesCount: images.length })
+    const currentInput = inputRef.current
+    if (!currentInput.trim() && images.length === 0) return
+    console.debug('[chat-ui] handleSend', { inputLen: currentInput.trim().length, mode, imagesCount: images.length })
     isNearBottomRef.current = true
 
-    let messageToSend = input.trim()
+    let messageToSend = currentInput.trim()
 
     // Auto 模式：先用 Haiku 分類決定模型
     let resolvedModel: 'sonnet' | 'opus' | undefined
@@ -767,7 +770,9 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     }
 
     sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, resolvedModel)
-    setInput('')
+    inputRef.current = ''
+    if (textareaRef.current) textareaRef.current.value = ''
+    setHasInput(false)
     setImages([])
     // 重置 textarea 高度
     requestAnimationFrame(adjustTextareaHeight)
@@ -1179,8 +1184,13 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         {/* Textarea */}
         <textarea
           ref={textareaRef}
-          value={input}
-          onChange={(e) => { setInput(e.target.value); adjustTextareaHeight() }}
+          defaultValue=""
+          onChange={(e) => {
+            inputRef.current = e.target.value
+            const nowHas = e.target.value.trim().length > 0
+            if (nowHas !== hasInput) setHasInput(nowHas)
+            adjustTextareaHeight()
+          }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           onCompositionStart={() => setIsComposing(true)}
@@ -1312,11 +1322,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             ) : (
               <button
                 onClick={handleSend}
-                disabled={!input.trim() && images.length === 0}
+                disabled={!hasInput && images.length === 0}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:hover:scale-100"
                 style={{
-                  backgroundColor: (input.trim() || images.length > 0) ? '#ffffff' : '#1a1a1a',
-                  color: (input.trim() || images.length > 0) ? '#000000' : '#444444',
+                  backgroundColor: (hasInput || images.length > 0) ? '#ffffff' : '#1a1a1a',
+                  color: (hasInput || images.length > 0) ? '#000000' : '#444444',
                   fontSize: '16px',
                 }}
                 title="傳送"
