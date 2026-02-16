@@ -13,7 +13,7 @@ export interface ChatPanelState {
   emailMode?: boolean
   scratchItemId?: string
   initialMessage?: string
-  initialMode?: 'plan' | 'edit' | 'ask'
+  initialMode?: 'plan' | 'edit'
   model?: string
   ephemeral?: boolean
 }
@@ -23,7 +23,7 @@ interface AddPanelOpts {
   emailMode?: boolean
   scratchItemId?: string
   initialMessage?: string
-  initialMode?: 'plan' | 'edit' | 'ask'
+  initialMode?: 'plan' | 'edit'
   model?: string
   ephemeral?: boolean
 }

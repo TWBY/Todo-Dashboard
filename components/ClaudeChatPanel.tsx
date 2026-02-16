@@ -15,7 +15,7 @@ interface ClaudeChatPanelProps {
   model?: string
   sessionId?: string
   initialMessage?: string
-  initialMode?: 'plan' | 'edit' | 'ask'
+  initialMode?: 'plan' | 'edit'
   ephemeral?: boolean
   theme?: 'default' | 'green'
   onClose?: () => void
