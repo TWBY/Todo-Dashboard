@@ -97,6 +97,7 @@ button:focus-visible {
 /* 暗色調表單元素 */
 input, select, textarea {
   color: var(--text-primary);
+  font-family: inherit;
 }
 
 input::placeholder, textarea::placeholder {
