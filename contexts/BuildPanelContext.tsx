@@ -5,13 +5,13 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 export type BuildState = 'idle' | 'running' | 'done' | 'error';
 
 interface BuildPanelContextValue {
-  open: boolean; // deprecated, kept for backward compat
-  toggle: () => void; // now triggers build start
+  open: boolean;
+  toggle: () => void;
   close: () => void;
   buildState: BuildState;
   setBuildState: (state: BuildState) => void;
   resetBuild: () => void;
-  startBuild: () => void; // new: explicitly start build
+  startBuild: () => void;
 }
 
 const BuildPanelContext = createContext<BuildPanelContextValue>({
@@ -25,31 +25,32 @@ const BuildPanelContext = createContext<BuildPanelContextValue>({
 });
 
 export function BuildPanelProvider({ children }: { children: ReactNode }) {
+  const [panelOpen, setPanelOpen] = useState(false);
   const [buildState, setBuildState] = useState<BuildState>('idle');
 
-  // Start build (show panel + set running state)
+  // Toggle panel open/close (does NOT start build)
+  const toggle = useCallback(() => {
+    setPanelOpen(prev => !prev);
+  }, []);
+
+  // Close panel + reset build state
+  const close = useCallback(() => {
+    setPanelOpen(false);
+    setBuildState('idle');
+  }, []);
+
+  // Start build (set running state, panel stays open)
   const startBuild = useCallback(() => {
     setBuildState('running');
   }, []);
 
-  // Toggle now means: start build if idle, otherwise do nothing
-  const toggle = useCallback(() => {
-    if (buildState === 'idle') {
-      startBuild();
-    }
-  }, [buildState, startBuild]);
-
-  // Close means: reset to idle (hide panel)
-  const close = useCallback(() => setBuildState('idle'), []);
-
-  // Reset means: go back to idle
-  const resetBuild = useCallback(() => setBuildState('idle'), []);
-
-  // For backward compat: compute "open" from buildState
-  const open = buildState !== 'idle';
+  // Reset build state to idle (panel stays open)
+  const resetBuild = useCallback(() => {
+    setBuildState('idle');
+  }, []);
 
   return (
-    <BuildPanelContext.Provider value={{ open, toggle, close, buildState, setBuildState, resetBuild, startBuild }}>
+    <BuildPanelContext.Provider value={{ open: panelOpen, toggle, close, buildState, setBuildState, resetBuild, startBuild }}>
       {children}
     </BuildPanelContext.Provider>
   );
