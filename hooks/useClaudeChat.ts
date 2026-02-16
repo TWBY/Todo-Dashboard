@@ -56,8 +56,8 @@ interface UseClaudeChatReturn {
   streamingActivity: StreamingActivity | null
   sessionId: string | null
   sessionMeta: SessionMeta
-  pendingQuestions: { id: string; questions: UserQuestion[] } | null
-  pendingPlanApproval: { id: string } | null
+  pendingQuestions: PendingQuestionsState | null
+  pendingPlanApproval: PendingPlanApprovalState | null
   sendMessage: (message: string, mode?: ChatMode, images?: File[], modelOverride?: 'sonnet' | 'opus') => Promise<void>
   answerQuestion: (answers: Record<string, string>) => void
   approvePlan: (approved: boolean, feedback?: string) => void
@@ -65,12 +65,14 @@ interface UseClaudeChatReturn {
   resetStreamStatus: () => void
   clearChat: () => void
   resumeSession: (sessionId: string) => Promise<void>
+  isLoadingHistory: boolean
   error: string | null
   clearError: () => void
 }
 
 interface UseClaudeChatConfig {
   model?: string
+  ephemeral?: boolean
 }
 
 // --- 串流事件處理器（主迴圈 & 重試共用） ---
@@ -79,11 +81,22 @@ interface StreamContext {
   currentAssistantId: string | null
   exitPlanModeHandled: boolean
   resultSuccess: boolean
-  shouldStopReading: boolean
   hasPendingApproval: boolean
   hasPendingQuestions: boolean
   retryWithFreshSession: boolean
   newSessionIdForHistory: string | null
+}
+
+// canUseTool 的 toolUseID（從 tool_use block 的 id 取得）
+interface PendingQuestionsState {
+  id: string
+  toolUseID: string
+  questions: UserQuestion[]
+}
+
+interface PendingPlanApprovalState {
+  id: string
+  toolUseID: string
 }
 
 interface StreamActions {
@@ -92,12 +105,13 @@ interface StreamActions {
   setSessionId: (id: string | null) => void
   setSessionMeta: React.Dispatch<React.SetStateAction<SessionMeta>>
   setError: React.Dispatch<React.SetStateAction<string | null>>
-  setPendingQuestions: React.Dispatch<React.SetStateAction<{ id: string; questions: UserQuestion[] } | null>>
-  setPendingPlanApproval: React.Dispatch<React.SetStateAction<{ id: string } | null>>
+  setPendingQuestions: React.Dispatch<React.SetStateAction<PendingQuestionsState | null>>
+  setPendingPlanApproval: React.Dispatch<React.SetStateAction<PendingPlanApprovalState | null>>
   setStreamingActivity: React.Dispatch<React.SetStateAction<StreamingActivity | null>>
   projectId: string
   message: string
   currentSessionId: string | null
+  ephemeral: boolean
 }
 
 function processStreamEvent(
@@ -111,7 +125,7 @@ function processStreamEvent(
     actions.setSessionId(event.session_id as string)
     actions.setStreamingActivity({ status: 'thinking' })
     ctx.newSessionIdForHistory = event.session_id as string
-    if (!actions.currentSessionId) {
+    if (!actions.currentSessionId && !actions.ephemeral) {
       fetch('/api/claude-chat/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,6 +151,51 @@ function processStreamEvent(
       timestamp: Date.now(),
       isError: true,
     }])
+    return
+  }
+
+  // 逐字串流事件（SDK includePartialMessages: true）
+  if (event.type === 'stream') {
+    const streamData = (event as { event: Record<string, unknown> }).event
+    const eventType = streamData.type as string
+
+    if (eventType === 'content_block_delta') {
+      const delta = streamData.delta as { type: string; text?: string } | undefined
+      if (delta?.type === 'text_delta' && delta.text) {
+        actions.setStreamingActivity({ status: 'replying' })
+        if (!ctx.currentAssistantId) {
+          ctx.currentAssistantId = crypto.randomUUID()
+          const aid = ctx.currentAssistantId
+          actions.setMessages(prev => [...prev, {
+            id: aid,
+            role: 'assistant',
+            content: delta.text!,
+            timestamp: Date.now(),
+          }])
+        } else {
+          const aid = ctx.currentAssistantId
+          actions.setMessages(prev => prev.map(m =>
+            m.id === aid ? { ...m, content: m.content + delta.text! } : m
+          ))
+        }
+      }
+    } else if (eventType === 'content_block_start') {
+      const contentBlock = streamData.content_block as { type: string; name?: string; id?: string } | undefined
+      if (contentBlock?.type === 'tool_use' && contentBlock.name) {
+        // 工具開始 — 提早顯示工具名稱
+        actions.setStreamingActivity({ status: 'tool', toolName: contentBlock.name })
+        ctx.currentAssistantId = null // 結束文字累積
+      } else if (contentBlock?.type === 'text') {
+        actions.setStreamingActivity({ status: 'replying' })
+      }
+    }
+    return
+  }
+
+  // 工具統計事件
+  if (event.type === 'tool_stats') {
+    const stats = event.stats as Record<string, { count: number; totalDurationMs: number }>
+    actions.setSessionMeta(prev => ({ ...prev, toolStats: stats }))
     return
   }
 
@@ -174,9 +233,10 @@ function processStreamEvent(
             timestamp: Date.now(),
           }])
         } else {
+          // 逐字串流已建立 message → 用完整文字覆蓋（而非 append）
           const aid = ctx.currentAssistantId
           actions.setMessages(prev => prev.map(m =>
-            m.id === aid ? { ...m, content: m.content + block.text } : m
+            m.id === aid ? { ...m, content: block.text } : m
           ))
         }
       } else if (block.type === 'tool_use') {
@@ -202,13 +262,14 @@ function processStreamEvent(
           return
         }
 
-        // AskUserQuestion
+        // AskUserQuestion — canUseTool 阻塞中，SSE 不斷開
         if (block.name === 'AskUserQuestion') {
           const qInput = block.input as { questions?: UserQuestion[] }
           if (qInput.questions) {
             const qId = crypto.randomUUID()
-            actions.setPendingQuestions({ id: qId, questions: qInput.questions })
+            actions.setPendingQuestions({ id: qId, toolUseID: block.id, questions: qInput.questions })
             ctx.hasPendingQuestions = true
+            actions.setStreamingActivity(null) // 清除 thinking/tool 狀態
             actions.setMessages(prev => [...prev, {
               id: qId,
               role: 'tool',
@@ -219,16 +280,16 @@ function processStreamEvent(
             }])
           }
           ctx.currentAssistantId = null
-          ctx.shouldStopReading = true
           return
         }
 
-        // ExitPlanMode
+        // ExitPlanMode — canUseTool 阻塞中，SSE 不斷開
         if (block.name === 'ExitPlanMode') {
           ctx.exitPlanModeHandled = true
           ctx.hasPendingApproval = true
           const pId = crypto.randomUUID()
-          actions.setPendingPlanApproval({ id: pId })
+          actions.setPendingPlanApproval({ id: pId, toolUseID: block.id })
+          actions.setStreamingActivity(null) // 清除 thinking/tool 狀態
           actions.setMessages(prev => [...prev, {
             id: pId,
             role: 'tool',
@@ -314,10 +375,6 @@ async function readSSEStream(
   let buffer = ''
 
   while (true) {
-    if (ctx.shouldStopReading) {
-      reader.cancel()
-      break
-    }
     const { done, value } = await reader.read()
     if (done) break
 
@@ -327,7 +384,6 @@ async function readSSEStream(
     buffer = lines.pop() || ''
 
     for (const line of lines) {
-      if (ctx.shouldStopReading) break
       if (!line.startsWith('data: ')) continue
       const data = line.slice(6).trim()
       if (data === '[DONE]') continue
@@ -355,9 +411,10 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     _setSessionId(id)
   }, [])
   const [error, setError] = useState<string | null>(null)
-  const [pendingQuestions, setPendingQuestions] = useState<{ id: string; questions: UserQuestion[] } | null>(null)
-  const [pendingPlanApproval, setPendingPlanApproval] = useState<{ id: string } | null>(null)
+  const [pendingQuestions, setPendingQuestions] = useState<PendingQuestionsState | null>(null)
+  const [pendingPlanApproval, setPendingPlanApproval] = useState<PendingPlanApprovalState | null>(null)
   const [streamingActivity, setStreamingActivity] = useState<StreamingActivity | null>(null)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [sessionMeta, setSessionMeta] = useState<SessionMeta>({
     model: null,
     permissionMode: 'acceptEdits',
@@ -460,7 +517,6 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       currentAssistantId: null,
       exitPlanModeHandled: false,
       resultSuccess: false,
-      shouldStopReading: false,
       hasPendingApproval: false,
       hasPendingQuestions: false,
       retryWithFreshSession: false,
@@ -479,6 +535,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       projectId,
       message,
       currentSessionId,
+      ephemeral: !!config?.ephemeral,
     }
 
     try {
@@ -513,7 +570,6 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
         console.debug('[chat] retrying with fresh session')
         // 重置 context 給重試用
         ctx.retryWithFreshSession = false
-        ctx.shouldStopReading = false
 
         const retryRes = await fetch('/api/claude-chat', {
           method: 'POST',
@@ -530,20 +586,6 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
         }
       }
 
-      // Plan mode fallback
-      if (currentModeRef.current === 'plan' && ctx.resultSuccess && !ctx.exitPlanModeHandled) {
-        ctx.hasPendingApproval = true
-        const pId = crypto.randomUUID()
-        setPendingPlanApproval({ id: pId })
-        setMessages(prev => [...prev, {
-          id: pId,
-          role: 'tool',
-          content: '',
-          toolName: 'ExitPlanMode',
-          planApproval: { pending: true },
-          timestamp: Date.now(),
-        }])
-      }
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('[chat] sendMessage failed:', err)
@@ -553,16 +595,16 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       // 根據串流結果原子化設定最終狀態
       const finalStatus: StreamStatus = (ctx.hasPendingApproval || ctx.hasPendingQuestions)
         ? 'idle'
-        : (ctx.resultSuccess || ctx.currentAssistantId)
+        : ctx.resultSuccess
           ? 'completed'
           : 'idle'
       console.debug('[chat] stream ended', { resultSuccess: ctx.resultSuccess, finalStatus, hasPendingApproval: ctx.hasPendingApproval })
       setStreamStatus(finalStatus)
       setStreamingActivity(null)
 
-      // 更新歷史紀錄
+      // 更新歷史紀錄（ephemeral 模式跳過）
       const sid = sessionIdRef.current || ctx.newSessionIdForHistory
-      if (sid) {
+      if (sid && !config?.ephemeral) {
         setMessages(prev => {
           const userMsgCount = prev.filter(m => m.role === 'user').length
           fetch('/api/claude-chat/history', {
@@ -597,24 +639,84 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     }
   }, [projectId, config?.model, setSessionId])
 
-  // 回答 AskUserQuestion
+  // 回答 AskUserQuestion — POST 到 /answer endpoint，不開新 SSE
   const answerQuestion = useCallback((answers: Record<string, string>) => {
+    const pending = pendingQuestions
     setPendingQuestions(null)
+    if (!pending) return
+
+    const sid = sessionIdRef.current
+    if (!sid) return
+
+    // 在 message 中顯示用戶的回答
     const answerText = Object.entries(answers)
       .map(([q, a]) => `${q}: ${a}`)
       .join('\n')
-    sendMessage(answerText)
-  }, [sendMessage])
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: answerText,
+      timestamp: Date.now(),
+    }])
+    setStreamingActivity({ status: 'thinking' })
 
-  // 審批計畫
+    fetch('/api/claude-chat/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sid,
+        toolUseID: pending.toolUseID,
+        type: 'question',
+        answers,
+      }),
+    }).catch(err => {
+      console.error('[chat] answerQuestion POST failed:', err)
+      setError('回答傳送失敗，請重試')
+    })
+  }, [pendingQuestions])
+
+  // 審批計畫 — POST 到 /answer endpoint，不開新 SSE
   const approvePlan = useCallback((approved: boolean, feedback?: string) => {
-    setPendingPlanApproval(null)
+    const pending = pendingPlanApproval
     if (approved) {
-      sendMessage('yes, 請開始執行計畫', 'edit')
-    } else if (feedback) {
-      sendMessage(feedback, 'plan')
+      setMessages(prev => prev.map(m =>
+        m.planApproval?.pending ? { ...m, planApproval: { pending: false, approved: true } } : m
+      ))
+    } else {
+      setMessages(prev => prev.map(m =>
+        m.planApproval?.pending ? { ...m, planApproval: { pending: false, approved: false } } : m
+      ))
     }
-  }, [sendMessage])
+    setPendingPlanApproval(null)
+    if (!pending) return
+
+    const sid = sessionIdRef.current
+    if (!sid) return
+
+    // 顯示用戶的回應
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: approved ? '✓ 批准計畫' : (feedback || '拒絕計畫'),
+      timestamp: Date.now(),
+    }])
+    setStreamingActivity({ status: 'thinking' })
+
+    fetch('/api/claude-chat/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sid,
+        toolUseID: pending.toolUseID,
+        type: 'planApproval',
+        approved,
+        feedback: feedback || undefined,
+      }),
+    }).catch(err => {
+      console.error('[chat] approvePlan POST failed:', err)
+      setError('計畫審批傳送失敗，請重試')
+    })
+  }, [pendingPlanApproval])
 
   const clearChat = useCallback(() => {
     console.debug('[chat] clearChat called', { hasAbortRef: !!abortRef.current })
@@ -639,6 +741,8 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setPendingPlanApproval(null)
     setSessionMeta({ model: null, permissionMode: 'acceptEdits', totalInputTokens: 0, totalOutputTokens: 0 })
     setStreamingActivity(null)
+    setIsLoadingHistory(true)
+    setMessages([])
     setSessionId(targetSessionId)
 
     // 從持久化儲存載入歷史訊息
@@ -657,15 +761,18 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
           return
         }
       }
+      setMessages([])
+      setTodos([])
     } catch (err) {
       console.error('[chat] resumeSession load failed:', err)
+      setMessages([])
+      setTodos([])
+    } finally {
+      setIsLoadingHistory(false)
     }
-
-    setMessages([])
-    setTodos([])
   }, [projectId, setSessionId])
 
   const clearError = useCallback(() => setError(null), [])
 
-  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, error, clearError }
+  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError }
 }

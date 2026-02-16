@@ -1,6 +1,7 @@
-import { spawn, type ChildProcess } from 'child_process'
 import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
 import type { Project } from '@/lib/types'
+import { createSDKQuery } from '@/lib/claude-session-manager'
+import type { SDKMessage } from '@/lib/claude-session-manager'
 
 export const maxDuration = 300
 
@@ -32,160 +33,155 @@ export async function POST(request: Request) {
     const projectPath = project.devPath || project.path
     const newSessionId = sessionId || crypto.randomUUID()
 
-    const args = [
-      '--print',
-      '--output-format', 'stream-json',
-      '--verbose',
-      '--add-dir', projectPath,
-      '--permission-mode', mode === 'edit' ? 'acceptEdits' : 'plan',
-    ]
-
-    if (model === 'haiku') {
-      args.push('--model', 'haiku')
-    } else if (model === 'opus') {
-      args.push('--model', 'opus')
-    }
-
-    // 若有 sessionId 代表續接對話，否則建立新 session
-    if (sessionId) {
-      args.push('--resume', sessionId)
-    } else {
-      args.push('--session-id', newSessionId)
-    }
-
-    args.push('-p', message)
-
-    const claudePath = '/Users/ruanbaiye/.local/bin/claude'
-    // 清除 Claude Code 環境變數，避免嵌套檢測導致子進程阻塞
-    // 同時移除 NODE_ENV（dev server 設為 development，但 next build 需要自行設定 production）
-    const cleanEnv: Record<string, string> = {}
-    for (const [key, value] of Object.entries(process.env)) {
-      if (value && !key.startsWith('CLAUDE') && !key.startsWith('CURSOR_SPAWN') && key !== 'NODE_ENV') {
-        cleanEnv[key] = value
-      }
-    }
-    cleanEnv.PATH = `${process.env.HOME}/.local/bin:${cleanEnv.PATH || ''}`
-    cleanEnv.HOME = process.env.HOME || ''
-
-    console.log('[claude-chat] spawning CLI', { sessionId: sessionId || 'new:' + newSessionId, projectId, argsLen: args.length })
-
-    const child: ChildProcess = spawn(claudePath, args, {
-      cwd: projectPath,
-      env: cleanEnv as NodeJS.ProcessEnv,
-      stdio: ['ignore', 'pipe', 'pipe'],
+    console.log('[claude-chat] creating SDK query', {
+      sessionId: sessionId || 'new:' + newSessionId,
+      projectId,
+      mode,
+      model,
     })
 
-    console.log('[claude-chat] child spawned', { pid: child.pid })
+    const { queryInstance, abortController, toolStats } = createSDKQuery(
+      projectPath,
+      message,
+      mode || 'plan',
+      model,
+      sessionId,                          // resume existing session
+      sessionId ? undefined : newSessionId, // new session ID
+    )
 
-    // 監聽 request abort（客戶端斷開連線）
+    // 監聽 client 斷開連線
     request.signal.addEventListener('abort', () => {
-      console.log('[claude-chat] ⚠️ request.signal aborted — client disconnected', { pid: child.pid })
+      console.log('[claude-chat] request.signal aborted — client disconnected')
+      abortController.abort()
     })
-
-    // 用 line buffer 處理跨 chunk 的 NDJSON
-    let lineBuffer = ''
-    let hasStdout = false
-    let hasResult = false  // 追蹤是否收到有意義的回應（assistant 或 result 事件）
 
     const stream = new ReadableStream({
-      start(controller) {
+      async start(controller) {
         const encoder = new TextEncoder()
 
-        // 先送 sessionId 給前端
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'session', session_id: newSessionId })}\n\n`))
-
-        child.stdout?.on('data', (chunk: Buffer) => {
-          hasStdout = true
-          lineBuffer += chunk.toString()
-          const lines = lineBuffer.split('\n')
-          // 最後一段可能不完整，保留
-          lineBuffer = lines.pop() || ''
-
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (trimmed) {
-              controller.enqueue(encoder.encode(`data: ${trimmed}\n\n`))
-              // 追蹤是否收到有意義的回應事件
-              if (!hasResult) {
-                try {
-                  const parsed = JSON.parse(trimmed)
-                  if (parsed.type === 'assistant' || parsed.type === 'result') {
-                    hasResult = true
-                  }
-                } catch { /* not valid JSON, ignore */ }
-              }
-            }
-          }
-        })
-
-        let stderrBuffer = ''
-        child.stderr?.on('data', (chunk: Buffer) => {
-          const text = chunk.toString().trim()
-          if (text) {
-            stderrBuffer += text + '\n'
-            // 不即時轉發 stderr — verbose 模式會產生大量非錯誤輸出
-            // 真正的錯誤在 close 事件中處理（結合 exit code + hasStdout 判斷）
-          }
-        })
-
-        child.on('close', (code) => {
-          const safeEnqueue = (data: Uint8Array) => {
-            try {
-              controller.enqueue(data)
-            } catch (err) {
-              // Controller already closed, ignore
-            }
-          }
-
-          // DEBUG: 總是記錄 stderr（包含成功情況，幫助診斷）
-          if (stderrBuffer.trim()) {
-            console.log(`[claude-chat] stderr output (code: ${code}):`, stderrBuffer.trim().slice(0, 500))
-          }
-
-          // 處理 buffer 中剩餘的資料
-          if (lineBuffer.trim()) {
-            safeEnqueue(encoder.encode(`data: ${lineBuffer.trim()}\n\n`))
-          }
-
-          // 錯誤偵測：分三種情境
-          if (!hasStdout) {
-            // 情境 1：完全沒有 stdout
-            const exitMsg = code !== 0
-              ? `Claude CLI 異常退出 (exit code: ${code})${stderrBuffer ? '\n' + stderrBuffer.trim() : ''}`
-              : 'Claude CLI 未產生任何回應，可能是記憶體不足或進程被系統終止。'
-            console.error(`[claude-chat] ${exitMsg}`)
-            safeEnqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: exitMsg })}\n\n`))
-          } else if (!hasResult) {
-            // 情境 2：有 stdout（如 init 事件）但沒有實際回應
-            const exitMsg = `Claude CLI 已啟動但未產生回應 (exit code: ${code ?? 'null'})。可能是 cold-start 超時或內部錯誤。`
-            console.error(`[claude-chat] ${exitMsg}`)
-            safeEnqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: exitMsg })}\n\n`))
-          } else if (code !== 0 && code !== null) {
-            // 情境 3：有回應但 exit code 非 0
-            const lastStderr = stderrBuffer.trim().split('\n').slice(-3).join('\n')
-            if (lastStderr) {
-              console.error(`[claude-chat] CLI exited with code ${code}, stderr: ${lastStderr}`)
-              safeEnqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: `CLI 異常退出 (code: ${code}): ${lastStderr}` })}\n\n`))
-            }
-          }
-
-          safeEnqueue(encoder.encode('data: [DONE]\n\n'))
+        const safeEnqueue = (data: string) => {
           try {
-            controller.close()
+            controller.enqueue(encoder.encode(data))
           } catch {
-            // Already closed
+            // Controller already closed
           }
-        })
+        }
 
-        child.on('error', (err: Error) => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`))
+        // 先送 sessionId 給前端（與 CLI 版本一致）
+        safeEnqueue(`data: ${JSON.stringify({ type: 'session', session_id: newSessionId })}\n\n`)
+
+        let hasResult = false
+
+        try {
+          for await (const msg of queryInstance) {
+            const sdkMsg = msg as SDKMessage & Record<string, unknown>
+
+            // system init — 轉發模型資訊
+            if (sdkMsg.type === 'system' && 'subtype' in sdkMsg && sdkMsg.subtype === 'init') {
+              safeEnqueue(`data: ${JSON.stringify({
+                type: 'system',
+                subtype: 'init',
+                session_id: (sdkMsg as { session_id: string }).session_id,
+                model: (sdkMsg as { model: string }).model,
+                tools: (sdkMsg as { tools: string[] }).tools,
+                cwd: (sdkMsg as { cwd: string }).cwd,
+              })}\n\n`)
+              continue
+            }
+
+            // assistant — 直接轉發（SDK 的 BetaMessage 格式與 CLI stream-json 一致）
+            if (sdkMsg.type === 'assistant') {
+              hasResult = true
+              const aMsg = sdkMsg as {
+                type: 'assistant'
+                message: { role: string; content: unknown[]; usage: unknown }
+                session_id: string
+              }
+              safeEnqueue(`data: ${JSON.stringify({
+                type: 'assistant',
+                message: aMsg.message,
+                session_id: aMsg.session_id,
+              })}\n\n`)
+              continue
+            }
+
+            // result — 映射欄位
+            if (sdkMsg.type === 'result') {
+              hasResult = true
+              const rMsg = sdkMsg as {
+                type: 'result'
+                subtype: string
+                is_error: boolean
+                result?: string
+                duration_ms: number
+                total_cost_usd: number
+                session_id: string
+                errors?: string[]
+              }
+              safeEnqueue(`data: ${JSON.stringify({
+                type: 'result',
+                subtype: rMsg.subtype === 'success' ? 'success' : rMsg.subtype,
+                is_error: rMsg.is_error,
+                result: rMsg.result || '',
+                duration_ms: rMsg.duration_ms,
+                total_cost_usd: rMsg.total_cost_usd,
+                session_id: rMsg.session_id,
+                errors: rMsg.errors,
+              })}\n\n`)
+              continue
+            }
+
+            // stream_event — 逐字串流（includePartialMessages: true）
+            if (sdkMsg.type === 'stream_event') {
+              const streamMsg = sdkMsg as {
+                type: 'stream_event'
+                event: Record<string, unknown>
+                session_id: string
+              }
+              safeEnqueue(`data: ${JSON.stringify({
+                type: 'stream',
+                event: streamMsg.event,
+              })}\n\n`)
+              continue
+            }
+
+            // 其他事件類型（user replays, status, tool_progress 等）跳過
+          }
+        } catch (err) {
+          if (err instanceof Error && err.name !== 'AbortError') {
+            console.error('[claude-chat] SDK query error:', err)
+            safeEnqueue(`data: ${JSON.stringify({
+              type: 'error',
+              message: err.message,
+            })}\n\n`)
+          }
+        }
+
+        if (!hasResult) {
+          safeEnqueue(`data: ${JSON.stringify({
+            type: 'error',
+            message: 'SDK query 未產生任何回應',
+          })}\n\n`)
+        }
+
+        // 工具統計
+        if (Object.keys(toolStats).length > 0) {
+          safeEnqueue(`data: ${JSON.stringify({
+            type: 'tool_stats',
+            stats: toolStats,
+          })}\n\n`)
+        }
+
+        safeEnqueue('data: [DONE]\n\n')
+        try {
           controller.close()
-        })
+        } catch {
+          // Already closed
+        }
       },
       cancel() {
-        console.log('[claude-chat] ⚠️ ReadableStream cancel() called — killing child process', { pid: child.pid })
-        console.trace('[claude-chat] cancel() call stack')
-        child.kill()
+        console.log('[claude-chat] ReadableStream cancel() — aborting SDK query')
+        abortController.abort()
       },
     })
 

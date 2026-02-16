@@ -69,7 +69,7 @@ export interface ChatMessage {
   images?: string[] // Object URLs for preview (user messages)
   todos?: TodoItem[] // TodoWrite tool data
   questions?: UserQuestion[] // AskUserQuestion tool data
-  planApproval?: { pending: boolean } // ExitPlanMode tool data
+  planApproval?: { pending: boolean; approved?: boolean } // ExitPlanMode tool data
   isError?: boolean // Error message from backend
   timestamp: number
 }
@@ -98,4 +98,5 @@ export interface SessionMeta {
   totalInputTokens: number
   totalOutputTokens: number
   lastDurationMs?: number
+  toolStats?: Record<string, { count: number; totalDurationMs: number }>
 }
