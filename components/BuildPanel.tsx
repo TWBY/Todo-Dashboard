@@ -478,39 +478,35 @@ export default function BuildPanel() {
     setCurrentPhase(0);
   };
 
+  // Auto-start build when buildState becomes 'running' for the first time
+  useEffect(() => {
+    if (buildState === 'running' && messages.length === 0) {
+      handleStartBuild();
+    }
+  }, [buildState]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Don't render if idle (hidden by parent)
+  if (buildState === 'idle') return null;
+
   return (
     <div
-      className="h-full flex flex-col min-w-0"
+      className="rounded-md overflow-hidden"
       style={{
-        border: '1.5px solid transparent',
-        borderRadius: 6,
-        padding: '6px 8px',
+        border: '1px solid var(--border-color)',
+        backgroundColor: 'rgba(0,0,0,0.2)',
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between py-4 mb-6 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
-        <button
-          onClick={close}
-          className="w-9 h-9 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
-          style={{ color: 'var(--text-secondary)' }}
-          title="返回"
-        >
-          <i className="fa-solid fa-arrow-left" />
-        </button>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {buildState === 'idle' && (
-            <button
-              onClick={handleStartBuild}
-              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:brightness-110"
-              style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
-            >
-              開始建立
-            </button>
-          )}
+      <div className="flex items-center justify-between px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <div className="flex items-center gap-2">
+          <i className="fa-solid fa-hammer text-xs" style={{ color: '#f59e0b' }} />
+          <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Build Status</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           {buildState === 'running' && (
             <button
               onClick={() => { stopStreaming(); setBuildState('error'); }}
-              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20"
+              className="h-7 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-red-500/20"
               style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
             >
               停止
@@ -519,18 +515,30 @@ export default function BuildPanel() {
           {(buildState === 'done' || buildState === 'error') && (
             <button
               onClick={handleReset}
-              className="h-9 px-4 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-white/10"
+              className="h-7 px-3 rounded-md text-xs font-semibold transition-colors cursor-pointer hover:bg-white/10"
               style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
             >
               重新執行
             </button>
           )}
+          <button
+            onClick={close}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-xs transition-colors hover:bg-white/10"
+            style={{ color: 'var(--text-secondary)' }}
+            title="關閉"
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-1">
-        <div className="pb-8">
+      <div
+        ref={scrollRef}
+        className="overflow-y-auto px-3 py-3"
+        style={{ maxHeight: '400px' }}
+      >
+        <div>
           {/* Phase 0: System startup */}
           {buildState === 'running' && currentPhase === 0 && (
             <div className="mb-4">

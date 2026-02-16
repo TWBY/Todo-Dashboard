@@ -11,6 +11,8 @@ import ClaudeUsagePanel from './ClaudeUsagePanel';
 import ResizableLayout from './ResizableLayout';
 import MemoryWarningBanner from './MemoryWarningBanner';
 import ProductionMonitor from './ProductionMonitor';
+import BuildPanel from './BuildPanel';
+import { useBuildPanel } from '@/contexts/BuildPanelContext';
 
 interface DashboardContentProps {
   initialProjects: Project[];
@@ -48,6 +50,7 @@ export default function DashboardContent({
   initialCourseFiles,
   initialUtilityTools,
 }: DashboardContentProps) {
+  const { buildState } = useBuildPanel();
   const [projects, setProjects] = useState(initialProjects);
   const [courseFiles, setCourseFiles] = useState(initialCourseFiles);
   const [utilityTools, setUtilityTools] = useState(initialUtilityTools);
@@ -92,6 +95,7 @@ export default function DashboardContent({
             <DevServerPanel projects={allProjects} onUpdate={updateProject} />
             <div className="space-y-4">
               <ClaudeUsagePanel />
+              {buildState !== 'idle' && <BuildPanel />}
               <MemoryWarningBanner />
               <ProductionMonitor />
             </div>
