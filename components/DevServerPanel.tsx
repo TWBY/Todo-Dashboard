@@ -8,7 +8,7 @@ import PulsingDots from '@/components/PulsingDots';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { formatPort } from '@/lib/format';
-import pkg from '@/package.json';
+import versionConfig from '@/version.json';
 
 interface PortStatus {
   projectId: string;
@@ -406,7 +406,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             className="text-xs px-1.5 py-0.5 rounded-full"
             style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
           >
-            v{pkg.version}
+            {currentPort === 3000 ? `D-${versionConfig.development}` : currentPort === 4000 ? `P-${versionConfig.production}` : `v-${versionConfig.development}`}
           </span>
           {isUpdating && (
             <span className="text-sm px-2 py-0.5 rounded-full animate-pulse"
@@ -474,9 +474,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
               letterSpacing: 'var(--tracking-ui)',
               border: '1px solid #4a3520',
             }}
-            title="打包 Dashboard (npm run build)"
+            title="版本升級與打包流程"
           >
-            {compact ? 'B' : 'Build'}
+            {compact ? 'P' : 'Pack'}
           </button>
           <button
             onClick={() => router.push('/changelog')}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import pkg from '@/package.json'
+import versionConfig from '@/version.json'
 
 interface ChangelogEntry {
   version: string
@@ -50,7 +50,7 @@ export default function ChangelogPage() {
             className="text-xs px-1.5 py-0.5 rounded-full"
             style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
           >
-            v{pkg.version}
+            P-{versionConfig.production}
           </span>
         </div>
       </div>
