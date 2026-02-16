@@ -98,5 +98,5 @@ export interface SessionMeta {
   totalInputTokens: number
   totalOutputTokens: number
   lastDurationMs?: number
-  toolStats?: Record<string, { count: number; totalDurationMs: number }>
+  toolStats?: Record<string, { count: number }>
 }

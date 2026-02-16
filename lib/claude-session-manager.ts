@@ -45,7 +45,7 @@ export function hasPendingRequest(key: string): boolean {
 // --- Tool Stats ---
 
 export interface ToolStats {
-  [toolName: string]: { count: number; totalDurationMs: number }
+  [toolName: string]: { count: number }
 }
 
 // --- Build Query Options ---
@@ -108,7 +108,7 @@ export function createSDKQuery(
   // canUseTool：攔截 AskUserQuestion/ExitPlanMode
   opts.canUseTool = async (toolName: string, input: Record<string, unknown>, options: { toolUseID: string; signal: AbortSignal }) => {
     // 工具統計：計數
-    if (!toolStats[toolName]) toolStats[toolName] = { count: 0, totalDurationMs: 0 }
+    if (!toolStats[toolName]) toolStats[toolName] = { count: 0 }
     toolStats[toolName].count++
 
     if (toolName !== 'AskUserQuestion' && toolName !== 'ExitPlanMode') {
