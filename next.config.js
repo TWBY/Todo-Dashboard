@@ -10,6 +10,9 @@ module.exports = (phase) => {
     outputFileTracingExcludes: {
       '*': ['./data/crash-reports/**'],
     },
+    typescript: {
+      tsconfigPath: './tsconfig.json',
+    },
   };
 
   return nextConfig;
