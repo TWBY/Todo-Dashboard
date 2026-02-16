@@ -201,28 +201,46 @@ function CodeBlockWithCopy({ children, ...props }: React.ComponentPropsWithoutRe
     return ''
   }
 
+  // 從 <code className="language-xxx"> 擷取語言名稱
+  const extractLang = (node: React.ReactNode): string => {
+    if (node && typeof node === 'object' && 'props' in node) {
+      const el = node as React.ReactElement<{ className?: string; children?: React.ReactNode }>
+      const match = el.props.className?.match(/language-(\w+)/)
+      if (match) return match[1]
+    }
+    return ''
+  }
+
   const text = extractText(children)
+  const lang = extractLang(Array.isArray(children) ? children[0] : children)
   const copied = isCopied(text)
 
   return (
     <div className="relative group">
       <pre {...props}>{children}</pre>
-      <button
-        onClick={() => copy(text)}
-        className="absolute top-1.5 right-1.5 w-7 h-7 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-        title="複製程式碼"
-      >
-        {copied ? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        {lang && (
+          <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: '#666', backgroundColor: 'rgba(255,255,255,0.06)' }}>
+            {lang}
+          </span>
         )}
-      </button>
+        <button
+          onClick={() => copy(text)}
+          className="w-7 h-7 rounded flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+          title="複製程式碼"
+        >
+          {copied ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   )
 }
@@ -297,9 +315,11 @@ function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) 
 }
 
 // Plan 審批列
-function PlanApprovalBar({ onApprove, planOnly, loading }: { onApprove: () => void; planOnly?: boolean; loading?: boolean }) {
+function PlanApprovalBar({ onApprove, onReject, planOnly, loading }: { onApprove: () => void; onReject?: (feedback: string) => void; planOnly?: boolean; loading?: boolean }) {
+  const [showReject, setShowReject] = useState(false)
+  const [feedback, setFeedback] = useState('')
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-1.5">
       <button
         onClick={onApprove}
         disabled={loading}
@@ -312,6 +332,38 @@ function PlanApprovalBar({ onApprove, planOnly, loading }: { onApprove: () => vo
       >
         {loading ? (planOnly ? '回存中...' : '執行中...') : planOnly ? '回存' : '執行'}
       </button>
+      {!planOnly && !loading && onReject && (
+        showReject ? (
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={feedback}
+              onChange={e => setFeedback(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && feedback.trim()) { onReject(feedback.trim()); setShowReject(false) } }}
+              placeholder="修改建議..."
+              autoFocus
+              className="flex-1 px-2 py-1 rounded text-sm outline-none bg-transparent"
+              style={{ border: '1px solid #333', color: '#ccc' }}
+            />
+            <button
+              onClick={() => { if (feedback.trim()) { onReject(feedback.trim()); setShowReject(false) } }}
+              disabled={!feedback.trim()}
+              className="px-3 py-1 rounded text-sm transition-colors"
+              style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#f87171' }}
+            >
+              送出
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowReject(true)}
+            className="w-full py-1 rounded text-sm transition-all duration-200"
+            style={{ color: '#666' }}
+          >
+            拒絕 / 給回饋
+          </button>
+        )
+      )}
     </div>
   )
 }
@@ -597,12 +649,23 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     if (approved) {
       setMode('edit')
     }
+    // 自動 focus 回 textarea
+    requestAnimationFrame(() => textareaRef.current?.focus())
   }, [approvePlan, planOnly, messages, sessionId, isApproving])
 
   // pendingPlanApproval 消失時重置 isApproving
   useEffect(() => {
     if (!pendingPlanApproval) setIsApproving(false)
   }, [pendingPlanApproval])
+
+  // 回答問題後自動 focus 回 textarea
+  const prevPendingQRef = useRef(pendingQuestions)
+  useEffect(() => {
+    if (prevPendingQRef.current && !pendingQuestions) {
+      requestAnimationFrame(() => textareaRef.current?.focus())
+    }
+    prevPendingQRef.current = pendingQuestions
+  }, [pendingQuestions])
 
   // 通知父元件 sessionMeta 變化
   useEffect(() => {
@@ -859,8 +922,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     if (textareaRef.current) textareaRef.current.value = ''
     setHasInput(false)
     setImages([])
-    // 重置 textarea 高度
-    requestAnimationFrame(adjustTextareaHeight)
+    // 重置 textarea 高度 & 自動 focus
+    requestAnimationFrame(() => {
+      adjustTextareaHeight()
+      textareaRef.current?.focus()
+    })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1022,7 +1088,9 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                         [&_strong]:font-bold [&_a]:underline
                         [&_table]:w-full [&_table]:border-collapse [&_table]:my-2
                         [&_th]:border [&_th]:border-[#222222] [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_th]:bg-[#111111]
-                        [&_td]:border [&_td]:border-[#222222] [&_td]:px-2 [&_td]:py-1"
+                        [&_td]:border [&_td]:border-[#222222] [&_td]:px-2 [&_td]:py-1
+                        [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-[#999]
+                        [&_hr]:border-[#333333] [&_hr]:my-3"
                       style={{ color: '#ffffff' }}
                     >
                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
@@ -1167,14 +1235,19 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             <span className="streaming-status-text">載入對話紀錄...</span>
           </div>
         )}
-        {isStreaming && streamingActivity && streamingActivity.status !== 'tool' && (
+        {isStreaming && streamingActivity && (
           <div className="text-sm animate-fade-in flex items-center gap-2">
             <span className="streaming-status-text">
               {streamingActivity.status === 'connecting' && '正在連線...'}
               {streamingActivity.status === 'thinking' && '正在思考...'}
               {streamingActivity.status === 'replying' && '正在回覆...'}
+              {streamingActivity.status === 'tool' && streamingActivity.toolName}
             </span>
-            {elapsed > 0 && <span style={{ color: '#555' }}>{elapsed}s</span>}
+            {elapsed > 0 && (
+              <span style={{ color: '#555' }}>
+                {elapsed >= 60 ? `${Math.floor(elapsed / 60)}m ${elapsed % 60}s` : `${elapsed}s`}
+              </span>
+            )}
           </div>
         )}
         </div>
@@ -1183,16 +1256,16 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         {showScrollBottom && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
             style={{
               backgroundColor: '#1a1a1a',
-              border: '1px solid #333',
-              color: '#888',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              border: '1px solid #444',
+              color: '#aaa',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
             }}
             title="回到底部"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
@@ -1202,7 +1275,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       {/* 決策面板 — 在 Input 之上 */}
       {pendingPlanApproval && (
         <ActionOverlay>
-          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} planOnly={planOnly} loading={isApproving} />
+          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} onReject={(fb) => handleApprovePlan(false, fb)} planOnly={planOnly} loading={isApproving} />
         </ActionOverlay>
       )}
       {pendingQuestions && (
@@ -1377,11 +1450,14 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 <button
                   key={m}
                   onClick={() => selectMode(m)}
+                  disabled={isStreaming}
                   className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                   style={{
                     backgroundColor: isActive ? '#222222' : 'transparent',
                     color: isActive ? '#ffffff' : '#666666',
                     border: isActive ? '1px solid #333333' : '1px solid transparent',
+                    opacity: isStreaming ? 0.4 : 1,
+                    cursor: isStreaming ? 'not-allowed' : 'pointer',
                   }}
                   title={MODE_CONFIG[m].label}
                 >
@@ -1482,14 +1558,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               <button
                 onClick={stopStreaming}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105"
-                style={{
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  fontSize: '14px',
-                }}
-                title="停止"
+                style={{ backgroundColor: '#ef4444', color: 'white' }}
+                title="停止 (Esc)"
               >
-                &#9632;
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                </svg>
               </button>
             ) : (
               <button
@@ -1499,11 +1573,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 style={{
                   backgroundColor: (hasInput || images.length > 0) ? '#ffffff' : '#1a1a1a',
                   color: (hasInput || images.length > 0) ? '#000000' : '#444444',
-                  fontSize: '16px',
                 }}
-                title="傳送"
+                title="傳送 (Enter)"
               >
-                &#8593;
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+                </svg>
               </button>
             )}
           </div>

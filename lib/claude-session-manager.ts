@@ -10,6 +10,22 @@ import type { Query, Options, PermissionMode, SDKMessage } from '@anthropic-ai/c
  * 工具統計：透過 toolStats 累計工具使用次數。
  */
 
+// --- Active Queries Map（用於 ExitPlanMode 後切換 permissionMode） ---
+
+const activeQueries = new Map<string, Query>()
+
+export function setActiveQuery(sessionId: string, q: Query) {
+  activeQueries.set(sessionId, q)
+}
+
+export function getActiveQuery(sessionId: string): Query | undefined {
+  return activeQueries.get(sessionId)
+}
+
+export function removeActiveQuery(sessionId: string) {
+  activeQueries.delete(sessionId)
+}
+
 // --- Pending Requests Map（canUseTool 阻塞時暫存 Promise） ---
 
 interface PendingRequest {

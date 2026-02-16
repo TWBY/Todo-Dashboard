@@ -1,4 +1,4 @@
-import { resolvePendingRequest, hasPendingRequest } from '@/lib/claude-session-manager'
+import { resolvePendingRequest, hasPendingRequest, getActiveQuery } from '@/lib/claude-session-manager'
 
 export async function POST(request: Request) {
   try {
@@ -42,6 +42,17 @@ export async function POST(request: Request) {
     } else if (type === 'planApproval') {
       if (approved) {
         resolved = resolvePendingRequest(key, { behavior: 'allow' })
+        // ExitPlanMode 批准後，切換 SDK 的 permissionMode 到 acceptEdits
+        // 否則 SDK 仍停留在 plan mode，後續工具呼叫全部會被擋下
+        const q = getActiveQuery(sessionId)
+        if (q) {
+          try {
+            await q.setPermissionMode('acceptEdits')
+            console.log('[claude-chat/answer] permissionMode switched to acceptEdits')
+          } catch (err) {
+            console.error('[claude-chat/answer] setPermissionMode failed:', err)
+          }
+        }
       } else {
         resolved = resolvePendingRequest(key, {
           behavior: 'deny',

@@ -1,6 +1,6 @@
 import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
 import type { Project } from '@/lib/types'
-import { createSDKQuery } from '@/lib/claude-session-manager'
+import { createSDKQuery, setActiveQuery, removeActiveQuery } from '@/lib/claude-session-manager'
 import type { SDKMessage } from '@/lib/claude-session-manager'
 
 export const maxDuration = 300
@@ -51,10 +51,14 @@ export async function POST(request: Request) {
       effort,
     )
 
+    // 註冊 activeQuery（供 /answer endpoint 在 ExitPlanMode 後切換 permissionMode）
+    setActiveQuery(newSessionId, queryInstance)
+
     // 監聽 client 斷開連線
     request.signal.addEventListener('abort', () => {
       console.log('[claude-chat] request.signal aborted — client disconnected')
       abortController.abort()
+      removeActiveQuery(newSessionId)
     })
 
     const stream = new ReadableStream({
@@ -160,6 +164,8 @@ export async function POST(request: Request) {
             })}\n\n`)
           }
         }
+
+        removeActiveQuery(newSessionId)
 
         if (!hasResult) {
           safeEnqueue(`data: ${JSON.stringify({
