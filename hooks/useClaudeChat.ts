@@ -68,6 +68,8 @@ interface UseClaudeChatReturn {
   isLoadingHistory: boolean
   error: string | null
   clearError: () => void
+  lastFailedMessage: { message: string; mode?: ChatMode } | null
+  streamStartTime: number | null
 }
 
 interface UseClaudeChatConfig {
@@ -444,6 +446,8 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     _setSessionId(id)
   }, [])
   const [error, setError] = useState<string | null>(null)
+  const [lastFailedMessage, setLastFailedMessage] = useState<{ message: string; mode?: ChatMode } | null>(null)
+  const [streamStartTime, setStreamStartTime] = useState<number | null>(null)
   const [pendingQuestions, _setPendingQuestions] = useState<PendingQuestionsState | null>(null)
   const [pendingPlanApproval, _setPendingPlanApproval] = useState<PendingPlanApprovalState | null>(null)
   const [streamingActivity, setStreamingActivity] = useState<StreamingActivity | null>(null)
@@ -559,6 +563,8 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     setMessages(prev => [...prev, userMsg])
     setStreamStatus('streaming')
     setStreamingActivity({ status: 'connecting' })
+    setStreamStartTime(Date.now())
+    setLastFailedMessage(null)
 
     const controller = new AbortController()
     abortRef.current = controller
@@ -647,8 +653,10 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('[chat] sendMessage failed:', err)
         setError(err.message)
+        setLastFailedMessage({ message, mode })
       }
     } finally {
+      setStreamStartTime(null)
       // 根據串流結果原子化設定最終狀態
       const finalStatus: StreamStatus = (ctx.hasPendingApproval || ctx.hasPendingQuestions)
         ? 'idle'
@@ -848,5 +856,5 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
 
   const clearError = useCallback(() => setError(null), [])
 
-  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError }
+  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime }
 }

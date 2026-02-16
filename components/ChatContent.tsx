@@ -161,6 +161,33 @@ function EmailCopyButton({ content }: { content: string }) {
   )
 }
 
+// Assistant 訊息複製按鈕（hover 時顯示於右上角）
+function AssistantCopyButton({ content }: { content: string }) {
+  const { copy, isCopied } = useCopyToClipboard()
+  const copied = isCopied(content)
+  return (
+    <button
+      onClick={() => copy(content)}
+      className="absolute top-0 right-0 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-150 p-1 rounded"
+      style={{
+        backgroundColor: copied ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.08)',
+        color: copied ? '#22c55e' : '#666',
+      }}
+      title={copied ? '已複製' : '複製訊息'}
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      )}
+    </button>
+  )
+}
+
 // 程式碼區塊複製按鈕
 function CodeBlockWithCopy({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) {
   const { copy, isCopied } = useCopyToClipboard()
@@ -270,18 +297,20 @@ function ToolGroup({ msgs, isLive }: { msgs: ChatMessage[]; isLive?: boolean }) 
 }
 
 // Plan 審批列
-function PlanApprovalBar({ onApprove, planOnly }: { onApprove: () => void; planOnly?: boolean }) {
+function PlanApprovalBar({ onApprove, planOnly, loading }: { onApprove: () => void; planOnly?: boolean; loading?: boolean }) {
   return (
     <div className="animate-fade-in">
       <button
         onClick={onApprove}
+        disabled={loading}
         className="w-full py-2 rounded text-base font-medium transition-all duration-200"
         style={{
-          backgroundColor: planOnly ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-          color: planOnly ? '#34d399' : '#60a5fa',
+          backgroundColor: loading ? 'rgba(100, 100, 100, 0.15)' : planOnly ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+          color: loading ? '#888' : planOnly ? '#34d399' : '#60a5fa',
+          cursor: loading ? 'not-allowed' : 'pointer',
         }}
       >
-        {planOnly ? '回存' : '執行'}
+        {loading ? (planOnly ? '回存中...' : '執行中...') : planOnly ? '回存' : '執行'}
       </button>
     </div>
   )
@@ -468,6 +497,9 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [modelChoice, setModelChoice] = useState<'sonnet' | 'auto' | 'opus'>('sonnet')
   const [effortLevel, setEffortLevel] = useState<'low' | 'medium' | 'high'>('medium')
   const [autoResolvedModel, setAutoResolvedModel] = useState<'sonnet' | 'opus' | null>(null)
+  const [isApproving, setIsApproving] = useState(false)
+  const [showScrollBottom, setShowScrollBottom] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -476,7 +508,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // auto 模式下用 autoResolvedModel（每次送訊息前由 Haiku 決定），手動模式直接用 modelChoice
   const effectiveModel = modelProp || (modelChoice === 'auto' ? (autoResolvedModel || 'sonnet') : modelChoice)
-  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
+  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
   const { addPanel } = useChatPanels()
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
@@ -525,6 +557,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   // 批准計畫時自動切換 mode 到 edit（planOnly 模式下不切換，改為自動存回 Scratch Pad）
   const handleApprovePlan = useCallback(async (approved: boolean, feedback?: string) => {
+    if (isApproving) return // 防重複點擊
+    setIsApproving(true)
     if (approved && planOnly) {
       // planOnly: 只回存到 Scratch Pad，不讓 Claude 繼續執行
       approvePlan(false) // 清除 pending 狀態，不發送執行指令
@@ -563,7 +597,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     if (approved) {
       setMode('edit')
     }
-  }, [approvePlan, planOnly, messages, sessionId])
+  }, [approvePlan, planOnly, messages, sessionId, isApproving])
+
+  // pendingPlanApproval 消失時重置 isApproving
+  useEffect(() => {
+    if (!pendingPlanApproval) setIsApproving(false)
+  }, [pendingPlanApproval])
 
   // 通知父元件 sessionMeta 變化
   useEffect(() => {
@@ -576,7 +615,9 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const handleScroll = useCallback(() => {
     const el = messagesContainerRef.current
     if (!el) return
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+    isNearBottomRef.current = nearBottom
+    setShowScrollBottom(!nearBottom)
   }, [])
 
   // 只在使用者已經在底部時才自動捲動
@@ -609,6 +650,26 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       playCompletionSound()
     }
   }, [streamStatus])
+
+  // 串流經過時間計時器
+  useEffect(() => {
+    if (!streamStartTime) { setElapsed(0); return }
+    setElapsed(Math.floor((Date.now() - streamStartTime) / 1000))
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - streamStartTime) / 1000))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [streamStartTime])
+
+  // 捲動到底部
+  const scrollToBottom = useCallback(() => {
+    const el = messagesContainerRef.current
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+      isNearBottomRef.current = true
+      setShowScrollBottom(false)
+    }
+  }, [])
 
   // 自動調整 textarea 高度（debounced，避免每次按鍵都 layout thrash）
   const adjustTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -716,6 +777,20 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const handleSend = async () => {
     const currentInput = inputRef.current
     if (!currentInput.trim() && images.length === 0) return
+
+    // 有待審批計畫時，偵測確認類關鍵字 → 自動觸發執行
+    if (pendingPlanApproval && currentInput.trim()) {
+      const confirmWords = ['執行', '好', '確認', '批准', '開始', 'yes', 'ok', 'go', 'approve', 'execute', 'run']
+      if (confirmWords.some(w => currentInput.trim().toLowerCase().includes(w))) {
+        inputRef.current = ''
+        hasInputRef.current = false
+        if (textareaRef.current) textareaRef.current.value = ''
+        setHasInput(false)
+        handleApprovePlan(true)
+        return
+      }
+    }
+
     console.debug('[chat-ui] handleSend', { inputLen: currentInput.trim().length, mode, imagesCount: images.length })
     isNearBottomRef.current = true
 
@@ -789,6 +864,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && isStreaming) {
+      e.preventDefault()
+      stopStreaming()
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       // compositionEnd 在某些瀏覽器中會在 keyDown 之後觸發，用 nativeEvent.isComposing 即時判斷
       if (isComposing || e.nativeEvent.isComposing) {
@@ -837,7 +917,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       />
 
       {/* Messages Area */}
-      <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
         <div
           ref={messagesContainerRef}
           onScroll={handleScroll}
@@ -859,7 +939,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         )}
 
         {(() => {
-          const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Task']
+          const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch']
 
           const isLowLevelTool = (m: typeof displayMessages[0]) =>
             m.role === 'tool' &&
@@ -921,7 +1001,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                 )}
 
                 {msg.role === 'assistant' && (
-                  <div>
+                  <div className="group/msg relative">
                     <div
                       className="text-base leading-[1.5] prose prose-invert max-w-none overflow-hidden break-words
                         [&_h1]:text-[1.5em] [&_h1]:font-bold [&_h1]:mt-[1em] [&_h1]:mb-[0.4em]
@@ -952,6 +1032,32 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                         <EmailCopyButton content={msg.content} />
                       </div>
                     )}
+                    {!emailMode && msg.content.length > 20 && (
+                      <AssistantCopyButton content={msg.content} />
+                    )}
+                  </div>
+                )}
+
+                {msg.role === 'tool' && msg.toolName === 'Task' && (
+                  <div
+                    className="px-2.5 py-2 rounded text-sm"
+                    style={{
+                      backgroundColor: '#0d1117',
+                      border: '1px solid #1c2333',
+                      color: '#8b949e',
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                      </svg>
+                      <span style={{ color: '#c9d1d9' }}>
+                        {msg.toolDescription || 'Sub-agent'}
+                      </span>
+                      {isStreaming && gi === groups.length - 1 && (
+                        <span className="streaming-status-text text-xs" style={{ color: '#58a6ff' }}>running</span>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1062,21 +1168,41 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           </div>
         )}
         {isStreaming && streamingActivity && streamingActivity.status !== 'tool' && (
-          <div className="text-sm animate-fade-in">
+          <div className="text-sm animate-fade-in flex items-center gap-2">
             <span className="streaming-status-text">
               {streamingActivity.status === 'connecting' && '正在連線...'}
               {streamingActivity.status === 'thinking' && '正在思考...'}
               {streamingActivity.status === 'replying' && '正在回覆...'}
             </span>
+            {elapsed > 0 && <span style={{ color: '#555' }}>{elapsed}s</span>}
           </div>
         )}
         </div>
+
+        {/* 回到底部按鈕 */}
+        {showScrollBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #333',
+              color: '#888',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}
+            title="回到底部"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* 決策面板 — 在 Input 之上 */}
       {pendingPlanApproval && (
         <ActionOverlay>
-          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} planOnly={planOnly} />
+          <PlanApprovalBar onApprove={() => handleApprovePlan(true)} planOnly={planOnly} loading={isApproving} />
         </ActionOverlay>
       )}
       {pendingQuestions && (
@@ -1091,6 +1217,18 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           className="mb-2 p-2 rounded text-base flex-shrink-0 flex items-center gap-2"
           style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444' }}
         >
+          {lastFailedMessage && (
+            <button
+              onClick={() => {
+                clearError()
+                sendMessage(lastFailedMessage.message, lastFailedMessage.mode)
+              }}
+              className="flex-shrink-0 px-2 py-0.5 rounded text-sm transition-colors hover:bg-white/10"
+              style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+            >
+              重試
+            </button>
+          )}
           <span className="flex-1 text-center">{error}</span>
           <button
             onClick={clearError}
@@ -1208,7 +1346,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           onPaste={handlePaste}
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
-          placeholder={modeConfig.placeholder}
+          placeholder={(pendingPlanApproval || pendingQuestions) ? '請先處理上方的決策...' : modeConfig.placeholder}
           rows={1}
           className="w-full px-4 pt-3 pb-1 text-lg outline-none resize-none bg-transparent"
           style={{
@@ -1216,6 +1354,8 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             overflowY: 'hidden',
             fieldSizing: 'content' as unknown as undefined, // CSS field-sizing: content（Chromium 123+）
             maxHeight: '200px',
+            opacity: (pendingPlanApproval || pendingQuestions) ? 0.4 : 1,
+            transition: 'opacity 0.2s',
           }}
         />
 
