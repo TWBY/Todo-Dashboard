@@ -15,6 +15,10 @@ function execAsync(cmd: string, opts?: { timeout?: number }) {
 }
 
 const DASHBOARD_PORT = 3000;
+
+// In-memory cache to prevent concurrent polling from saturating the event loop
+let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
+const GET_CACHE_TTL = 5000; // 5 seconds
 const LOG_PATH = path.join(process.cwd(), '.dev-server.log');
 
 async function logEvent(message: string) {
@@ -226,37 +230,48 @@ async function checkPort(port: number): Promise<{ isRunning: boolean; pid?: numb
 // GET - Get status of all dev servers
 export async function GET() {
   try {
+    // Return cached response if fresh (prevents polling from multiple components saturating event loop)
+    if (cachedGetResponse && Date.now() - cachedGetResponse.timestamp < GET_CACHE_TTL) {
+      return NextResponse.json(cachedGetResponse.data);
+    }
+
     const brickverseProjects = await readJsonFile<Project>('projects.json');
     const courseFiles = await readJsonFile<Project>('coursefiles.json');
     const utilityTools = await readJsonFile<Project>('utility-tools.json');
     const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools]);
-    const statuses: PortStatus[] = [];
 
-    for (const project of projects) {
-      if (project.devPort) {
-        const portInfo = await checkPort(project.devPort);
+    // Check all ports in parallel instead of serial
+    const projectsWithPort = projects.filter(p => p.devPort);
+    const statuses: PortStatus[] = await Promise.all(
+      projectsWithPort.map(async (project) => {
+        const portInfo = await checkPort(project.devPort!);
         let memoryMB: number | undefined;
         let cpuPercent: number | undefined;
         if (portInfo.isRunning && portInfo.pid) {
-          memoryMB = await getProcessMemory(portInfo.pid);
-          cpuPercent = await getProcessCpu(portInfo.pid);
+          [memoryMB, cpuPercent] = await Promise.all([
+            getProcessMemory(portInfo.pid),
+            getProcessCpu(portInfo.pid),
+          ]);
         }
-        statuses.push({
+        return {
           projectId: project.id,
-          port: project.devPort,
+          port: project.devPort!,
           isRunning: portInfo.isRunning,
           pid: portInfo.pid,
           projectPath: project.path,
           memoryMB,
           cpuPercent,
-        });
-      }
-    }
+        };
+      })
+    );
 
-    // 取得系統記憶體 + 外部軟體記憶體（一律回傳）
-    const systemMemory = await getSystemMemory();
+    // 取得系統記憶體 + 外部軟體記憶體（並行）
+    const [systemMemory, topProcesses] = await Promise.all([
+      getSystemMemory(),
+      getTopProcesses(),
+    ]);
     if (systemMemory) {
-      systemMemory.topProcesses = await getTopProcesses();
+      systemMemory.topProcesses = topProcesses;
       // warning/critical 時額外建議關閉 dev server
       if (systemMemory.pressureLevel !== 'normal') {
         const runningServers = statuses
@@ -267,7 +282,9 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ data: statuses, systemMemory });
+    const responseData = { data: statuses, systemMemory };
+    cachedGetResponse = { data: responseData, timestamp: Date.now() };
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error getting dev server status:', error);
     return NextResponse.json({ error: 'Failed to get status' }, { status: 500 });
