@@ -2412,5 +2412,364 @@
     "role": "assistant",
     "content": "全部完成。改寫內容摘要：\n\n**`BuildPanel.tsx` 大改重點：**\n\n1. **`useClaudeChat` 整合** — 使用 `ephemeral: true` 直接在面板內與 Claude 通訊，不跳 Chat 架構\n2. **Phase 自動偵測** — `detectPhase()` 根據 messages 中的 tool calls（`git status`、`git diff`、`npm version`、`npm run build`、`release:` commit）推斷目前進行到第幾個 Phase\n3. **動態狀態顯示** — 每個 Phase/Step 有 `pending` → `running` → `done`/`error` 四種狀態，顏色和圖示即時切換（綠色打勾、黃色旋轉、紅色叉）\n4. **AI 輸出內嵌** — Phase 2/3（AI 介入）執行時，在該 Phase 容器內顯示 `AiOutputArea`，展示 streaming activity（工具執行、思考中、回應中）和最近的 AI 訊息\n5. **自動捲動** — 當前 Phase 變化時自動捲動到對應位置\n6. **完成/錯誤狀態** — Header 顯示狀態 badge，完成時顯示結果摘要，可按「重新執行」重置\n7. **停止按鈕** — 執行中可按停止中斷 streaming",
     "timestamp": 1771204635605
+  },
+  {
+    "id": "861f5e57-74c9-4f0f-93a2-9475b1e490b5",
+    "role": "user",
+    "content": "我的需求在我的文字上，你要看看",
+    "timestamp": 1771205180021
+  },
+  {
+    "id": "f6cbccb4-1ee5-4a76-8ce2-c629a928e8ea",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/tmp/claude-chat-images/1771205179949-s6r52g.png\"\n}",
+    "toolName": "Read",
+    "toolDescription": "1771205179949-s6r52g.png",
+    "timestamp": 1771205187037
+  },
+  {
+    "id": "ffd13dd6-3afd-41ff-b364-e563be56d87a",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/tmp/claude-chat-images/1771205179950-tnwuky.png\"\n}",
+    "toolName": "Read",
+    "toolDescription": "1771205179950-tnwuky.png",
+    "timestamp": 1771205187507
+  },
+  {
+    "id": "c308873c-0ad9-4424-88e8-0967dd76e27d",
+    "role": "assistant",
+    "content": "了解，用戶提了三個問題：\n\n1. **AI 回覆的 Markdown 格式沒有正確渲染** — 表格、粗體等沒有正確顯示（第一張圖的「Build 完成」區域）\n2. **機械執行過程需要呼吸感** — 已加了 CSS 動畫但需要確認效果\n3. **Build 流程介面缺少返回鍵或關閉面板按鈕**\n\n讓我先看一下完成摘要的渲染位置和現有關閉按鈕的狀況。",
+    "timestamp": 1771205191008
+  },
+  {
+    "id": "04b82856-019a-4f14-9f8e-d66694e23289",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 565,\n  \"limit\": 60\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205197240
+  },
+  {
+    "id": "b73bf4bf-37f4-4d23-a2dc-ec8a3e126765",
+    "role": "assistant",
+    "content": "Now let me also check the header area with the close button:",
+    "timestamp": 1771205199731
+  },
+  {
+    "id": "d176d76e-b688-466e-9148-c0619ea73cc1",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 448,\n  \"limit\": 50\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205200939
+  },
+  {
+    "id": "8b3c0240-6d39-4347-beca-51dd853346e3",
+    "role": "assistant",
+    "content": "了解了全部問題。右上角其實有關閉按鈕（`fa-xmark`），但可能在截圖中不明顯或是用戶想要底部也有一個「返回」按鈕。讓我寫計畫。",
+    "timestamp": 1771205203440
+  },
+  {
+    "id": "9044ebf2-ce05-400e-94ca-75981928eda8",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/plans/peaceful-churning-newt.md\",\n  \"content\": \"# BuildPanel 三項修正\\n\\n## Context\\nBuildPanel 動態流程圖已完成，但用戶回報三個問題需修正。\\n\\n## 修正項目\\n\\n### 1. AI 回覆 Markdown 格式正確渲染\\n**問題**: `resultSummary`（Build 完成區塊）用 `whitespace-pre-wrap` 純文字渲染，表格/粗體/code 等未解析。\\n**檔案**: `components/BuildPanel.tsx:569-582`\\n**修改**:\\n- Result summary 區域改用 `<ReactMarkdown>` + `remarkGfm` 渲染（已有 import）\\n- 加上 `build-ai-output` class 復用已有 markdown 樣式\\n- `globals.css` 的 `.build-ai-output` 補充 table 樣式\\n\\n### 2. 機械執行呼吸感\\n**問題**: CSS 動畫已寫入 `globals.css`，class 也已加到 JSX，但需加強呼吸效果使其更明顯。\\n**檔案**: `app/globals.css`\\n**修改**:\\n- `build-breathe` 動畫：加大 box-shadow 範圍、加上 background-color 微變\\n- `build-step-breathe` 動畫：加上 border-color 漸變讓 step 也有呼吸邊框\\n- 確保 spinner icon 有旋轉動畫（`fa-spin` 已在用，OK）\\n\\n### 3. 返回/關閉按鈕更明顯\\n**問題**: 右上角有 `fa-xmark` 關閉按鈕但不夠明顯，且沒有底部返回操作。\\n**檔案**: `components/BuildPanel.tsx`\\n**修改**:\\n- Header 左側加一個返回箭頭按鈕 `fa-arrow-left`（在標題前），點擊 `close()`\\n- 底部在所有狀態都顯示「關閉面板」的文字連結（idle 時在「確認開始建立」下方，done/error 時在「重新執行」下方）\\n\\n## 驗證\\n- `npm run build` 確認編譯通過\\n- 開 dev server 在瀏覽器確認：\\n  1. Build 完成後的摘要表格正確渲染\\n  2. 機械執行 Phase 有明顯的呼吸光暈\\n  3. 關閉/返回按鈕清晰可點\\n\"\n}",
+    "toolName": "Write",
+    "toolDescription": "peaceful-churning-newt.md",
+    "timestamp": 1771205220037
+  },
+  {
+    "id": "34dda866-3143-42d2-aca1-c036009c55c8",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/plans/peaceful-churning-newt.md\"\n}",
+    "toolName": "Read",
+    "toolDescription": "peaceful-churning-newt.md",
+    "timestamp": 1771205223502
+  },
+  {
+    "id": "7879d803-24a6-49d2-aaa9-76a9c598436a",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/.claude/plans/peaceful-churning-newt.md\",\n  \"content\": \"# BuildPanel 三項修正\\n\\n## Context\\nBuildPanel 動態流程圖已完成，但用戶回報三個問題需修正：\\n1. AI 回覆的 Markdown 格式（表格/粗體/code）沒有正確渲染\\n2. 機械執行過程需要更明顯的呼吸感\\n3. Build 流程介面缺少明顯的返回/關閉按鈕\\n\\n## 修正項目\\n\\n### 1. Result Summary 改用 ReactMarkdown 渲染\\n**檔案**: `components/BuildPanel.tsx:569-582`\\n- 「Build 完成」區域的 `resultSummary` 目前用 `whitespace-pre-wrap` 純文字，改用 `<ReactMarkdown remarkPlugins={[remarkGfm]}>` 渲染\\n- 外層加 `build-ai-output` class 復用已有樣式\\n\\n**檔案**: `app/globals.css` `.build-ai-output` 補充 table 樣式：\\n```css\\n.build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.3em 0; }\\n.build-ai-output th, .build-ai-output td { padding: 0.2em 0.5em; border: 1px solid var(--border-color); text-align: left; }\\n.build-ai-output th { color: var(--text-primary); font-weight: 600; }\\n```\\n\\n### 2. 機械執行呼吸感加強\\n**檔案**: `app/globals.css`\\n- `build-breathe`：加大 box-shadow（`0 0 20px 4px`）、加上 background-color 微變化\\n- `build-step-breathe`：加上 border-color + box-shadow 呼吸效果，讓每個 step card 都有微微光暈脈動\\n\\n### 3. 返回/關閉按鈕更明顯\\n**檔案**: `components/BuildPanel.tsx`\\n- Header 左側：標題前加一個 `fa-arrow-left` 返回箭頭按鈕，點擊 `close()`\\n- 底部：所有狀態（idle/done/error）都增加一個「關閉面板」文字按鈕\\n\\n## 驗證\\n- `npm run build` 確認編譯通過\\n\"\n}",
+    "toolName": "Write",
+    "toolDescription": "peaceful-churning-newt.md",
+    "timestamp": 1771205234491
+  },
+  {
+    "id": "ba6d366c-2375-421f-8ab3-743a348c50f0",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": false,
+      "approved": true
+    },
+    "timestamp": 1771205237513
+  },
+  {
+    "id": "986b5a4a-becc-43f0-860c-7405936ae64c",
+    "role": "user",
+    "content": "✓ 批准計畫",
+    "timestamp": 1771205272792
+  },
+  {
+    "id": "a3e27355-fd46-445f-aacf-caa5b1f9b350",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": false,
+      "approved": true
+    },
+    "timestamp": 1771205276567
+  },
+  {
+    "id": "c4960f96-d288-490e-80b7-2209119c205d",
+    "role": "user",
+    "content": "✓ 批准計畫",
+    "timestamp": 1771205314271
+  },
+  {
+    "id": "09ec9eb1-5674-401d-b5c7-4e51acbe4fa7",
+    "role": "tool",
+    "content": "",
+    "toolName": "ExitPlanMode",
+    "planApproval": {
+      "pending": false,
+      "approved": true
+    },
+    "timestamp": 1771205316486
+  },
+  {
+    "id": "61a299f9-dd5c-4807-9eee-bc755e8e7af4",
+    "role": "user",
+    "content": "✓ 批准計畫",
+    "timestamp": 1771205318579
+  },
+  {
+    "id": "feca3763-c2da-417c-a1e2-82becd01ada9",
+    "role": "assistant",
+    "content": "計畫已寫好在 plan file 中，三項修正：\n\n1. **Markdown 渲染** — Result summary 改用 `<ReactMarkdown>` + 補 table CSS\n2. **呼吸感加強** — 加大 box-shadow、加 background-color 微變\n3. **返回按鈕** — Header 加返回箭頭 + 底部加關閉文字按鈕\n\n請確認是否可以開始執行。",
+    "timestamp": 1771205320890
+  },
+  {
+    "id": "644ac396-53c4-4dde-b6d3-2ba6e74e2d4f",
+    "role": "user",
+    "content": "執行",
+    "timestamp": 1771205375001
+  },
+  {
+    "id": "24605429-c384-4afe-b09f-15df47d5103a",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "Result Summary 改用 ReactMarkdown 渲染 + 補 table CSS",
+        "status": "in_progress",
+        "activeForm": "修正 Markdown 渲染"
+      },
+      {
+        "content": "機械執行呼吸感加強",
+        "status": "pending",
+        "activeForm": "加強呼吸動畫"
+      },
+      {
+        "content": "返回/關閉按鈕更明顯",
+        "status": "pending",
+        "activeForm": "加入返回按鈕"
+      }
+    ],
+    "timestamp": 1771205384660
+  },
+  {
+    "id": "a94f0696-b116-48ed-b1be-8f52a64d4d77",
+    "role": "assistant",
+    "content": "**修正 1：Result Summary 改用 ReactMarkdown**",
+    "timestamp": 1771205386715
+  },
+  {
+    "id": "1feca38a-faa6-486f-a15d-4537d81b6b0b",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"              <div className=\\\"text-xs whitespace-pre-wrap\\\" style={{ color: 'var(--text-secondary)' }}>\\n                {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}\\n              </div>\",\n  \"new_string\": \"              <div className=\\\"text-xs build-ai-output\\\" style={{ color: 'var(--text-secondary)' }}>\\n                <ReactMarkdown remarkPlugins={[remarkGfm]}>\\n                  {resultSummary.length > 500 ? resultSummary.slice(-500) : resultSummary}\\n                </ReactMarkdown>\\n              </div>\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205389805
+  },
+  {
+    "id": "237ac125-836a-4f3c-ae75-692ff3efad1c",
+    "role": "assistant",
+    "content": "補 table CSS 到 globals.css：",
+    "timestamp": 1771205392041
+  },
+  {
+    "id": "99fe1e97-ce52-40ae-88da-c6870a335eb3",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/globals.css\",\n  \"offset\": 455\n}",
+    "toolName": "Read",
+    "toolDescription": "globals.css",
+    "timestamp": 1771205392995
+  },
+  {
+    "id": "0a3c5cce-32ca-493e-a729-93eb82ed13c5",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/globals.css\",\n  \"old_string\": \".build-ai-output ul, .build-ai-output ol { padding-left: 1.2em; margin: 0.2em 0; }\\n.build-ai-output li { margin: 0.1em 0; }\",\n  \"new_string\": \".build-ai-output ul, .build-ai-output ol { padding-left: 1.2em; margin: 0.2em 0; }\\n.build-ai-output li { margin: 0.1em 0; }\\n.build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.3em 0; font-size: 0.7rem; }\\n.build-ai-output th, .build-ai-output td { padding: 0.25em 0.5em; border: 1px solid var(--border-color); text-align: left; }\\n.build-ai-output th { color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.03); }\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "globals.css",
+    "timestamp": 1771205398989
+  },
+  {
+    "id": "1514fdbd-7953-454a-9abf-ba4b74eb7b57",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "Result Summary 改用 ReactMarkdown 渲染 + 補 table CSS",
+        "status": "completed",
+        "activeForm": "修正 Markdown 渲染"
+      },
+      {
+        "content": "機械執行呼吸感加強",
+        "status": "in_progress",
+        "activeForm": "加強呼吸動畫"
+      },
+      {
+        "content": "返回/關閉按鈕更明顯",
+        "status": "pending",
+        "activeForm": "加入返回按鈕"
+      }
+    ],
+    "timestamp": 1771205403310
+  },
+  {
+    "id": "d2dadd27-401e-4df5-8080-50ab958468b2",
+    "role": "assistant",
+    "content": "**修正 2：機械執行呼吸感加強**",
+    "timestamp": 1771205405934
+  },
+  {
+    "id": "aaf540a0-fbde-41e6-b2b8-27e31b0504c0",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/globals.css\",\n  \"old_string\": \"/* 機械執行呼吸光暈 */\\n@keyframes build-breathe {\\n  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0.3); }\\n  50% { box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.5); }\\n}\\n.build-phase-running {\\n  animation: build-breathe 2.5s ease-in-out infinite;\\n}\\n\\n/* 機械執行 step 呼吸 */\\n@keyframes build-step-breathe {\\n  0%, 100% { opacity: 0.85; }\\n  50% { opacity: 1; }\\n}\\n.build-step-running {\\n  animation: build-step-breathe 2s ease-in-out infinite;\\n}\",\n  \"new_string\": \"/* 機械執行呼吸光暈（Phase 容器） */\\n@keyframes build-breathe {\\n  0%, 100% {\\n    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);\\n    border-color: rgba(245, 158, 11, 0.2);\\n    background-color: rgba(245, 158, 11, 0);\\n  }\\n  50% {\\n    box-shadow: 0 0 24px 4px rgba(245, 158, 11, 0.06), inset 0 0 12px rgba(245, 158, 11, 0.02);\\n    border-color: rgba(245, 158, 11, 0.55);\\n    background-color: rgba(245, 158, 11, 0.015);\\n  }\\n}\\n.build-phase-running {\\n  animation: build-breathe 2.8s ease-in-out infinite;\\n}\\n\\n/* 機械執行 step 呼吸（Step 卡片） */\\n@keyframes build-step-breathe {\\n  0%, 100% {\\n    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);\\n    border-color: rgba(245, 158, 11, 0.35);\\n  }\\n  50% {\\n    box-shadow: 0 0 10px 1px rgba(245, 158, 11, 0.08);\\n    border-color: rgba(245, 158, 11, 0.6);\\n  }\\n}\\n.build-step-running {\\n  animation: build-step-breathe 2.4s ease-in-out infinite;\\n}\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "globals.css",
+    "timestamp": 1771205414017
+  },
+  {
+    "id": "41433a9a-7524-40c2-a277-647e5994a4fa",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "Result Summary 改用 ReactMarkdown 渲染 + 補 table CSS",
+        "status": "completed",
+        "activeForm": "修正 Markdown 渲染"
+      },
+      {
+        "content": "機械執行呼吸感加強",
+        "status": "completed",
+        "activeForm": "加強呼吸動畫"
+      },
+      {
+        "content": "返回/關閉按鈕更明顯",
+        "status": "in_progress",
+        "activeForm": "加入返回按鈕"
+      }
+    ],
+    "timestamp": 1771205418401
+  },
+  {
+    "id": "4878e04d-c1cd-4ceb-a7da-e79d842cbc75",
+    "role": "assistant",
+    "content": "**修正 3：返回/關閉按鈕更明顯**",
+    "timestamp": 1771205421375
+  },
+  {
+    "id": "eeb068b8-177f-4f92-a89f-6ce85790f644",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 452,\n  \"limit\": 15\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205422603
+  },
+  {
+    "id": "fe435e7c-2a58-4e9a-ba57-04e70084b337",
+    "role": "assistant",
+    "content": "Header 左側加返回箭頭：",
+    "timestamp": 1771205426040
+  },
+  {
+    "id": "d9ad90bd-8426-49fb-9e95-2f7c4404e6a2",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"        <div className=\\\"flex items-center gap-2\\\">\\n          <h2 className=\\\"font-semibold text-lg truncate\\\" style={{ color: 'var(--text-primary)' }}>\\n            Build 流程\\n          </h2>\",\n  \"new_string\": \"        <div className=\\\"flex items-center gap-2\\\">\\n          <button\\n            onClick={close}\\n            className=\\\"w-7 h-7 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0\\\"\\n            style={{ color: 'var(--text-secondary)' }}\\n            title=\\\"返回\\\"\\n          >\\n            <i className=\\\"fa-sharp fa-regular fa-arrow-left\\\" />\\n          </button>\\n          <h2 className=\\\"font-semibold text-lg truncate\\\" style={{ color: 'var(--text-primary)' }}>\\n            Build 流程\\n          </h2>\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205430867
+  },
+  {
+    "id": "5c8a7e12-f8c3-426f-9d57-a66650bbc851",
+    "role": "assistant",
+    "content": "底部加關閉面板按鈕（在所有狀態的按鈕下方）：",
+    "timestamp": 1771205433570
+  },
+  {
+    "id": "06678872-b241-4ac2-ac79-303aa4bc5ff6",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 600,\n  \"limit\": 30\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205435102
+  },
+  {
+    "id": "d3b84eb6-5082-441d-8abe-17a18eb8013c",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"              重新執行\\n            </button>\\n          )}\\n        </div>\\n      </div>\\n    </div>\\n  );\\n}\",\n  \"new_string\": \"              重新執行\\n            </button>\\n          )}\\n\\n          {/* 關閉面板（底部） */}\\n          {buildState !== 'running' && (\\n            <button\\n              onClick={close}\\n              className=\\\"w-full mt-3 py-2 text-xs transition-colors cursor-pointer hover:underline\\\"\\n              style={{ color: 'var(--text-tertiary)' }}\\n            >\\n              <i className=\\\"fa-sharp fa-regular fa-arrow-left mr-1\\\" />\\n              關閉面板\\n            </button>\\n          )}\\n        </div>\\n      </div>\\n    </div>\\n  );\\n}\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771205440637
+  },
+  {
+    "id": "6d0e86b1-e50d-4e29-b987-69f206cd4d3b",
+    "role": "tool",
+    "content": "{\n  \"command\": \"npx next build 2>&1 | tail -10\",\n  \"description\": \"Run Next.js build to verify\",\n  \"timeout\": 120000\n}",
+    "toolName": "Bash",
+    "toolDescription": "npx next build 2>&1 | tail -10",
+    "timestamp": 1771205444460
+  },
+  {
+    "id": "371364f0-8ac2-44a1-8319-4064c69f9c84",
+    "role": "assistant",
+    "content": "Build 通過。",
+    "timestamp": 1771205475505
+  },
+  {
+    "id": "5703f956-b8f8-4331-8c6c-f4886b6061b8",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "Result Summary 改用 ReactMarkdown 渲染 + 補 table CSS",
+        "status": "completed",
+        "activeForm": "修正 Markdown 渲染"
+      },
+      {
+        "content": "機械執行呼吸感加強",
+        "status": "completed",
+        "activeForm": "加強呼吸動畫"
+      },
+      {
+        "content": "返回/關閉按鈕更明顯",
+        "status": "completed",
+        "activeForm": "加入返回按鈕"
+      }
+    ],
+    "timestamp": 1771205477802
+  },
+  {
+    "id": "4d33b322-627f-4017-a94a-d4e4dcbdf246",
+    "role": "assistant",
+    "content": "三項修正全部完成：\n\n1. **Markdown 渲染** — Result summary 和 AI output 都改用 `<ReactMarkdown remarkPlugins={[remarkGfm]}>` 渲染，補了 table/th/td 的 CSS 樣式\n2. **呼吸感加強** — Phase 容器加了 `box-shadow` + `background-color` + `border-color` 三重呼吸動畫（2.8s），Step 卡片加了 `box-shadow` + `border-color` 呼吸（2.4s），錯開節奏更有層次\n3. **返回按鈕** — Header 標題前加了 `fa-arrow-left` 返回箭頭，底部（非執行中時）也加了「關閉面板」文字按鈕",
+    "timestamp": 1771205480138
   }
 ]
