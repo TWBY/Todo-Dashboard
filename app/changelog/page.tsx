@@ -68,6 +68,78 @@ export default function ChangelogPage() {
             />
 
             <div className="space-y-0">
+              {/* Current development version indicator */}
+              {(() => {
+                const currentDevVersion = versionConfig.development
+                const latestReleaseVersion = entries.find(e => e.type === 'release')?.version?.replace(/^v/, '')
+                const devVersionNumber = currentDevVersion.replace(/-dev$/, '')
+
+                // Helper: compare semantic versions (e.g., "1.15.12" > "1.15.11")
+                const isVersionGreater = (a: string, b: string): boolean => {
+                  const aParts = a.split('.').map(Number)
+                  const bParts = b.split('.').map(Number)
+                  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                    const aPart = aParts[i] || 0
+                    const bPart = bParts[i] || 0
+                    if (aPart > bPart) return true
+                    if (aPart < bPart) return false
+                  }
+                  return false
+                }
+
+                // Only show if dev version is ahead of latest release
+                if (latestReleaseVersion && isVersionGreater(devVersionNumber, latestReleaseVersion)) {
+                  return (
+                    <div className="relative pl-8 pb-8">
+                      {/* DEV tag */}
+                      <div className="absolute -left-16 top-0">
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                          style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
+                        >
+                          DEV
+                        </span>
+                      </div>
+
+                      {/* Timeline dot - pulsing animation */}
+                      <div className="absolute left-0 top-1.5 w-4 h-4">
+                        <div
+                          className="absolute inset-0 rounded-full animate-ping"
+                          style={{ backgroundColor: '#4ade80', opacity: 0.3 }}
+                        />
+                        <div
+                          className="absolute inset-0 rounded-full"
+                          style={{ backgroundColor: '#22c55e', border: '2px solid #16a34a' }}
+                        />
+                      </div>
+
+                      {/* Version info */}
+                      <div className="flex items-center gap-3 mb-1">
+                        <span
+                          className="text-lg font-bold shrink-0"
+                          style={{ color: '#4ade80' }}
+                        >
+                          v{devVersionNumber}
+                        </span>
+                        <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: '#555555' }}>
+                          開發中
+                        </span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80' }}
+                        >
+                          {currentDevVersion}
+                        </span>
+                      </div>
+                      <p className="text-base" style={{ color: '#999999' }}>
+                        尚未發布的開發版本
+                      </p>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
               {entries.map((entry, i) => {
                 const isRelease = entry.type === 'release'
                 const isFirst = i === 0
