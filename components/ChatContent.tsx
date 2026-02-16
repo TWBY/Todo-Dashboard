@@ -53,30 +53,34 @@ function ContentsRate({ inputTokens, outputTokens, lastDurationMs }: { inputToke
 }
 
 // Todo 進度元件
-function TodoList({ todos }: { todos: TodoItem[] }) {
+function TodoList({ todos, isStreaming }: { todos: TodoItem[]; isStreaming: boolean }) {
   return (
     <div className="space-y-2">
-      {todos.map((todo, i) => (
-        <div key={i} className="flex items-center gap-2 text-base">
-          <span className="w-3 flex-shrink-0 flex items-center justify-center">
-            {todo.status === 'completed' && (
-              <i className="fa-solid fa-check text-green-400 text-[11px]" />
-            )}
-            {todo.status === 'in_progress' && (
-              <i className="fa-solid fa-circle shimmer-dot text-[6px]" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }} />
-            )}
-            {todo.status === 'pending' && (
-              <span className="w-3 h-3 rounded-full border border-gray-500" />
-            )}
-          </span>
-          <span
-            className={`${todo.status === 'completed' ? 'line-through opacity-60' : ''} ${todo.status === 'in_progress' ? 'shimmer-text' : ''}`}
-            style={todo.status === 'in_progress' ? { color: '#999999', animationDelay: `${i * 0.3}s` } : undefined}
-          >
-            {todo.status === 'in_progress' ? todo.activeForm : todo.content}
-          </span>
-        </div>
-      ))}
+      {todos.map((todo, i) => {
+        // streaming 結束時，自動完成所有 in_progress 的 todo
+        const effectiveStatus = !isStreaming && todo.status === 'in_progress' ? 'completed' : todo.status
+        return (
+          <div key={i} className="flex items-center gap-2 text-base">
+            <span className="w-3 flex-shrink-0 flex items-center justify-center">
+              {effectiveStatus === 'completed' && (
+                <i className="fa-solid fa-check text-green-400 text-[11px]" />
+              )}
+              {effectiveStatus === 'in_progress' && (
+                <i className="fa-solid fa-circle shimmer-dot text-[6px]" style={{ color: '#999999', animationDelay: `${i * 0.3}s` }} />
+              )}
+              {effectiveStatus === 'pending' && (
+                <span className="w-3 h-3 rounded-full border border-gray-500" />
+              )}
+            </span>
+            <span
+              className={`${effectiveStatus === 'completed' ? 'line-through opacity-60' : ''} ${effectiveStatus === 'in_progress' ? 'shimmer-text' : ''}`}
+              style={effectiveStatus === 'in_progress' ? { color: '#999999', animationDelay: `${i * 0.3}s` } : undefined}
+            >
+              {effectiveStatus === 'in_progress' ? todo.activeForm : todo.content}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -1222,7 +1226,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                       <div className="font-medium mb-1 text-sm" style={{ color: '#666666' }}>
                         Update Todos
                       </div>
-                      <TodoList todos={msg.todos} />
+                      <TodoList todos={msg.todos} isStreaming={isStreaming} />
                     </div>
                   </div>
                 )}
@@ -1539,25 +1543,26 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
               )
             })}
 
-            {/* Model Switcher: [S][A][O] */}
+            {/* Model Switcher: [H][S][O] */}
             {!planOnly && !emailMode && (
               <>
                 <span className="mx-1 text-xs" style={{ color: '#444444' }}>|</span>
-                {(['sonnet', 'opus'] as const).map(m => {
+                {(['haiku', 'sonnet', 'opus'] as const).map(m => {
                   const isActive = modelChoice === m
-                  const label = m === 'sonnet' ? 'S' : 'O'
+                  const label = m === 'haiku' ? 'H' : m === 'sonnet' ? 'S' : 'O'
                   const isOpusActive = m === 'opus' && isActive
+                  const isHaikuActive = m === 'haiku' && isActive
                   return (
                     <button
                       key={m}
-                      onClick={() => { setModelChoice(m); setAutoResolvedModel(null) }}
+                      onClick={() => setModelChoice(m)}
                       className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center transition-all duration-150"
                       style={{
-                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : '#222222') : 'transparent',
-                        color: isActive ? (isOpusActive ? '#f5a623' : '#ffffff') : '#666666',
-                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : '1px solid #333333') : '1px solid transparent',
+                        backgroundColor: isActive ? (isOpusActive ? '#2d1f00' : isHaikuActive ? '#0a1a1f' : '#222222') : 'transparent',
+                        color: isActive ? (isOpusActive ? '#f5a623' : isHaikuActive ? '#34d399' : '#ffffff') : '#666666',
+                        border: isActive ? (isOpusActive ? '1px solid #f5a623' : isHaikuActive ? '1px solid #34d399' : '1px solid #333333') : '1px solid transparent',
                       }}
-                      title={m === 'sonnet' ? 'Sonnet (default)' : `Opus (effort: ${effortLevel})`}
+                      title={m === 'haiku' ? 'Haiku (fast & lightweight)' : m === 'sonnet' ? 'Sonnet (default)' : `Opus (effort: ${effortLevel})`}
                     >
                       {label}
                     </button>
