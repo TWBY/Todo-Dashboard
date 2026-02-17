@@ -363,8 +363,24 @@
     "sessionId": "6ad4743c-2adc-4a83-bb2e-c26bdd43bf11",
     "projectId": "dashboard",
     "title": "現在 chat prot blog 都有自己的子版面了，主版面的 skill 列表也需要有自己的子版面才放，不要佔據主板",
-    "messageCount": 5,
+    "messageCount": 22,
     "createdAt": 1771315645343,
-    "lastActiveAt": 1771316117539
+    "lastActiveAt": 1771323324985
+  },
+  {
+    "sessionId": "45f839af-c7bb-4375-9605-8e4ed1179365",
+    "projectId": "dashboard",
+    "title": "為什麼我  1.23.0 已經說好就是主畫面沒有要顯示專案資料夾，還有就是沒有顯示 skill 了，但為何我現在 dev",
+    "messageCount": 5,
+    "createdAt": 1771323097234,
+    "lastActiveAt": 1771323337978
+  },
+  {
+    "sessionId": "b7a025af-ef36-4e16-bcf7-e117a571d1ac",
+    "projectId": "dashboard",
+    "title": "我要建立 team agent 去做功能探索，先不要細讀程式，反正我要做的就是，現在我們有這個 Todo Dashboa",
+    "messageCount": 1,
+    "createdAt": 1771323469388,
+    "lastActiveAt": 1771323540848
   }
 ]
