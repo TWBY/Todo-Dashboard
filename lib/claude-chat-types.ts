@@ -104,7 +104,7 @@ export interface TeamMember {
 export interface TeamTask {
   id: string
   description: string
-  status: string
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked'
   owner?: string
 }
 

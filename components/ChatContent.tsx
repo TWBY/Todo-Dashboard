@@ -1510,42 +1510,59 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         </ActionOverlay>
       )}
 
-      {/* Error Display */}
-      {error && (
-        <div className="mb-2 flex-shrink-0 flex items-stretch gap-2">
-          {lastFailedMessage && (
-            <button
-              onClick={() => {
-                clearError()
-                sendMessage(lastFailedMessage.message, lastFailedMessage.mode)
-              }}
-              className="px-4 rounded text-base font-medium transition-colors hover:bg-red-500/20"
-              style={{
-                backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                color: '#ef4444',
-                minWidth: '72px',
-              }}
-            >
-              重試
-            </button>
-          )}
+      {/* Error Display — three-layer: icon+type / message / action */}
+      {error && (() => {
+        const errLower = error.toLowerCase()
+        const isNetwork = errLower.includes('fetch') || errLower.includes('network') || errLower.includes('abort') || errLower.includes('timeout') || errLower.includes('逾時')
+        const isOverload = errLower.includes('overload') || errLower.includes('529') || errLower.includes('rate') || errLower.includes('capacity')
+        const isAuth = errLower.includes('401') || errLower.includes('403') || errLower.includes('auth') || errLower.includes('key')
+        const errType = isNetwork ? 'network' : isOverload ? 'overload' : isAuth ? 'auth' : 'unknown'
+        const errIcon = errType === 'network' ? 'fa-wifi' : errType === 'overload' ? 'fa-gauge-high' : errType === 'auth' ? 'fa-lock' : 'fa-circle-exclamation'
+        const errLabel = errType === 'network' ? 'Network' : errType === 'overload' ? 'Overloaded' : errType === 'auth' ? 'Auth' : 'Error'
+        const errHint = errType === 'network' ? '檢查網路連線或 API 伺服器狀態'
+          : errType === 'overload' ? '伺服器忙碌中，稍後重試'
+          : errType === 'auth' ? '檢查 API Key 設定'
+          : '可嘗試重新發送'
+        return (
           <div
-            className="flex-1 p-2 rounded text-base flex items-center"
-            style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#ef4444' }}
+            className="mb-2 flex-shrink-0 rounded-lg overflow-hidden"
+            style={{ backgroundColor: 'rgba(220, 38, 38, 0.08)', border: '1px solid rgba(220, 38, 38, 0.15)' }}
           >
-            <span className="flex-1">{error}</span>
-            <button
-              onClick={clearError}
-              className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors ml-2"
-              title="關閉"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
+            <div className="px-3 py-2 flex items-start gap-3">
+              {/* Icon + type label */}
+              <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5">
+                <i className={`fa-solid ${errIcon} text-xs`} style={{ color: '#ef4444' }} />
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#ef4444' }}>{errLabel}</span>
+              </div>
+              {/* Message + hint */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm" style={{ color: '#fca5a5' }}>{error}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(252,165,165,0.6)' }}>{errHint}</p>
+              </div>
+              {/* Actions */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {lastFailedMessage && (
+                  <button
+                    onClick={() => { clearError(); sendMessage(lastFailedMessage.message, lastFailedMessage.mode) }}
+                    className="px-2.5 py-1 rounded text-xs font-medium transition-colors hover:bg-red-500/20 cursor-pointer"
+                    style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
+                  >
+                    Retry
+                  </button>
+                )}
+                <button
+                  onClick={clearError}
+                  className="w-6 h-6 rounded flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+                  style={{ color: '#ef4444' }}
+                  title="關閉"
+                >
+                  <i className="fa-solid fa-xmark text-xs" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Slash Command Dropdown — 在 Input 之上 */}
       {slashFilter !== null && filteredSkills.length > 0 && (

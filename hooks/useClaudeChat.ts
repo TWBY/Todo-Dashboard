@@ -157,7 +157,7 @@ function processStreamEvent(
     actions.setMessages(prev => [...prev, {
       id: crypto.randomUUID(),
       role: 'assistant',
-      content: `⚠️ ${event.message}`,
+      content: String(event.message),
       timestamp: Date.now(),
       isError: true,
     }])
@@ -419,7 +419,7 @@ function processStreamEvent(
       actions.setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `⚠️ ${errorText}`,
+        content: errorText,
         isError: true,
         timestamp: Date.now(),
       }])
@@ -559,7 +559,14 @@ async function executeStream(opts: {
     const retryRes = await fetch('/api/claude-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId, message: fullMessage, sessionId: null, mode }),
+      body: JSON.stringify({
+        projectId,
+        message: fullMessage,
+        sessionId: null,
+        mode,
+        model: model || undefined,
+        effort: effort || undefined,
+      }),
       signal: controller.signal,
     })
 

@@ -3,15 +3,21 @@
 import { ChatPanelsProvider } from '@/contexts/ChatPanelsContext'
 import { LeftPanelProvider } from '@/contexts/LeftPanelContext'
 import { BuildPanelProvider } from '@/contexts/BuildPanelContext'
+import { DevServerProvider } from '@/contexts/DevServerContext'
+import { ToastProvider } from '@/contexts/ToastContext'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <LeftPanelProvider>
-      <ChatPanelsProvider>
-        <BuildPanelProvider>
-          {children}
-        </BuildPanelProvider>
-      </ChatPanelsProvider>
-    </LeftPanelProvider>
+    <ToastProvider>
+      <LeftPanelProvider>
+        <DevServerProvider>
+          <ChatPanelsProvider>
+            <BuildPanelProvider>
+              {children}
+            </BuildPanelProvider>
+          </ChatPanelsProvider>
+        </DevServerProvider>
+      </LeftPanelProvider>
+    </ToastProvider>
   )
 }

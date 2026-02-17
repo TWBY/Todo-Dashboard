@@ -4,10 +4,9 @@ import { useState, useCallback, useMemo } from 'react';
 import type { Project } from '@/lib/types';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
-import ClaudeUsagePanel from './ClaudeUsagePanel';
+import { MemoryCpuBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
-import MemoryWarningBanner, { MemoryProvider, ProcessKillButtons } from './MemoryWarningBanner';
-import ProductionMonitor from './ProductionMonitor';
+import { ProcessKillButtons } from './MemoryWarningBanner';
 
 interface DashboardContentProps {
   initialProjects: Project[];
@@ -40,6 +39,7 @@ function flattenProjects(projects: Project[]): Project[] {
   return result;
 }
 
+
 export default function DashboardContent({
   initialProjects,
   initialCourseFiles,
@@ -49,13 +49,11 @@ export default function DashboardContent({
   const [courseFiles, setCourseFiles] = useState(initialCourseFiles);
   const [utilityTools, setUtilityTools] = useState(initialUtilityTools);
 
-  // 動態計算 allProjects（當 projects/courseFiles/utilityTools 變更時自動更新）
   const allProjects = useMemo(
     () => flattenProjects([...projects, ...courseFiles, ...utilityTools]),
     [projects, courseFiles, utilityTools]
   );
 
-  // 樂觀更新專案資料
   const updateProject = useCallback((updatedProject: Project, category: 'projects' | 'courseFiles' | 'utilityTools') => {
     const setState = category === 'projects' ? setProjects : category === 'courseFiles' ? setCourseFiles : setUtilityTools;
 
@@ -63,7 +61,6 @@ export default function DashboardContent({
       if (p.id === updatedProject.id) {
         return updatedProject;
       }
-      // 處理 children
       if (p.children) {
         const updatedChildren = p.children.map(child => {
           if (child.name === updatedProject.name) {
@@ -82,27 +79,22 @@ export default function DashboardContent({
   return (
     <ResizableLayout
       left={
-        <div className="animate-fade-in space-y-6 pb-12">
-          <ScratchPad />
-          <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
-          <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))' }}>
-            <div className="space-y-4">
-              <DevServerPanel projects={allProjects} onUpdate={updateProject} />
-            </div>
-            <MemoryProvider>
-              <div className="space-y-4">
-                <ClaudeUsagePanel />
-                {/* Memory + CPU side by side */}
-                <div className="grid grid-cols-2 gap-4">
-                  <MemoryWarningBanner />
-                  <ProductionMonitor />
-                </div>
-                {/* Process kill buttons — independent section */}
-                <ProcessKillButtons />
-              </div>
-            </MemoryProvider>
+        <div className="animate-fade-in flex flex-col h-full">
+          {/* Quick Actions: ScratchPad */}
+          <div className="flex-shrink-0">
+            <ScratchPad />
           </div>
 
+          {/* Main: Dev Server panel (fills remaining space) */}
+          <div className="flex-1 min-h-0 overflow-y-auto mt-3">
+            <DevServerPanel projects={allProjects} onUpdate={updateProject} />
+          </div>
+
+          {/* Bottom: Memory/CPU + Process Kill Buttons */}
+          <div className="flex-shrink-0 space-y-2 mt-3">
+            <MemoryCpuBar />
+            <ProcessKillButtons />
+          </div>
         </div>
       }
     />

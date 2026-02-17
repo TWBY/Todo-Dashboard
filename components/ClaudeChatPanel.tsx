@@ -114,7 +114,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
               style={{ color: 'var(--text-tertiary)' }}
               title="關閉"
             >
-              ✕
+              <i className="fa-solid fa-xmark" />
             </button>
           )}
         </div>
