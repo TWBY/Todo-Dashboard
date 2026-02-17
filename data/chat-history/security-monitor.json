@@ -22,5 +22,13 @@
     "messageCount": 1,
     "createdAt": 1771299065137,
     "lastActiveAt": 1771299091707
+  },
+  {
+    "sessionId": "c4475f78-f566-4c1e-9083-18bbbede28da",
+    "projectId": "security-monitor",
+    "title": "我有以下需求，你評估看看是否可以開\n\n請開放這個權限：\n\nBash(node -e *)\n\n這樣我就能執行內嵌 Java",
+    "messageCount": 17,
+    "createdAt": 1771337542039,
+    "lastActiveAt": 1771339647118
   }
 ]
