@@ -1,0 +1,14 @@
+[
+  {
+    "id": "4d16ba00-8d30-4c21-8fbc-b098b244b9d3",
+    "role": "user",
+    "content": "/ship",
+    "timestamp": 1771324926401
+  },
+  {
+    "id": "ca7e13f1-e530-4087-bbbc-a08536aa06ee",
+    "role": "assistant",
+    "content": "I'll execute the `/ship` deployment process for you. Let me start by reading the project's CLAUDE.md to check for deployment targets.",
+    "timestamp": 1771324930665
+  }
+]
