@@ -68,6 +68,32 @@ export async function writeJsonFile<T>(filename: string, data: T[]): Promise<voi
 }
 
 /**
+ * Load all projects from all three city JSON files and flatten children.
+ * Replaces the pattern of reading 3 JSONs + flattenProjectsWithChildren that was repeated 8+ times.
+ */
+export async function loadAllProjects(): Promise<Project[]> {
+  const [brickverse, courseFiles, utilityTools] = await Promise.all([
+    readJsonFile<Project>('projects.json'),
+    readJsonFile<Project>('coursefiles.json'),
+    readJsonFile<Project>('utility-tools.json'),
+  ])
+  return flattenProjectsWithChildren([...brickverse, ...courseFiles, ...utilityTools])
+}
+
+/**
+ * Load all projects from all three city JSON files, returning both raw (per-city) and flattened.
+ */
+export async function loadAllProjectsWithCities() {
+  const [projects, courseFiles, utilityTools] = await Promise.all([
+    readJsonFile<Project>('projects.json'),
+    readJsonFile<Project>('coursefiles.json'),
+    readJsonFile<Project>('utility-tools.json'),
+  ])
+  const allFlattened = flattenProjectsWithChildren([...projects, ...courseFiles, ...utilityTools])
+  return { projects, courseFiles, utilityTools, allFlattened }
+}
+
+/**
  * Flatten projects: expand children with devPort into virtual Project objects.
  * Child projects get id = "parentId::childName" and path = "parentPath/childName".
  */
