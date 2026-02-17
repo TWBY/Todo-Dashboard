@@ -125,6 +125,25 @@ function ActionOverlay({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Team Monitor 查看列
+function TeamMonitorBanner({ onOpen, teamName }: { onOpen: () => void; teamName: string }) {
+  return (
+    <div className="animate-fade-in">
+      <button
+        onClick={onOpen}
+        className="w-full py-2 rounded text-base font-medium transition-all duration-200 flex items-center justify-center gap-2"
+        style={{
+          backgroundColor: 'rgba(88, 166, 255, 0.15)',
+          color: '#58a6ff',
+        }}
+      >
+        <span>查看 Agent Team</span>
+        <span style={{ color: '#666666', fontSize: '0.875rem' }}>({teamName})</span>
+      </button>
+    </div>
+  )
+}
+
 // Email 訊息複製按鈕（複製為 rich text，貼到 Gmail 會保留格式）
 function EmailCopyButton({ content }: { content: string }) {
   const { copyRichText, isCopied } = useCopyToClipboard()
@@ -596,7 +615,7 @@ interface ChatContentProps {
   onPanelStatusChange?: (status: PanelStatus) => void
 }
 
-interface SkillInfo { name: string; description: string }
+interface SkillInfo { name: string; description: string; model?: 'haiku' | 'sonnet' | 'opus'; category?: string }
 
 export { ContentsRate }
 
@@ -620,6 +639,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [autoResolvedModel, setAutoResolvedModel] = useState<string | null>(null)
+  const [activeTeam, setActiveTeam] = useState<{ name: string; description?: string } | null>(null)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -642,6 +662,20 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const effectiveModel = modelProp || modelChoice
   const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
   const { addPanel } = useChatPanels()
+
+  // 偵測 Team 事件（TeamCreate / TeamDelete）→ 追蹤 activeTeam state（不自動開啟面板）
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1]
+    if (!lastMsg?.teamEvent) return
+    if (lastMsg.teamEvent.type === 'create') {
+      const teamName = lastMsg.teamEvent.teamName
+      setActiveTeam({ name: teamName, description: lastMsg.teamEvent.description })
+      // 不再自動開啟面板，由用戶點擊 banner 手動開啟
+    } else if (lastMsg.teamEvent.type === 'delete') {
+      setActiveTeam(prev => prev ? { ...prev, name: prev.name } : null)
+      setTimeout(() => setActiveTeam(null), 5000)
+    }
+  }, [messages, projectId])
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
   const hasResumedRef = useRef(false)
@@ -686,6 +720,17 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   useEffect(() => {
     if (sessionId && onSessionIdChange) onSessionIdChange(sessionId)
   }, [sessionId, onSessionIdChange])
+
+  // 手動開啟 Team Monitor 面板
+  const handleOpenTeamMonitor = useCallback(() => {
+    if (!activeTeam) return
+    const teamName = activeTeam.name
+    addPanel(projectId, `Team: ${teamName}`, {
+      type: 'team-monitor',
+      teamName,
+      ephemeral: true
+    })
+  }, [activeTeam, projectId, addPanel])
 
   // 批准計畫時自動切換 mode 到 edit（planOnly 模式下不切換，改為自動存回 Scratch Pad）
   const isApprovingRef = useRef(false)
@@ -989,7 +1034,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       messageToSend = emailSystemPrompt + messageToSend
     }
 
-    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined)
+    sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, modelChoice, effortLevel)
     inputRef.current = ''
     hasInputRef.current = false
     if (textareaRef.current) textareaRef.current.value = ''
@@ -1044,7 +1089,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   const runSkill = (name: string) => {
     setSlashFilter(null)
-    // 清空 textarea
+    const skill = allSkills.find(s => s.name === name)
+    const skillModel = skill?.model
+    // Skill 有指定 model → 同步更新 UI 選擇器
+    if (skillModel && !modelProp) {
+      setModelChoice(skillModel)
+    }
     inputRef.current = ''
     hasInputRef.current = false
     if (textareaRef.current) textareaRef.current.value = ''
@@ -1054,7 +1104,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       textareaRef.current?.focus()
     })
     isNearBottomRef.current = true
-    sendMessage(`/${name}`, 'edit')
+    sendMessage(`/${name}`, 'edit', undefined, skillModel)
     setMode('edit')
   }
 
@@ -1098,6 +1148,20 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             backgroundColor: '#000000',
           }}
         >
+        {/* DEV: Team Monitor 測試按鈕（開發環境才顯示） */}
+        {process.env.NODE_ENV === 'development' && !activeTeam && displayMessages.length === 0 && !emailMode && !isStreaming && (
+          <button
+            onClick={() => {
+              setActiveTeam({ name: 'ct-fix', description: '修復 ClaudeTerminal App 在 streaming 結束後自動退出的問題' })
+              addPanel(projectId, 'Team: ct-fix', { type: 'team-monitor', teamName: 'ct-fix', ephemeral: true })
+            }}
+            className="text-xs px-2 py-1 rounded mb-2"
+            style={{ backgroundColor: '#0d1117', border: '1px solid #1f3a5f', color: '#58a6ff' }}
+          >
+            DEV: Test Team Monitor
+          </button>
+        )}
+
         {/* emailMode 初始歡迎訊息 */}
         {emailMode && displayMessages.length === 0 && (
           <div className="animate-fade-in">
@@ -1111,7 +1175,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         )}
 
         {(() => {
-          const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch']
+          const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch', 'SendMessage']
 
           const isLowLevelTool = (m: typeof displayMessages[0]) =>
             m.role === 'tool' &&
@@ -1230,6 +1294,22 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                   )
                 })()}
 
+                {msg.role === 'tool' && msg.toolName === 'TeamCreate' && msg.teamEvent && (
+                  <div className="text-sm py-0.5 flex items-center gap-2" style={{ color: '#58a6ff' }}>
+                    <i className="fa-solid fa-users-gear text-xs" />
+                    <span>Team: {msg.teamEvent.teamName}</span>
+                    {msg.teamEvent.description && (
+                      <span style={{ color: '#666666' }}>— {msg.teamEvent.description}</span>
+                    )}
+                  </div>
+                )}
+
+                {msg.role === 'tool' && msg.toolName === 'TeamDelete' && (
+                  <div className="text-sm py-0.5" style={{ color: '#666666' }}>
+                    團隊已解散
+                  </div>
+                )}
+
                 {msg.role === 'tool' && msg.toolName === 'TodoWrite' && msg.todos && (
                   <div>
                     <div
@@ -1257,7 +1337,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
                   </div>
                 )}
 
-                {msg.role === 'tool' && msg.toolName !== 'TodoWrite' && msg.toolName !== 'AskUserQuestion' && msg.toolName !== 'ExitPlanMode' && (() => {
+                {msg.role === 'tool' && msg.toolName !== 'TodoWrite' && msg.toolName !== 'AskUserQuestion' && msg.toolName !== 'ExitPlanMode' && msg.toolName !== 'TeamCreate' && msg.toolName !== 'TeamDelete' && (() => {
                   const isPlanWrite = msg.toolName === 'Write' && msg.content.includes('/plans/')
 
                   if (isPlanWrite) {
@@ -1369,6 +1449,13 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       {pendingQuestions && (
         <ActionOverlay>
           <QuestionDialog questions={pendingQuestions.questions} onAnswer={answerQuestion} />
+        </ActionOverlay>
+      )}
+
+      {/* Team Monitor 查看按鈕 — 在 Input 之上 */}
+      {activeTeam && (
+        <ActionOverlay>
+          <TeamMonitorBanner onOpen={handleOpenTeamMonitor} teamName={activeTeam.name} />
         </ActionOverlay>
       )}
 

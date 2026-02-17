@@ -42,6 +42,13 @@ function extractToolDescription(name: string, input: Record<string, unknown>): s
       } catch { return '' }
     }
     case 'Diff': return String(input.file_path || '').split('/').pop() || ''
+    case 'TeamCreate': return `Team: ${String(input.team_name || '')}`
+    case 'TeamDelete': return 'Team dissolved'
+    case 'SendMessage': {
+      const summary = String(input.summary || '').trim()
+      const msgType = String(input.type || 'message')
+      return summary ? `${msgType}: ${summary}` : msgType
+    }
     default: return ''
   }
 }
@@ -330,6 +337,41 @@ function processStreamEvent(
             content: '',
             toolName: block.name,
             planApproval: { pending: true },
+            timestamp: Date.now(),
+          }])
+          ctx.currentAssistantId = null
+          return
+        }
+
+        // TeamCreate — 標記 team 事件，UI 渲染 TeamMonitorPanel
+        if (block.name === 'TeamCreate') {
+          if (ctx.handledToolUseIDs.has(block.id)) return
+          ctx.handledToolUseIDs.add(block.id)
+          const teamInput = block.input as { team_name?: string; description?: string }
+          actions.setMessages(prev => [...prev, {
+            id: crypto.randomUUID(),
+            role: 'tool',
+            content: JSON.stringify(block.input, null, 2),
+            toolName: block.name,
+            toolDescription: `Team: ${teamInput.team_name || ''}`,
+            teamEvent: { type: 'create', teamName: teamInput.team_name || '', description: teamInput.description },
+            timestamp: Date.now(),
+          }])
+          ctx.currentAssistantId = null
+          return
+        }
+
+        // TeamDelete — 標記 team 結束事件
+        if (block.name === 'TeamDelete') {
+          if (ctx.handledToolUseIDs.has(block.id)) return
+          ctx.handledToolUseIDs.add(block.id)
+          actions.setMessages(prev => [...prev, {
+            id: crypto.randomUUID(),
+            role: 'tool',
+            content: '',
+            toolName: block.name,
+            toolDescription: 'Team dissolved',
+            teamEvent: { type: 'delete', teamName: '' },
             timestamp: Date.now(),
           }])
           ctx.currentAssistantId = null

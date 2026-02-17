@@ -8,6 +8,8 @@ export interface ChatPanelState {
   panelId: string
   projectId: string
   projectName: string
+  type?: 'chat' | 'team-monitor' // default: 'chat'
+  teamName?: string // team-monitor 專用：Team 名稱
   sessionId?: string
   planOnly?: boolean
   emailMode?: boolean
@@ -19,6 +21,8 @@ export interface ChatPanelState {
 }
 
 interface AddPanelOpts {
+  type?: 'chat' | 'team-monitor'
+  teamName?: string
   planOnly?: boolean
   emailMode?: boolean
   scratchItemId?: string
