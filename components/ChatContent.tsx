@@ -9,7 +9,7 @@ import type { ChatMessage, ChatMode, TodoItem, UserQuestion } from '@/lib/claude
 import { useClaudeChat } from '@/hooks/useClaudeChat'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
-import { useStreamingReveal } from '@/hooks/useStreamingReveal'
+import { useThrottledValue } from '@/hooks/useThrottledValue'
 
 
 const MODE_CONFIG: Record<ChatMode, { label: string; prefix: string; placeholder: string }> = {
@@ -316,9 +316,8 @@ const MARKDOWN_PROSE = `prose prose-invert max-w-none overflow-hidden break-word
   [&_blockquote]:border-l-2 [&_blockquote]:border-[#333] [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-[#999]
   [&_hr]:border-[#333333] [&_hr]:my-4`
 
-// Streaming 中的 assistant 訊息：diff-chunk 漸進式揭露（FlowToken 風格）
-// 每次 SSE 送來新文字 → 新 chunk mount → CSS fade-in 動畫
-// Streaming 結束後外層會切回 ReactMarkdown 渲染完整 Markdown
+// Streaming 中的 assistant 訊息：使用 ReactMarkdown + throttle 避免過度重繪
+// 與完成態使用相同的 ReactMarkdown 渲染路徑，消除切換時的閃爍
 function StreamingAssistantMessage({
   msg,
   emailMode,
@@ -326,22 +325,17 @@ function StreamingAssistantMessage({
   msg: ChatMessage
   emailMode: boolean
 }) {
-  const { chunks } = useStreamingReveal(msg.content, true)
+  const throttledContent = useThrottledValue(msg.content, 100)
 
   return (
     <div className="group/msg relative">
       <div
-        className="text-base leading-[1.75] tracking-[0em] whitespace-pre-wrap"
+        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
         style={{ color: '#ffffff' }}
       >
-        {chunks.map((chunk) => (
-          <span
-            key={chunk.id}
-            className={chunk.id >= 0 ? 'streaming-word-reveal' : undefined}
-          >
-            {chunk.text}
-          </span>
-        ))}
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          {throttledContent}
+        </ReactMarkdown>
       </div>
       {emailMode && msg.content.length > 20 && (
         <div className="mt-1.5">
