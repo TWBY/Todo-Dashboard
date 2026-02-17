@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import { appendFile, access, stat } from 'fs/promises';
 import { openSync } from 'fs';
 import path from 'path';
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data';
+import { readJsonFile, flattenProjectsWithChildren, loadAllProjects } from '@/lib/data';
 import type { Project } from '@/lib/types';
 
 const execAsyncRaw = promisify(exec);
@@ -334,10 +334,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const brickverseProjects = await readJsonFile<Project>('projects.json');
-    const courseFiles = await readJsonFile<Project>('coursefiles.json');
-    const utilityTools = await readJsonFile<Project>('utility-tools.json');
-    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools]);
+    const projects = await loadAllProjects();
     const project = projects.find(p => p.id === projectId);
 
     if (!project) {

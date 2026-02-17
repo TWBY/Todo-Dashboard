@@ -21,15 +21,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   const body = await request.json();
+
+  if (!body.title || typeof body.title !== 'string' || !body.title.trim()) {
+    return NextResponse.json({ error: 'title is required' }, { status: 400 });
+  }
+
+  const validPriorities = ['low', 'medium', 'high'] as const;
+  const priority = validPriorities.includes(body.priority) ? body.priority : 'medium';
+
   const todos = await readJsonFile<Todo>('todos.json');
 
   const newTodo: Todo = {
     id: crypto.randomUUID(),
-    title: body.title,
+    title: body.title.trim(),
     description: body.description,
     projectId: body.projectId || '',
     status: 'pending',
-    priority: body.priority || 'medium',
+    priority,
     createdAt: new Date().toISOString(),
   };
 

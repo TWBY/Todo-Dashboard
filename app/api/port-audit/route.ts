@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { readFile, writeFile, access } from 'fs/promises'
 import path from 'path'
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
+import { readJsonFile, flattenProjectsWithChildren, loadAllProjects } from '@/lib/data'
 import type { Project } from '@/lib/types'
 
 interface AuditEntry {
@@ -210,15 +210,7 @@ export async function PATCH(request: Request) {
 
     if (action === 'fix-all') {
       // 取得所有有問題的項目並修復
-      const brickverseProjects = await readJsonFile<Project>('projects.json')
-      const courseFiles = await readJsonFile<Project>('coursefiles.json')
-      const utilityTools = await readJsonFile<Project>('utility-tools.json')
-
-      const allProjects = [
-        ...flattenProjectsWithChildren(brickverseProjects),
-        ...flattenProjectsWithChildren(courseFiles),
-        ...flattenProjectsWithChildren(utilityTools),
-      ].filter(p => p.devPort)
+      const allProjects = (await loadAllProjects()).filter(p => p.devPort)
 
       const results: { name: string; pkg: string; claude: string }[] = []
       for (const project of allProjects) {

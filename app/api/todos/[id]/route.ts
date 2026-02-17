@@ -12,9 +12,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // Whitelist updatable fields to prevent overwriting id/createdAt
+  const validStatuses = ['pending', 'in_progress', 'completed'] as const;
+  const validPriorities = ['low', 'medium', 'high'] as const;
+  const updates: Partial<Todo> = {};
+  if (body.title && typeof body.title === 'string') updates.title = body.title.trim();
+  if (body.description !== undefined) updates.description = body.description;
+  if (body.projectId && typeof body.projectId === 'string') updates.projectId = body.projectId;
+  if (validStatuses.includes(body.status)) updates.status = body.status;
+  if (validPriorities.includes(body.priority)) updates.priority = body.priority;
+
   todos[index] = {
     ...todos[index],
-    ...body,
+    ...updates,
     completedAt: body.status === 'completed' ? new Date().toISOString() : todos[index].completedAt,
   };
 
