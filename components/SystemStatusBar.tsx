@@ -19,7 +19,7 @@ function formatCountdown(resetsAt: string | null): string {
 function MiniBar({ percent, color }: { percent: number; color: string }) {
   return (
     <div
-      className="w-12 h-1 rounded-full overflow-hidden flex-shrink-0"
+      className="flex-1 h-2 rounded-full overflow-hidden"
       style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
     >
       <div
@@ -117,8 +117,14 @@ function UsageRow({ label, utilization, resetsAt, totalDays, showPace }: {
  * 顏色邏輯：port 判斷（3000=紅色系，4000=綠色系）
  * 內容：實時 Claude 用量
  */
-export function ClaudeUsageBar({ port }: { port?: number } = {}) {
+export function ClaudeUsageBar({ layout = 'both' }: { layout?: 'both' | 'session-only' | 'weekly-only' } = {}) {
+  const [port, setPort] = useState<number>(0);
   const [data, setData] = useState<ClaudeUsageLimits | null>(null);
+
+  // 讀取 port
+  useEffect(() => {
+    setPort(parseInt(window.location.port) || 80);
+  }, []);
 
   const fetchData = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -144,65 +150,58 @@ export function ClaudeUsageBar({ port }: { port?: number } = {}) {
   const accentColor = isDevPort ? '#ef4444' : '#10b981';
 
   if (!data) return (
-    <div className="space-y-1">
-      <SkeletonBar />
-      <SkeletonBar />
+    <div>
+      {(layout === 'both' || layout === 'session-only') && <SkeletonBar />}
+      {(layout === 'both' || layout === 'weekly-only') && <SkeletonBar />}
     </div>
   );
 
   return (
-    <div className="space-y-1">
-      {/* 上：Session (5h) */}
-      <div
-        className="flex items-center gap-3 px-3 py-1.5 rounded-lg"
-        style={{ backgroundColor: bgColor }}
-      >
-        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: accentColor }} />
-        <span className="text-xs font-semibold" style={{ color: accentColor }}>Session</span>
-        <span className="text-xs font-mono font-semibold" style={{ color: 'var(--text-secondary)' }}>
-          {data.five_hour.utilization}%
-        </span>
-        {formatCountdown(data.five_hour.resets_at) && (
-          <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-            {formatCountdown(data.five_hour.resets_at)}
+    <div>
+      {/* Session */}
+      {(layout === 'both' || layout === 'session-only') && (
+        <div className="flex items-center gap-2 py-1.5">
+          <span className="text-sm font-mono font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            {data.five_hour.utilization}%
           </span>
-        )}
-      </div>
-
-      {/* 下：Weekly (7d) — 含 pace 分析 */}
-      <div
-        className="flex items-center gap-3 px-3 py-1.5 rounded-lg"
-        style={{ backgroundColor: bgColor }}
-      >
-        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: accentColor }} />
-        <span className="text-xs font-semibold" style={{ color: accentColor }}>Weekly</span>
-        <span className="text-xs font-mono font-semibold" style={{ color: 'var(--text-secondary)' }}>
-          {data.seven_day.utilization}%
-        </span>
-        {formatCountdown(data.seven_day.resets_at) && (
-          <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-            {formatCountdown(data.seven_day.resets_at)}
-          </span>
-        )}
-        {(() => {
-          const pace = computePace(data.seven_day.utilization, data.seven_day.resets_at, 7);
-          return pace ? (
-            <span
-              className="text-xs flex items-center gap-1"
-              style={{ color: pace.diffPct > 5 ? '#f59e0b' : pace.diffPct < -5 ? '#22c55e' : 'var(--text-tertiary)' }}
-            >
-              {pace.diffPct > 5 && <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '0.6rem' }} />}
-              {pace.label}
+          {formatCountdown(data.five_hour.resets_at) && (
+            <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>
+              {formatCountdown(data.five_hour.resets_at)}
             </span>
-          ) : null;
-        })()}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Weekly */}
+      {(layout === 'both' || layout === 'weekly-only') && (
+        <div className="flex items-center gap-2 py-1.5">
+          <span className="text-sm font-mono font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            {data.seven_day.utilization}%
+          </span>
+          {formatCountdown(data.seven_day.resets_at) && (
+            <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>
+              {formatCountdown(data.seven_day.resets_at)}
+            </span>
+          )}
+          {(() => {
+            const pace = computePace(data.seven_day.utilization, data.seven_day.resets_at, 7);
+            return pace ? (
+              <span
+                className="text-sm"
+                style={{ color: pace.diffPct > 5 ? '#f59e0b' : pace.diffPct < -5 ? '#22c55e' : 'var(--text-tertiary)' }}
+              >
+                {pace.diffPct > 0 ? '+' : ''}{pace.diffPct}%
+              </span>
+            ) : null;
+          })()}
+        </div>
+      )}
     </div>
   );
 }
 
 /** 底部 Memory + CPU 指標條 */
-export function MemoryCpuBar() {
+export function MemoryCpuBar({ layout = 'both' }: { layout?: 'both' | 'memory-only' | 'cpu-only' } = {}) {
   const { systemMemory, systemCpu } = useDevServer();
 
   const memoryColor = !systemMemory ? 'rgba(255,255,255,0.15)'
@@ -213,36 +212,37 @@ export function MemoryCpuBar() {
     : systemCpu >= 80 ? '#ef4444' : systemCpu >= 50 ? '#fb923c' : '#818cf8';
 
   return (
-    <div className="flex items-center gap-4 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-      {/* M: Memory */}
-      <div className="flex items-center gap-1.5">
-        {systemMemory ? (
+    <div className="flex items-center gap-2">
+      {/* Memory */}
+      {(layout === 'both' || layout === 'memory-only') && (
+        systemMemory ? (
           <>
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>M</span>
-            <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }} title={`Memory: ${systemMemory.usedGB}/${systemMemory.totalGB}GB`}>
+            <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>
               {systemMemory.usedPercent}%
             </span>
             <MiniBar percent={systemMemory.usedPercent} color={memoryColor} />
           </>
         ) : (
           <SkeletonIndicator />
-        )}
-      </div>
+        )
+      )}
 
-      {/* C: CPU */}
-      <div className="flex items-center gap-1.5">
-        {systemCpu !== null ? (
+      {/* Spacer (only show when both) */}
+      {layout === 'both' && <div style={{ width: '16px' }} />}
+
+      {/* CPU */}
+      {(layout === 'both' || layout === 'cpu-only') && (
+        systemCpu !== null ? (
           <>
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>C</span>
-            <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }} title={`CPU: ${systemCpu.toFixed(1)}%`}>
+            <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>
               {systemCpu.toFixed(0)}%
             </span>
             <MiniBar percent={systemCpu} color={cpuColor} />
           </>
         ) : (
           <SkeletonIndicator />
-        )}
-      </div>
+        )
+      )}
     </div>
   );
 }
