@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import type { Project } from '@/lib/types';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
-import { MemoryCpuBar } from './SystemStatusBar';
+import { ClaudeUsageBar, MemoryCpuBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
 import { ProcessKillButtons } from './MemoryWarningBanner';
 
@@ -81,18 +81,31 @@ export default function DashboardContent({
       left={
         <div className="animate-fade-in flex flex-col h-full">
           {/* Quick Actions: ScratchPad */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mb-3">
             <ScratchPad />
           </div>
 
           {/* Main: Dev Server panel (fills remaining space) */}
-          <div className="flex-1 min-h-0 overflow-y-auto mt-3">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <DevServerPanel projects={allProjects} onUpdate={updateProject} />
           </div>
 
-          {/* Bottom: Memory/CPU + Process Kill Buttons */}
-          <div className="flex-shrink-0 space-y-2 mt-3">
-            <MemoryCpuBar />
+          {/* Bottom: Claude Usage + Memory/CPU Indicators (50/50 split) */}
+          <div className="flex-shrink-0 mt-3 px-3 py-2 rounded-lg flex gap-4" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            {/* Left Column: Session + Memory */}
+            <div style={{ flex: '0 0 50%' }}>
+              <ClaudeUsageBar layout="session-only" />
+              <MemoryCpuBar layout="memory-only" />
+            </div>
+            {/* Right Column: Weekly + CPU */}
+            <div style={{ flex: '0 0 50%' }}>
+              <ClaudeUsageBar layout="weekly-only" />
+              <MemoryCpuBar layout="cpu-only" />
+            </div>
+          </div>
+
+          {/* Process Kill Buttons */}
+          <div className="flex-shrink-0 mt-3">
             <ProcessKillButtons />
           </div>
         </div>

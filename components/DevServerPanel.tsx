@@ -468,16 +468,16 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
           {currentPort === 3000 && versionConfig.development && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+              style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
               title="Development 版本"
             >
-              D-{versionConfig.development}
+              D-{versionConfig.development.split('-')[0]}
             </span>
           )}
           {currentPort === 4000 && versionConfig.production && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+              style={{ backgroundColor: 'rgba(16,185,129,0.1)', color: '#10b981' }}
               title="Production 版本"
             >
               P-{versionConfig.production}
