@@ -1,0 +1,26 @@
+[
+  {
+    "sessionId": "49a95e6a-c684-46c8-8a5d-8953037853b7",
+    "projectId": "security-monitor",
+    "title": "現在我要幫他寫一個計畫。因為現在不管是 Claude Code，或者是 Claude Code 的 CDP 或 MCP，",
+    "messageCount": 26,
+    "createdAt": 1771262183959,
+    "lastActiveAt": 1771298263512
+  },
+  {
+    "sessionId": "e67bcba4-f7cb-4236-887b-de082b1f4c02",
+    "projectId": "security-monitor",
+    "title": "移除掉 高風險擴充套件：Grass Lite Node",
+    "messageCount": 17,
+    "createdAt": 1771298341123,
+    "lastActiveAt": 1771306222205
+  },
+  {
+    "sessionId": "96571430-1ac1-4df7-8e71-9cfc8deaca18",
+    "projectId": "security-monitor",
+    "title": "現在這個專案級規則 claude md 寫了什麼",
+    "messageCount": 1,
+    "createdAt": 1771299065137,
+    "lastActiveAt": 1771299091707
+  }
+]
