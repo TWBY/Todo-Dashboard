@@ -317,7 +317,6 @@ export default function BlogPipelinePage() {
             <VArrow dashed />
 
             {/* Phase 5 */}
-            <div className="mt-2">
             <PhaseHeader phase="Phase 5" title="語意索引雙向更新（發布後手動觸發）" />
             <div
               className="rounded-lg px-4 py-3"
@@ -352,7 +351,6 @@ export default function BlogPipelinePage() {
                 </div>
               </div>
             </div>
-            </div>
 
             {/* Utilities */}
             <div className="mt-10 pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
@@ -372,7 +370,6 @@ export default function BlogPipelinePage() {
               </div>
             </div>
           </div>
-      </div>
     </SubpageShell>
   );
 }
