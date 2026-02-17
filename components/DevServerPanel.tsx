@@ -395,12 +395,12 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <span
             className="cursor-pointer hover:opacity-70 transition-opacity"
-            onClick={() => copy('Dev Servers')}
+            onClick={() => copy('Station')}
             title="點擊複製名稱"
           >
-            Dev Servers
+            Station
           </span>
-          {isCopied('Dev Servers') && (
+          {isCopied('Station') && (
             <span className="text-sm text-green-500">已複製！</span>
           )}
           <span
@@ -631,7 +631,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                       fontSize: 'var(--text-sm)',
                       lineHeight: 'var(--leading-compact)',
                     }}
-                    title="從 Dev Server 移除"
+                    title="離開 Station"
                   >
                     ✕
                   </button>
@@ -647,7 +647,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
 
       {projectsWithPort.length === 0 && (
         <p className="text-base text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
-          No projects with devPort configured
+          Station 目前沒有進駐的專案
         </p>
       )}
     </div>

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { readFile, writeFile, access } from 'fs/promises';
+import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '@/lib/data';
 import type { Project } from '@/lib/types';
 
@@ -41,9 +43,108 @@ function findNextAvailablePort(allProjects: Project[]): number {
       }
     }
   }
-  let port = 3012;
-  while (usedPorts.has(port)) port++;
+  let port = 3001;
+  while (usedPorts.has(port) || port === 4000) port++;
   return port;
+}
+
+// --- 三重登記 helpers ---
+
+async function fileExists(path: string): Promise<boolean> {
+  try { await access(path); return true } catch { return false }
+}
+
+/** 更新 package.json：在 scripts.dev 加上 -p <port> */
+async function updatePackageJsonPort(projectPath: string, port: number): Promise<void> {
+  const pkgPath = join(projectPath, 'package.json')
+  if (!await fileExists(pkgPath)) return
+  try {
+    const raw = await readFile(pkgPath, 'utf-8')
+    const pkg = JSON.parse(raw)
+    if (!pkg.scripts?.dev) return
+    const devScript: string = pkg.scripts.dev
+    // 如果已經有 -p，先移除舊的
+    const cleaned = devScript.replace(/\s+-p\s+\d+/g, '').replace(/\s+--port\s+\d+/g, '')
+    pkg.scripts.dev = `${cleaned} -p ${port}`
+    await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
+  } catch { /* ignore parse errors */ }
+}
+
+/** 從 package.json scripts.dev 移除 -p <port> */
+async function removePackageJsonPort(projectPath: string): Promise<void> {
+  const pkgPath = join(projectPath, 'package.json')
+  if (!await fileExists(pkgPath)) return
+  try {
+    const raw = await readFile(pkgPath, 'utf-8')
+    const pkg = JSON.parse(raw)
+    if (!pkg.scripts?.dev) return
+    pkg.scripts.dev = pkg.scripts.dev.replace(/\s+-p\s+\d+/g, '').replace(/\s+--port\s+\d+/g, '')
+    await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
+  } catch { /* ignore */ }
+}
+
+const DEV_SERVER_TABLE = (port: number) =>
+  `\n## Dev Server\n\n| 環境 | Port | 指令 |\n|------|------|------|\n| 開發 | \`${port}\` | \`npm run dev\` |\n`
+
+/** 在專案 CLAUDE.md 登記 Dev Server port（區域戶口） */
+async function updateClaudeMdPort(projectPath: string, port: number): Promise<void> {
+  // 優先用 .claude/CLAUDE.md，其次根目錄 CLAUDE.md
+  const dotClaudePath = join(projectPath, '.claude', 'CLAUDE.md')
+  const rootClaudePath = join(projectPath, 'CLAUDE.md')
+
+  let claudePath: string
+  if (await fileExists(dotClaudePath)) {
+    claudePath = dotClaudePath
+  } else if (await fileExists(rootClaudePath)) {
+    claudePath = rootClaudePath
+  } else {
+    // 新建在根目錄
+    claudePath = rootClaudePath
+    await writeFile(claudePath, `# ${projectPath.split('/').pop()}\n${DEV_SERVER_TABLE(port)}`, 'utf-8')
+    return
+  }
+
+  const content = await readFile(claudePath, 'utf-8')
+  // 如果已有 Dev Server 區段，替換
+  const devServerRegex = /\n## Dev Server\n[\s\S]*?(?=\n## |\n# |$)/
+  if (devServerRegex.test(content)) {
+    const updated = content.replace(devServerRegex, DEV_SERVER_TABLE(port))
+    await writeFile(claudePath, updated, 'utf-8')
+  } else {
+    // 追加到末尾
+    await writeFile(claudePath, content.trimEnd() + '\n' + DEV_SERVER_TABLE(port), 'utf-8')
+  }
+}
+
+/** 從專案 CLAUDE.md 移除 Dev Server 區段 */
+async function removeClaudeMdPort(projectPath: string): Promise<void> {
+  const dotClaudePath = join(projectPath, '.claude', 'CLAUDE.md')
+  const rootClaudePath = join(projectPath, 'CLAUDE.md')
+
+  let claudePath: string
+  if (await fileExists(dotClaudePath)) {
+    claudePath = dotClaudePath
+  } else if (await fileExists(rootClaudePath)) {
+    claudePath = rootClaudePath
+  } else {
+    return
+  }
+
+  const content = await readFile(claudePath, 'utf-8')
+  const devServerRegex = /\n## Dev Server\n[\s\S]*?(?=\n## |\n# |$)/
+  if (devServerRegex.test(content)) {
+    const updated = content.replace(devServerRegex, '')
+    await writeFile(claudePath, updated.trimEnd() + '\n', 'utf-8')
+  }
+}
+
+/** 解析專案路徑：直接專案 vs child（CourseFiles 子專案） */
+function resolveProjectPath(project: Project, childName?: string): string {
+  if (childName && project.children) {
+    // CourseFiles 子專案：路徑 = parent.path / childName
+    return join(project.path, childName)
+  }
+  return project.devPath || project.path
 }
 
 export async function PATCH(request: Request) {
@@ -103,10 +204,21 @@ export async function PATCH(request: Request) {
     }
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
+
+    // 三重登記：package.json + CLAUDE.md
+    const projectPath = resolveProjectPath(targetList[targetIndex], childName);
+    await Promise.all([
+      updatePackageJsonPort(projectPath, devPort),
+      updateClaudeMdPort(projectPath, devPort),
+    ]);
+
     return NextResponse.json({ devPort, devAddedAt });
   }
 
   if (action === 'remove-from-dev') {
+    // 先取得路徑（移除前 project 還有 path 資訊）
+    const projectPath = resolveProjectPath(targetList[targetIndex], childName);
+
     if (childName) {
       const child = targetList[targetIndex].children?.find(c => c.name === childName);
       if (!child) {
@@ -124,6 +236,13 @@ export async function PATCH(request: Request) {
     }
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
+
+    // 三重清理：package.json + CLAUDE.md
+    await Promise.all([
+      removePackageJsonPort(projectPath),
+      removeClaudeMdPort(projectPath),
+    ]);
+
     return NextResponse.json({ success: true });
   }
 

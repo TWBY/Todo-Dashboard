@@ -54,6 +54,8 @@ interface PortStatus {
   projectPath?: string;
   memoryMB?: number;
   cpuPercent?: number;
+  source?: 'brickverse' | 'coursefiles' | 'utility'
+  devBasePath?: string;
 }
 
 interface SystemMemory {
@@ -251,7 +253,10 @@ export async function GET() {
     const brickverseProjects = await readJsonFile<Project>('projects.json');
     const courseFiles = await readJsonFile<Project>('coursefiles.json');
     const utilityTools = await readJsonFile<Project>('utility-tools.json');
-    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools]);
+    const brickverseFlat = flattenProjectsWithChildren(brickverseProjects).map(p => ({ ...p, source: 'brickverse' as const }));
+    const courseFlat = flattenProjectsWithChildren(courseFiles).map(p => ({ ...p, source: 'coursefiles' as const }));
+    const utilityFlat = flattenProjectsWithChildren(utilityTools).map(p => ({ ...p, source: 'utility' as const }));
+    const projects = [...brickverseFlat, ...courseFlat, ...utilityFlat];
 
     // Check all ports in parallel instead of serial
     const projectsWithPort = projects.filter(p => p.devPort);
@@ -274,6 +279,8 @@ export async function GET() {
           projectPath: project.path,
           memoryMB,
           cpuPercent,
+          source: project.source,
+          devBasePath: project.devBasePath,
         };
       })
     );

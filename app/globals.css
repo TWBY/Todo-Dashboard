@@ -362,7 +362,7 @@ option {
 }
 
 .streaming-status-text {
-  animation: toolCrossfade 0.3s ease-in-out, shimmer 3s ease-in-out infinite;
+  animation: toolCrossfade 0.3s ease-in-out, shimmer 1.8s ease-in-out infinite;
   background: linear-gradient(
     90deg,
     currentColor 0%,
@@ -547,6 +547,11 @@ option {
 }
 .team-activity-line {
   animation: team-activity-cycle 2.2s ease-in-out;
+}
+
+/* 當 shimmer-text 和 team-activity-line 同時使用時，合併兩個動畫避免覆蓋 */
+.shimmer-text.team-activity-line {
+  animation: shimmer 2.5s ease-in-out infinite, team-activity-cycle 2.2s ease-in-out;
 }
 
 /* Member card working glow（使用 CSS custom property --member-glow） */
