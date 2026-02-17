@@ -12,7 +12,7 @@
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
     "updatedAt": "2026-02-15T13:51:10.902Z",
-    "devPort": 3012,
+    "devPort": 3001,
     "devAddedAt": "2026-02-15T13:51:10.902Z"
   },
   {
@@ -27,7 +27,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-01-29T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:17:35.670Z"
+    "updatedAt": "2026-02-17T07:55:24.963Z"
   },
   {
     "id": "blogbackend",
@@ -37,7 +37,7 @@
     "description": "Blog 後端服務，負責與 Insforge 平台串接，提供文章資料的 API 端點供 BlogFrontend 使用。處理文章的 CRUD、分類管理和資料格式轉換。修改方式：進入 BlogBackend/ 目錄，API 路由在 app/api/ 下，Insforge 串接邏輯在 lib/ 中。",
     "techStack": [],
     "createdAt": "2026-01-30T00:00:00.000Z",
-    "updatedAt": "2026-02-15T07:45:42.730Z"
+    "updatedAt": "2026-02-17T07:55:24.247Z"
   },
   {
     "id": "brickverse-learn",
@@ -47,7 +47,7 @@
     "description": "學習平台系統，掛載於主站 /course 路徑下。預計提供課程瀏覽、課程內容呈現、學習進度追蹤等功能。目前尚在規劃階段，尚未開始開發。修改方式：進入 brickverse-learn/ 目錄，結構待建立。",
     "techStack": [],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T13:59:57.574Z"
+    "updatedAt": "2026-02-17T07:55:26.134Z"
   },
   {
     "id": "brickverse-design",
@@ -57,6 +57,7 @@
     "description": "設計系統底層，定義所有 Brickverse 專案共用的設計規範，包含色彩、字型、間距、元件樣式等。所有前端專案以此為基底延伸。修改方式：進入 brickverse-design/ 目錄，設計 token 與全域樣式定義於其中。",
     "techStack": [],
     "devPort": 3002,
+    "devAddedAt": "2026-02-17T00:00:00.000Z",
     "createdAt": "2026-02-04T00:00:00.000Z",
     "updatedAt": "2026-02-04T00:00:00.000Z"
   },
@@ -68,7 +69,7 @@
     "description": "課程發布系統，用於管理和發布課程內容到學習平台。處理課程的建立、編輯、排程發布等流程。修改方式：進入 ClassPost/ 目錄，發布邏輯與頁面在對應的 app/ 與 components/ 目錄中。",
     "techStack": [],
     "createdAt": "2026-02-03T00:00:00.000Z",
-    "updatedAt": "2026-02-15T07:47:54.335Z"
+    "updatedAt": "2026-02-17T07:55:14.009Z"
   },
   {
     "id": "dashboard",
@@ -98,7 +99,7 @@
       "Google Search Console API"
     ],
     "createdAt": "2026-02-05T00:00:00.000Z",
-    "updatedAt": "2026-02-15T07:47:50.300Z"
+    "updatedAt": "2026-02-17T07:55:14.730Z"
   },
   {
     "id": "salekit",
@@ -111,6 +112,6 @@
       "TypeScript"
     ],
     "createdAt": "2026-02-05T00:00:00.000Z",
-    "updatedAt": "2026-02-15T08:33:20.192Z"
+    "updatedAt": "2026-02-17T07:55:15.618Z"
   }
 ]
