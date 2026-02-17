@@ -2,8 +2,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import type { Project } from '@/lib/types';
-import DirectoryTree from './DirectoryTree';
-import SkillArchitecture from './SkillArchitecture';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
 import ClaudeUsagePanel from './ClaudeUsagePanel';
@@ -104,30 +102,6 @@ export default function DashboardContent({
               </div>
             </MemoryProvider>
           </div>
-          <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
-          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-            <DirectoryTree
-              projects={projects}
-              basePath="/Users/ruanbaiye/Documents/Brickverse/"
-              title="Brickverse Projects"
-              onUpdate={(updated) => updateProject(updated, 'projects')}
-            />
-            <DirectoryTree
-              projects={courseFiles}
-              basePath="/Users/ruanbaiye/Documents/Brickverse/CourseFiles/"
-              title="CourseFiles"
-              onUpdate={(updated) => updateProject(updated, 'courseFiles')}
-            />
-            <DirectoryTree
-              projects={utilityTools}
-              basePath="/Users/ruanbaiye/Documents/UtilityTools/"
-              title="UtilityTools"
-              onUpdate={(updated) => updateProject(updated, 'utilityTools')}
-            />
-          </div>
-
-          <hr className="border-0 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
-          <SkillArchitecture />
 
         </div>
       }
