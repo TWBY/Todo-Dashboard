@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import versionConfig from '@/version.json'
+import SubpageShell from '@/components/SubpageShell'
 
 interface ChangelogEntry {
   version: string
@@ -15,7 +15,6 @@ interface ChangelogEntry {
 export default function ChangelogPage() {
   const [entries, setEntries] = useState<ChangelogEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     fetch('/api/changelog')
@@ -25,38 +24,14 @@ export default function ChangelogPage() {
   }, [])
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: '#0a0a0a', color: '#e5e5e5' }}
-    >
-      {/* Header */}
-      <div
-        className="sticky top-0 z-10 px-6 py-4 flex items-center justify-between"
-        style={{ backgroundColor: '#0a0a0a', borderBottom: '1px solid #1a1a1a' }}
-      >
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-            style={{ color: '#888888' }}
-            title="返回 Dashboard"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
-            </svg>
-          </button>
-          <h1 className="text-xl font-semibold">Changelog</h1>
-        </div>
-      </div>
-
-      {/* Content */}
+    <SubpageShell title="Changelog">
       <div className="max-w-2xl mx-auto px-6 py-8">
         {loading ? (
-          <div className="text-center py-16" style={{ color: '#666666' }}>
+          <div className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>
             載入中...
           </div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-16" style={{ color: '#666666' }}>
+          <div className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>
             尚無 release 記錄
           </div>
         ) : (
@@ -64,7 +39,7 @@ export default function ChangelogPage() {
             {/* Timeline line */}
             <div
               className="absolute left-[7px] top-3 bottom-3"
-              style={{ width: 2, backgroundColor: '#222222' }}
+              style={{ width: 2, backgroundColor: 'var(--border-color)' }}
             />
 
             <div className="space-y-0">
@@ -121,7 +96,7 @@ export default function ChangelogPage() {
                         >
                           v{devVersionNumber}
                         </span>
-                        <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: '#555555' }}>
+                        <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>
                           開發中
                         </span>
                         <span
@@ -131,7 +106,7 @@ export default function ChangelogPage() {
                           {currentDevVersion}
                         </span>
                       </div>
-                      <p className="text-base" style={{ color: '#999999' }}>
+                      <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
                         尚未發布的開發版本
                       </p>
                     </div>
@@ -200,18 +175,18 @@ export default function ChangelogPage() {
                           >
                             {entry.version}
                           </span>
-                          <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: '#555555' }}>
+                          <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>
                             {entry.date}
                           </span>
                           <span
                             className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0"
-                            style={{ backgroundColor: '#1a1a1a', color: '#666666' }}
+                            style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
                           >
                             {entry.hash}
                           </span>
                         </div>
                         {entry.summary && (
-                          <p className="text-base" style={{ color: '#999999' }}>
+                          <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
                             {entry.summary}
                           </p>
                         )}
@@ -224,14 +199,14 @@ export default function ChangelogPage() {
                       >
                         <span
                           className="text-xs px-1.5 py-0.5 rounded font-mono whitespace-nowrap"
-                          style={{ backgroundColor: '#1a1a1a', color: '#555555' }}
+                          style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
                         >
                           {entry.hash}
                         </span>
-                        <span className="text-sm" style={{ color: '#888888' }}>
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                           {entry.summary}
                         </span>
-                        <span className="text-xs whitespace-nowrap pt-0.5" style={{ color: '#444444' }}>
+                        <span className="text-xs whitespace-nowrap pt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                           {entry.date}
                         </span>
                       </div>
@@ -243,6 +218,6 @@ export default function ChangelogPage() {
           </div>
         )}
       </div>
-    </div>
+    </SubpageShell>
   )
 }

@@ -91,18 +91,18 @@ function formatId(id: string): string {
 }
 
 // 登記狀態的圖示與顏色
-function statusIcon(status: PkgStatus | ClaudeStatus): { symbol: string; color: string } {
+function statusIcon(status: PkgStatus | ClaudeStatus): { icon: string; color: string } {
   switch (status) {
     case 'correct':
     case 'registered':
-      return { symbol: '✓', color: '#22c55e' }
+      return { icon: 'fa-solid fa-check', color: '#22c55e' }
     case 'missing-port':
     case 'no-port':
-      return { symbol: '⚠', color: '#f97316' }
+      return { icon: 'fa-solid fa-triangle-exclamation', color: '#f97316' }
     case 'wrong-port':
-      return { symbol: '✗', color: '#ef4444' }
+      return { icon: 'fa-solid fa-xmark', color: '#ef4444' }
     case 'no-file':
-      return { symbol: '—', color: 'var(--text-tertiary)' }
+      return { icon: 'fa-solid fa-minus', color: 'var(--text-tertiary)' }
   }
 }
 
@@ -120,7 +120,7 @@ function statusLabel(status: PkgStatus | ClaudeStatus): string {
 type TabId = 'cities' | 'residents' | 'audit' | 'rules'
 
 export default function PortsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('cities')
+  const [activeTab, setActiveTab] = useState<TabId>('residents')
   const [entries, setEntries] = useState<PortEntry[]>([])
   const [prodRunning, setProdRunning] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -398,8 +398,20 @@ export default function PortsPage() {
               <CityBlock name="UtilityTools" color="#a855f7" projects={cityUtilityTools} allEntries={allEntries} onEnterStation={() => setActiveTab('residents')} onRegistered={handleRegistered} />
             </div>
           ) : (
-            <div className="px-4 py-8 text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
-              載入中...
+            <div className="space-y-4 px-4 py-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-5 w-24 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                  <div className="space-y-1.5">
+                    {[...Array(3 + i)].map((_, j) => (
+                      <div key={j} className="flex items-center gap-3 py-1.5">
+                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                        <div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + j * 20}px` }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )
         )}
@@ -444,8 +456,18 @@ export default function PortsPage() {
             {/* 居民列表 */}
             <div className="rounded-[var(--radius-medium)] overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
               {loading ? (
-                <div className="px-3 py-8 text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
-                  載入中...
+                <div className="space-y-0">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 px-3 py-2.5 animate-pulse"
+                      style={{ borderBottom: i < 5 ? '1px solid var(--border-color)' : 'none' }}
+                    >
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                      <div className="w-10 h-3.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                      <div className="h-3.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)', width: `${80 + i * 15}px` }} />
+                    </div>
+                  ))}
                 </div>
               ) : (
                 allEntries.map((entry, i) => {
@@ -629,7 +651,7 @@ export default function PortsPage() {
                       {/* 右側：審計結果 + 修復按鈕 */}
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="flex items-center gap-1.5" title={entry.packageJsonDetail}>
-                          <span style={{ color: pkgIcon.color, fontWeight: 600 }}>{pkgIcon.symbol}</span>
+                          <i className={`${pkgIcon.icon} text-[10px]`} style={{ color: pkgIcon.color }} />
                           <span className="text-xs" style={{ color: pkgIcon.color }}>
                             {statusLabel(entry.packageJson)}
                           </span>
@@ -646,7 +668,7 @@ export default function PortsPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-1.5" title={entry.localClaudeDetail}>
-                          <span style={{ color: claudeIcon.color, fontWeight: 600 }}>{claudeIcon.symbol}</span>
+                          <i className={`${claudeIcon.icon} text-[10px]`} style={{ color: claudeIcon.color }} />
                           <span className="text-xs" style={{ color: claudeIcon.color }}>
                             {statusLabel(entry.localClaude)}
                           </span>

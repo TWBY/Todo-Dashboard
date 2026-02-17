@@ -1,6 +1,5 @@
 import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data';
 import type { Project } from '@/lib/types';
-import DashboardShell from '@/components/DashboardShell';
 import DashboardContent from '@/components/DashboardContent';
 
 export const metadata = { title: 'Dashboard' };
@@ -19,13 +18,11 @@ export default async function DashboardPage() {
   const allProjects = flattenProjectsWithChildren([...projects, ...courseFiles, ...utilityTools]);
 
   return (
-    <DashboardShell>
-      <DashboardContent
-        initialProjects={projects}
-        initialCourseFiles={courseFiles}
-        initialUtilityTools={utilityTools}
-        initialAllProjects={allProjects}
-      />
-    </DashboardShell>
+    <DashboardContent
+      initialProjects={projects}
+      initialCourseFiles={courseFiles}
+      initialUtilityTools={utilityTools}
+      initialAllProjects={allProjects}
+    />
   );
 }
