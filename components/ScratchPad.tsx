@@ -44,6 +44,17 @@ export default function ScratchPad() {
           Email
         </button>
         <button
+          onClick={() => router.push('/chat/center')}
+          className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+          style={{
+            backgroundColor: 'var(--background-tertiary)',
+            color: 'var(--text-tertiary)',
+          }}
+          title="Chat 功能中心"
+        >
+          Chat
+        </button>
+        <button
           onClick={() => router.push('/blog/pipeline')}
           className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
           style={{

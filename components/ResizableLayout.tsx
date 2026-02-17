@@ -6,6 +6,7 @@ import { useChatPanels } from '@/contexts/ChatPanelsContext'
 import { useLeftPanel } from '@/contexts/LeftPanelContext'
 import { useBuildPanel } from '@/contexts/BuildPanelContext'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
+import TeamMonitorPanel from '@/components/TeamMonitorPanel'
 import BuildPanel from '@/components/BuildPanel'
 
 // — M3 Easing Utilities —
@@ -386,7 +387,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
   }, [rightPct, leftCollapsed])
 
   // 所有面板：僅動態面板
-  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, model: p.model, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId, ephemeral: p.ephemeral }))
+  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, type: p.type || 'chat' as const, teamName: p.teamName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, model: p.model, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId, ephemeral: p.ephemeral }))
 
   // Chat 面板退場：設定 exitingIds，CSS transition 處理淡出，onTransitionEnd 移除
   const handlePanelClose = useCallback((panelId: string) => {
@@ -544,20 +545,28 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
               }
             }}
           >
-            <ClaudeChatPanel
-              projectId={panel.projectId}
-              projectName={panel.projectName}
-              panelId={panel.panelId}
-              isFixed={panel.isFixed}
-              planOnly={panel.planOnly}
-              emailMode={panel.emailMode}
-              model={panel.model}
-              sessionId={panel.sessionId}
-              initialMessage={panel.initialMessage}
-              initialMode={panel.initialMode}
-              ephemeral={panel.ephemeral}
-              onClose={() => handlePanelClose(panel.panelId)}
-            />
+            {panel.type === 'team-monitor' ? (
+              <TeamMonitorPanel
+                teamName={panel.teamName || ''}
+                panelId={panel.panelId}
+                onClose={() => handlePanelClose(panel.panelId)}
+              />
+            ) : (
+              <ClaudeChatPanel
+                projectId={panel.projectId}
+                projectName={panel.projectName}
+                panelId={panel.panelId}
+                isFixed={panel.isFixed}
+                planOnly={panel.planOnly}
+                emailMode={panel.emailMode}
+                model={panel.model}
+                sessionId={panel.sessionId}
+                initialMessage={panel.initialMessage}
+                initialMode={panel.initialMode}
+                ephemeral={panel.ephemeral}
+                onClose={() => handlePanelClose(panel.panelId)}
+              />
+            )}
           </div>
         ))}
 
