@@ -597,6 +597,264 @@ function QuestionDialog({ questions, onAnswer }: {
   )
 }
 
+// Tool 訊息渲染分派：每種 tool 類型有獨立的渲染邏輯
+function ToolMessageRenderer({
+  msg,
+  isStreaming,
+  isLastGroup,
+}: {
+  msg: ChatMessage
+  isStreaming: boolean
+  isLastGroup: boolean
+}) {
+  const isRunning = isStreaming && isLastGroup
+
+  // Task（子 agent）
+  if (msg.toolName === 'Task') {
+    return (
+      <div
+        className="px-2.5 py-2 rounded text-sm"
+        style={{
+          backgroundColor: '#0d1117',
+          border: `1px solid ${isRunning ? '#1f3a5f' : '#1c2333'}`,
+          color: '#8b949e',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {isRunning ? (
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#58a6ff' }} />
+              <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: '#58a6ff' }} />
+            </span>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+          )}
+          <span style={{ color: '#c9d1d9' }}>
+            {msg.toolDescription || 'Sub-agent'}
+          </span>
+          {isRunning && (
+            <span className="streaming-status-text text-xs" style={{ color: '#58a6ff' }}>執行中</span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // TeamCreate
+  if (msg.toolName === 'TeamCreate' && msg.teamEvent) {
+    return (
+      <div className="text-sm py-0.5 flex items-center gap-2" style={{ color: '#58a6ff' }}>
+        <i className="fa-solid fa-users-gear text-xs" />
+        <span>Team: {msg.teamEvent.teamName}</span>
+        {msg.teamEvent.description && (
+          <span style={{ color: '#666666' }}>— {msg.teamEvent.description}</span>
+        )}
+      </div>
+    )
+  }
+
+  // TeamDelete
+  if (msg.toolName === 'TeamDelete') {
+    return (
+      <div className="text-sm py-0.5" style={{ color: '#666666' }}>
+        團隊已解散
+      </div>
+    )
+  }
+
+  // TodoWrite
+  if (msg.toolName === 'TodoWrite' && msg.todos) {
+    return (
+      <div
+        className="px-2.5 py-2 rounded text-base"
+        style={{
+          backgroundColor: '#111111',
+          border: '1px solid #222222',
+          color: '#999999',
+        }}
+      >
+        <div className="font-medium mb-1 text-sm" style={{ color: '#666666' }}>
+          Update Todos
+        </div>
+        <TodoList todos={msg.todos} isStreaming={isStreaming} />
+      </div>
+    )
+  }
+
+  // ExitPlanMode（已審批）
+  if (msg.toolName === 'ExitPlanMode' && msg.planApproval?.approved) {
+    return (
+      <div className="w-full">
+        <div className="text-sm py-0.5" style={{ color: '#666666' }}>
+          已審批計畫
+        </div>
+      </div>
+    )
+  }
+
+  // AskUserQuestion / ExitPlanMode（未審批） → 不渲染
+  if (msg.toolName === 'AskUserQuestion' || msg.toolName === 'ExitPlanMode') {
+    return null
+  }
+
+  // Plan Write（寫入 /plans/ 的 Write 工具）
+  const isPlanWrite = msg.toolName === 'Write' && msg.content.includes('/plans/')
+  if (isPlanWrite) {
+    let planMarkdown = msg.content
+    try {
+      const parsed = JSON.parse(msg.content)
+      if (parsed.content) planMarkdown = parsed.content
+    } catch { /* use raw content */ }
+
+    return (
+      <div
+        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
+        style={{ color: '#cccccc' }}
+      >
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{planMarkdown}</ReactMarkdown>
+      </div>
+    )
+  }
+
+  // 通用工具：JSON 內容顯示
+  return (
+    <div
+      className="px-2.5 py-1.5 rounded text-sm font-mono"
+      style={{
+        backgroundColor: '#111111',
+        border: '1px solid #222222',
+        color: '#999999',
+      }}
+    >
+      <div className="font-medium mb-1 text-sm" style={{ color: '#666666' }}>
+        {msg.toolName}
+      </div>
+      <div
+        className="overflow-x-auto max-h-32 overflow-y-auto"
+        onWheel={(e) => {
+          const el = e.currentTarget
+          el.style.overflowY = 'hidden'
+          requestAnimationFrame(() => {
+            el.style.overflowY = 'auto'
+          })
+        }}
+      >
+        {msg.content}
+      </div>
+    </div>
+  )
+}
+
+// 訊息列表：分組邏輯（low-level tool 合併）+ 渲染迴圈
+const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch', 'SendMessage']
+
+function MessageList({
+  messages,
+  isStreaming,
+  emailMode,
+}: {
+  messages: ChatMessage[]
+  isStreaming: boolean
+  emailMode: boolean
+}) {
+  const isLowLevelTool = (m: ChatMessage) =>
+    m.role === 'tool' &&
+    LOW_LEVEL_TOOLS.includes(m.toolName || '') &&
+    !(m.toolName === 'Write' && m.content.includes('/plans/'))
+
+  // 將訊息分組：連續的 low-level tool 合併為一組
+  const groups: Array<{ type: 'single'; msg: ChatMessage } | { type: 'tool-group'; msgs: ChatMessage[] }> = []
+  for (const m of messages) {
+    if (isLowLevelTool(m)) {
+      const last = groups[groups.length - 1]
+      if (last?.type === 'tool-group') {
+        last.msgs.push(m)
+      } else {
+        groups.push({ type: 'tool-group', msgs: [m] })
+      }
+    } else {
+      groups.push({ type: 'single', msg: m })
+    }
+  }
+
+  return (
+    <>
+      {groups.map((group, gi) => {
+        if (group.type === 'tool-group') {
+          const isLastGroup = gi === groups.length - 1
+          return <ToolGroup key={`tg-${gi}`} msgs={group.msgs} isLive={isLastGroup && isStreaming} />
+        }
+
+        const msg = group.msg
+        const isLastGroup = gi === groups.length - 1
+
+        return (
+          <div key={msg.id} className="animate-fade-in">
+            {msg.role === 'user' && (
+              <div>
+                <div className="text-base leading-[1.5] whitespace-pre-wrap" style={{ color: '#ffffff' }}>
+                  {msg.images && msg.images.length > 0 && (
+                    <div className="flex gap-1.5 mb-1.5 flex-wrap">
+                      {msg.images.map((url, i) => (
+                        <img
+                          key={i}
+                          suppressHydrationWarning
+                          src={url}
+                          alt=""
+                          className="w-16 h-16 object-cover rounded"
+                          style={{ border: '1px solid #222222' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {emailMode && msg.content.startsWith('[系統指示]')
+                    ? (msg.content.match(/以下是用戶貼上的內容：\s*\n(.+)/s)?.[1] ?? msg.content)
+                    : msg.content
+                  }
+                </div>
+              </div>
+            )}
+
+            {msg.role === 'assistant' && (() => {
+              if (isStreaming && isLastGroup) {
+                return <StreamingAssistantMessage msg={msg} emailMode={emailMode} />
+              }
+              return (
+                <div className="group/msg relative">
+                  <div
+                    className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
+                    style={{ color: '#ffffff' }}
+                  >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
+                  </div>
+                  {emailMode && msg.content.length > 20 && (
+                    <div className="mt-1.5">
+                      <EmailCopyButton content={msg.content} />
+                    </div>
+                  )}
+                  {!emailMode && msg.content.length > 20 && (
+                    <AssistantCopyButton content={msg.content} />
+                  )}
+                </div>
+              )
+            })()}
+
+            {msg.role === 'tool' && (
+              <ToolMessageRenderer
+                msg={msg}
+                isStreaming={isStreaming}
+                isLastGroup={isLastGroup}
+              />
+            )}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
 export type PanelStatus = 'idle' | 'streaming' | 'waiting' | 'completed'
 
 interface ChatContentProps {
@@ -1151,9 +1409,14 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         {/* DEV: Team Monitor 測試按鈕（開發環境才顯示） */}
         {process.env.NODE_ENV === 'development' && !activeTeam && displayMessages.length === 0 && !emailMode && !isStreaming && (
           <button
-            onClick={() => {
-              setActiveTeam({ name: 'ct-fix', description: '修復 ClaudeTerminal App 在 streaming 結束後自動退出的問題' })
-              addPanel(projectId, 'Team: ct-fix', { type: 'team-monitor', teamName: 'ct-fix', ephemeral: true })
+            onClick={async () => {
+              // 先取得 reset token，確保服務端已重置好
+              const resetRes = await fetch(`/api/team-monitor/mock?reset=${crypto.randomUUID()}`)
+              const resetData = await resetRes.json()
+              if (resetData.reset) {
+                setActiveTeam({ name: '__mock__', description: 'SecurityMonitor 安全儀表板功能強化（Mock）' })
+                addPanel(projectId, 'Team: mock', { type: 'team-monitor', teamName: '__mock__', ephemeral: true })
+              }
             }}
             className="text-xs px-2 py-1 rounded mb-2"
             style={{ backgroundColor: '#0d1117', border: '1px solid #1f3a5f', color: '#58a6ff' }}
@@ -1174,223 +1437,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           </div>
         )}
 
-        {(() => {
-          const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff', 'MultiEdit', 'NotebookEdit', 'WebFetch', 'WebSearch', 'SendMessage']
-
-          const isLowLevelTool = (m: typeof displayMessages[0]) =>
-            m.role === 'tool' &&
-            LOW_LEVEL_TOOLS.includes(m.toolName || '') &&
-            !(m.toolName === 'Write' && m.content.includes('/plans/'))
-
-          // 將訊息分組：連續的 low-level tool 合併為一組
-          const groups: Array<{ type: 'single'; msg: typeof displayMessages[0] } | { type: 'tool-group'; msgs: typeof displayMessages }> = []
-          for (const m of displayMessages) {
-            if (isLowLevelTool(m)) {
-              const last = groups[groups.length - 1]
-              if (last?.type === 'tool-group') {
-                last.msgs.push(m)
-              } else {
-                groups.push({ type: 'tool-group', msgs: [m] })
-              }
-            } else {
-              groups.push({ type: 'single', msg: m })
-            }
-          }
-
-          return groups.map((group, gi) => {
-            // 連續 low-level tools → streaming 時展開即時 log，結束後收合
-            if (group.type === 'tool-group') {
-              const isLastGroup = gi === groups.length - 1
-              return <ToolGroup key={`tg-${gi}`} msgs={group.msgs} isLive={isLastGroup && isStreaming} />
-            }
-
-            const msg = group.msg
-            return (
-              <div key={msg.id} className="animate-fade-in">
-                {msg.role === 'user' && (
-                  <div>
-                    <div className="text-base leading-[1.5] whitespace-pre-wrap" style={{ color: '#ffffff' }}>
-                      {msg.images && msg.images.length > 0 && (
-                        <div className="flex gap-1.5 mb-1.5 flex-wrap">
-                          {msg.images.map((url, i) => (
-                            <img
-                              key={i}
-                              suppressHydrationWarning
-                              src={url}
-                              alt=""
-                              className="w-16 h-16 object-cover rounded"
-                              style={{ border: '1px solid #222222' }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {(() => {
-                        // emailMode: 隱藏系統指示前綴
-                        if (emailMode && msg.content.startsWith('[系統指示]')) {
-                          const match = msg.content.match(/以下是用戶貼上的內容：\s*\n(.+)/s)
-                          return match ? match[1] : msg.content
-                        }
-                        return msg.content
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {msg.role === 'assistant' && (() => {
-                  const isStreamingMsg = isStreaming && gi === groups.length - 1
-                  if (isStreamingMsg) {
-                    return <StreamingAssistantMessage msg={msg} emailMode={!!emailMode} />
-                  }
-                  return (
-                    <div className="group/msg relative">
-                      <div
-                        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
-                        style={{ color: '#ffffff' }}
-                      >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{msg.content}</ReactMarkdown>
-                      </div>
-                      {emailMode && msg.content.length > 20 && (
-                        <div className="mt-1.5">
-                          <EmailCopyButton content={msg.content} />
-                        </div>
-                      )}
-                      {!emailMode && msg.content.length > 20 && (
-                        <AssistantCopyButton content={msg.content} />
-                      )}
-                    </div>
-                  )
-                })()}
-
-                {msg.role === 'tool' && msg.toolName === 'Task' && (() => {
-                  const isRunning = isStreaming && gi === groups.length - 1
-                  return (
-                    <div
-                      className="px-2.5 py-2 rounded text-sm"
-                      style={{
-                        backgroundColor: '#0d1117',
-                        border: `1px solid ${isRunning ? '#1f3a5f' : '#1c2333'}`,
-                        color: '#8b949e',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {isRunning ? (
-                          <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#58a6ff' }} />
-                            <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: '#58a6ff' }} />
-                          </span>
-                        ) : (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                          </svg>
-                        )}
-                        <span style={{ color: '#c9d1d9' }}>
-                          {msg.toolDescription || 'Sub-agent'}
-                        </span>
-                        {isRunning && (
-                          <span className="streaming-status-text text-xs" style={{ color: '#58a6ff' }}>執行中</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {msg.role === 'tool' && msg.toolName === 'TeamCreate' && msg.teamEvent && (
-                  <div className="text-sm py-0.5 flex items-center gap-2" style={{ color: '#58a6ff' }}>
-                    <i className="fa-solid fa-users-gear text-xs" />
-                    <span>Team: {msg.teamEvent.teamName}</span>
-                    {msg.teamEvent.description && (
-                      <span style={{ color: '#666666' }}>— {msg.teamEvent.description}</span>
-                    )}
-                  </div>
-                )}
-
-                {msg.role === 'tool' && msg.toolName === 'TeamDelete' && (
-                  <div className="text-sm py-0.5" style={{ color: '#666666' }}>
-                    團隊已解散
-                  </div>
-                )}
-
-                {msg.role === 'tool' && msg.toolName === 'TodoWrite' && msg.todos && (
-                  <div>
-                    <div
-                      className="px-2.5 py-2 rounded text-base"
-                      style={{
-                        backgroundColor: '#111111',
-                        border: '1px solid #222222',
-                        color: '#999999',
-                      }}
-                    >
-                      <div className="font-medium mb-1 text-sm" style={{ color: '#666666' }}>
-                        Update Todos
-                      </div>
-                      <TodoList todos={msg.todos} isStreaming={isStreaming} />
-                    </div>
-                  </div>
-                )}
-
-
-                {msg.role === 'tool' && msg.toolName === 'ExitPlanMode' && msg.planApproval?.approved && (
-                  <div className="w-full">
-                    <div className="text-sm py-0.5" style={{ color: '#666666' }}>
-                      已審批計畫
-                    </div>
-                  </div>
-                )}
-
-                {msg.role === 'tool' && msg.toolName !== 'TodoWrite' && msg.toolName !== 'AskUserQuestion' && msg.toolName !== 'ExitPlanMode' && msg.toolName !== 'TeamCreate' && msg.toolName !== 'TeamDelete' && (() => {
-                  const isPlanWrite = msg.toolName === 'Write' && msg.content.includes('/plans/')
-
-                  if (isPlanWrite) {
-                    let planMarkdown = msg.content
-                    try {
-                      const parsed = JSON.parse(msg.content)
-                      if (parsed.content) planMarkdown = parsed.content
-                    } catch { /* use raw content */ }
-
-                    return (
-                      <div
-                        className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
-                        style={{ color: '#cccccc' }}
-                      >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{planMarkdown}</ReactMarkdown>
-                      </div>
-                    )
-                  }
-
-                  // 非 low-level 且非 plan write → 通用 JSON 顯示
-                  return (
-                    <div>
-                      <div
-                        className="px-2.5 py-1.5 rounded text-sm font-mono"
-                        style={{
-                          backgroundColor: '#111111',
-                          border: '1px solid #222222',
-                          color: '#999999',
-                        }}
-                      >
-                        <div className="font-medium mb-1 text-sm" style={{ color: '#666666' }}>
-                          {msg.toolName}
-                        </div>
-                        <div
-                          className="overflow-x-auto max-h-32 overflow-y-auto"
-                          onWheel={(e) => {
-                            const el = e.currentTarget
-                            el.style.overflowY = 'hidden'
-                            requestAnimationFrame(() => {
-                              el.style.overflowY = 'auto'
-                            })
-                          }}
-                        >
-                          {msg.content}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            )
-          })
-        })()}
+        <MessageList
+          messages={displayMessages}
+          isStreaming={isStreaming}
+          emailMode={!!emailMode}
+        />
 
         {isLoadingHistory && (
           <div className="text-sm animate-fade-in">

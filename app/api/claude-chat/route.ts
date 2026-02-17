@@ -21,16 +21,20 @@ export async function POST(request: Request) {
     const courseFiles = await readJsonFile<Project>('coursefiles.json')
     const utilityTools = await readJsonFile<Project>('utility-tools.json')
     const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
-    const project = projects.find(p => p.id === projectId)
+    // port-manager 是虛擬專案，指向 Todo-Dashboard 自身
+    const VIRTUAL_PROJECTS: Record<string, string> = {
+      'port-manager': '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',
+    }
 
-    if (!project) {
+    const project = projects.find(p => p.id === projectId)
+    const projectPath = VIRTUAL_PROJECTS[projectId] || (project ? (project.devPath || project.path) : null)
+
+    if (!projectPath) {
       return new Response(JSON.stringify({ error: 'Project not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },
       })
     }
-
-    const projectPath = project.devPath || project.path
     const newSessionId = sessionId || crypto.randomUUID()
 
     console.log('[claude-chat] creating SDK query', {

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import ChatCenterConsultant from '@/components/ChatCenterConsultant'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import {
   CHAT_FEATURES,
@@ -16,6 +15,7 @@ import {
 function TierBadge({ tier }: { tier: FeatureTier }) {
   const config: Record<FeatureTier, { label: string; bg: string; fg: string; border: string }> = {
     core: { label: '基本配備', bg: 'rgba(34,197,94,0.1)', fg: '#22c55e', border: 'rgba(34,197,94,0.2)' },
+    standard: { label: '標準配備', bg: 'rgba(249,115,22,0.1)', fg: '#f97316', border: 'rgba(249,115,22,0.2)' },
     optional: { label: '選配', bg: 'rgba(59,130,246,0.1)', fg: '#3b82f6', border: 'rgba(59,130,246,0.2)' },
     advanced: { label: '進階', bg: 'rgba(168,85,247,0.1)', fg: '#a855f7', border: 'rgba(168,85,247,0.2)' },
   }
@@ -51,7 +51,6 @@ function FeatureCard({
     >
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-2 min-w-0">
-          <i className={`${feature.icon} text-sm`} style={{ color: 'var(--text-secondary)', width: 16, textAlign: 'center' }} />
           <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
             {feature.label}
           </span>
@@ -82,8 +81,7 @@ function FeatureCard({
 
       {expanded && (
         <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
-          <div className="text-sm mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-            <i className="fa-sharp fa-regular fa-folder-open mr-1.5" />
+          <div className="text-sm mb-1.5 font-semibold" style={{ color: 'var(--text-secondary)' }}>
             包含檔案
           </div>
           {feature.files.map(file => (
@@ -93,8 +91,7 @@ function FeatureCard({
           ))}
           {feature.npmPackages && feature.npmPackages.length > 0 && (
             <>
-              <div className="text-sm mt-2 mb-1" style={{ color: 'var(--text-secondary)' }}>
-                <i className="fa-sharp fa-regular fa-box mr-1.5" />
+              <div className="text-sm mt-2 mb-1 font-semibold" style={{ color: 'var(--text-secondary)' }}>
                 npm 套件
               </div>
               {feature.npmPackages.map(pkg => (
@@ -106,8 +103,7 @@ function FeatureCard({
           )}
           {feature.dependencies.length > 0 && (
             <>
-              <div className="text-sm mt-2 mb-1" style={{ color: 'var(--text-secondary)' }}>
-                <i className="fa-sharp fa-regular fa-link mr-1.5" />
+              <div className="text-sm mt-2 mb-1 font-semibold" style={{ color: 'var(--text-secondary)' }}>
                 依賴
               </div>
               <div className="text-sm font-mono ml-4" style={{ color: 'var(--text-tertiary)' }}>
@@ -151,13 +147,11 @@ function ConfiguratorRow({
         onChange={onToggle}
         className="accent-[#3b82f6] w-4 h-4"
       />
-      <i className={`${feature.icon} text-sm`} style={{ color: 'var(--text-secondary)', width: 16, textAlign: 'center' }} />
       <span className="text-sm flex-1" style={{ color: checked ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
         {feature.label}
       </span>
       {depLabels.length > 0 && (
         <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          <i className="fa-sharp fa-regular fa-link mr-1 text-xs" />
           {depLabels.join(', ')}
         </span>
       )}
@@ -175,9 +169,9 @@ export default function ChatCenterPage() {
   // 展示區：哪張卡片展開
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
 
-  // 選配器：core 鎖定，optional/advanced 可勾選
+  // 選配器：core 鎖定，standard 預設勾選可取消，optional/advanced 預設不勾
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(CHAT_FEATURES.filter(f => f.tier === 'core').map(f => f.id))
+    () => new Set(CHAT_FEATURES.filter(f => f.tier === 'core' || f.tier === 'standard').map(f => f.id))
   )
   const [showOutput, setShowOutput] = useState(false)
 
@@ -210,6 +204,7 @@ export default function ChatCenterPage() {
 
   // 分組
   const coreFeatures = CHAT_FEATURES.filter(f => f.tier === 'core')
+  const standardFeatures = CHAT_FEATURES.filter(f => f.tier === 'standard')
   const optionalFeatures = CHAT_FEATURES.filter(f => f.tier === 'optional')
   const advancedFeatures = CHAT_FEATURES.filter(f => f.tier === 'advanced')
 
@@ -226,11 +221,10 @@ export default function ChatCenterPage() {
 
   return (
     <div
-      className="min-h-screen flex"
       style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)' }}
     >
-      {/* Left: Content (scrollable) */}
-      <div className="flex-1 min-w-0 overflow-y-auto h-screen">
+      {/* Content (scrollable) */}
+      <div className="min-w-0 overflow-y-auto">
         <div className="max-w-[820px] mx-auto px-5 sm:px-8 pt-8 pb-12">
 
           {/* Header */}
@@ -243,8 +237,7 @@ export default function ChatCenterPage() {
                 color: 'var(--text-tertiary)',
               }}
             >
-              <i className="fa-sharp fa-regular fa-arrow-left mr-1.5" />
-              儀表板
+              ← 儀表板
             </button>
             <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               Chat 功能中心
@@ -258,7 +251,6 @@ export default function ChatCenterPage() {
                 className="text-sm font-semibold px-2 py-0.5 rounded"
                 style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}
               >
-                <i className="fa-sharp fa-regular fa-grid-2 mr-1.5" />
                 功能展示
               </span>
               <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
@@ -287,7 +279,6 @@ export default function ChatCenterPage() {
                 className="text-sm font-semibold px-2 py-0.5 rounded"
                 style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}
               >
-                <i className="fa-sharp fa-regular fa-sliders mr-1.5" />
                 自定義選配
               </span>
               <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
@@ -311,6 +302,27 @@ export default function ChatCenterPage() {
                     checked={true}
                     locked={true}
                     onToggle={() => {}}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Standard（預設勾選，可取消） */}
+            <div className="mb-4">
+              <div className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                標準配備
+                <span className="ml-2 font-normal" style={{ color: 'var(--text-tertiary)' }}>
+                  — 大多數場景都需要，預設包含
+                </span>
+              </div>
+              <div className="space-y-2">
+                {standardFeatures.map(f => (
+                  <ConfiguratorRow
+                    key={f.id}
+                    feature={f}
+                    checked={selectedIds.has(f.id)}
+                    locked={false}
+                    onToggle={() => toggleFeature(f.id)}
                   />
                 ))}
               </div>
@@ -375,7 +387,6 @@ export default function ChatCenterPage() {
                   border: '1px solid rgba(59,130,246,0.3)',
                 }}
               >
-                <i className="fa-sharp fa-regular fa-list-check mr-1.5" />
                 生成移植清單
               </button>
             </div>
@@ -390,7 +401,6 @@ export default function ChatCenterPage() {
                     className="text-sm font-semibold px-2 py-0.5 rounded"
                     style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}
                   >
-                    <i className="fa-sharp fa-regular fa-clipboard mr-1.5" />
                     移植清單
                   </span>
                 </div>
@@ -403,17 +413,7 @@ export default function ChatCenterPage() {
                     border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'var(--border-color)'}`,
                   }}
                 >
-                  {copied ? (
-                    <>
-                      <i className="fa-sharp fa-solid fa-check mr-1.5" />
-                      已複製
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-sharp fa-regular fa-copy mr-1.5" />
-                      複製到剪貼簿
-                    </>
-                  )}
+                  {copied ? '已複製' : '複製到剪貼簿'}
                 </button>
               </div>
 
@@ -432,14 +432,6 @@ export default function ChatCenterPage() {
           )}
 
         </div>
-      </div>
-
-      {/* Right: Consultant Chat Panel (lg+ only) */}
-      <div
-        className="hidden lg:flex flex-col w-[420px] shrink-0 h-screen sticky top-0"
-        style={{ borderLeft: '1px solid var(--border-color)' }}
-      >
-        <ChatCenterConsultant />
       </div>
     </div>
   )

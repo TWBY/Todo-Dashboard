@@ -104,9 +104,15 @@ export async function GET(request: Request) {
     return Response.json({ globalSkills, projectSkills })
   }
 
+  // port-manager 使用 Todo-Dashboard 的 project-level skills
+  // port-sync 是全域 skill，不需要在此重複宣告
+
   // 單一專案查詢
   let projectCommands: SkillInfo[] = []
-  if (projectId) {
+  if (projectId === 'port-manager') {
+    // port-manager 映射到 Todo-Dashboard 路徑，使用其 skill 檔案
+    projectCommands = await listProjectSkills('/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard')
+  } else if (projectId) {
     const project = projects.find(p => p.id === projectId)
     if (project) {
       const projectPath = project.devPath || project.path

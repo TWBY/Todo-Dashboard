@@ -118,12 +118,20 @@ export interface TeamMessage {
   type?: 'message' | 'broadcast' | 'idle' | 'shutdown'
 }
 
+export interface TeamSystemEvent {
+  type: string
+  from: string
+  summary: string
+  timestamp: string
+}
+
 export interface TeamMonitorState {
   teamName: string
   description?: string
   members: TeamMember[]
   tasks: TeamTask[]
   messages: TeamMessage[]
+  systemEvents: TeamSystemEvent[]
   isActive: boolean
   startTime: number
 }

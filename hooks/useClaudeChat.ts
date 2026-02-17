@@ -475,6 +475,130 @@ async function readSSEStream(
   }
 }
 
+// --- 從 sendMessage 提取的 helper 函數 ---
+
+// 上傳圖片到暫存區，回傳伺服器檔案路徑
+async function uploadImages(
+  images: File[],
+  onError: (msg: string) => void,
+): Promise<{ paths: string[] } | null> {
+  try {
+    const formData = new FormData()
+    for (const img of images) {
+      formData.append('images', img)
+    }
+    const res = await fetch('/api/claude-chat/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    if (!res.ok) {
+      let errMsg = '圖片上傳失敗'
+      try {
+        const errData = await res.json()
+        if (errData.error) errMsg = errData.error
+      } catch { /* response 非 JSON */ }
+      console.error('[chat] image upload failed:', errMsg)
+      onError(errMsg)
+      return null
+    }
+    const data = await res.json()
+    return { paths: data.paths }
+  } catch (err) {
+    console.error('[chat] image upload error:', err)
+    onError('圖片上傳失敗：' + (err instanceof Error ? err.message : '網路錯誤'))
+    return null
+  }
+}
+
+// 執行 SSE 串流（含自動重試 fresh session）
+async function executeStream(opts: {
+  projectId: string
+  fullMessage: string
+  sessionId: string | null
+  mode: ChatMode
+  model?: string
+  effort?: string
+  controller: AbortController
+  ctx: StreamContext
+  actions: StreamActions
+}): Promise<void> {
+  const { projectId, fullMessage, sessionId, mode, model, effort, controller, ctx, actions } = opts
+
+  console.debug('[chat] fetching /api/claude-chat', { projectId, sessionId })
+  const res = await fetch('/api/claude-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      projectId,
+      message: fullMessage,
+      sessionId,
+      mode,
+      model: model || undefined,
+      effort: effort || undefined,
+    }),
+    signal: controller.signal,
+  })
+
+  console.debug('[chat] fetch response', { status: res.status })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.error || 'Request failed')
+  }
+
+  const reader = res.body?.getReader()
+  if (!reader) throw new Error('No response body')
+
+  await readSSEStream(reader, ctx, actions)
+
+  // Session 不存在 → 自動重試（用新 session）
+  if (ctx.retryWithFreshSession) {
+    console.debug('[chat] retrying with fresh session')
+    ctx.retryWithFreshSession = false
+
+    const retryRes = await fetch('/api/claude-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId, message: fullMessage, sessionId: null, mode }),
+      signal: controller.signal,
+    })
+
+    if (retryRes.ok) {
+      const retryReader = retryRes.body?.getReader()
+      if (retryReader) {
+        await readSSEStream(retryReader, ctx, actions)
+      }
+    }
+  }
+}
+
+// 持久化 session 歷史和訊息（fire-and-forget）
+function persistSession(
+  projectId: string,
+  sessionId: string,
+  messages: ChatMessage[],
+): void {
+  const userMsgCount = messages.filter(m => m.role === 'user').length
+  fetch('/api/claude-chat/history', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectId, sessionId, messageCount: userMsgCount }),
+  }).catch(() => {})
+
+  const persistable = messages.map(m => {
+    if (m.images) {
+      const { images: _images, ...rest } = m
+      return rest
+    }
+    return m
+  })
+  fetch('/api/claude-chat/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectId, sessionId, messages: persistable }),
+  }).catch(() => {})
+}
+
 export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): UseClaudeChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -563,32 +687,9 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     let imagePreviewUrls: string[] = []
     if (images && images.length > 0) {
       imagePreviewUrls = images.map(f => URL.createObjectURL(f))
-      try {
-        const formData = new FormData()
-        for (const img of images) {
-          formData.append('images', img)
-        }
-        const uploadRes = await fetch('/api/claude-chat/upload', {
-          method: 'POST',
-          body: formData,
-        })
-        if (!uploadRes.ok) {
-          let errMsg = '圖片上傳失敗'
-          try {
-            const errData = await uploadRes.json()
-            if (errData.error) errMsg = errData.error
-          } catch { /* response 非 JSON */ }
-          console.error('[chat] image upload failed:', errMsg)
-          setError(errMsg)
-          return
-        }
-        const uploadData = await uploadRes.json()
-        imagePaths = uploadData.paths
-      } catch (uploadErr) {
-        console.error('[chat] image upload error:', uploadErr)
-        setError('圖片上傳失敗：' + (uploadErr instanceof Error ? uploadErr.message : '網路錯誤'))
-        return
-      }
+      const result = await uploadImages(images, setError)
+      if (!result) return
+      imagePaths = result.paths
     }
 
     // 組合訊息
@@ -647,53 +748,17 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     }
 
     try {
-      console.debug('[chat] fetching /api/claude-chat', { projectId, sessionId: currentSessionId })
-      const res = await fetch('/api/claude-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          message: fullMessage,
-          sessionId: currentSessionId,
-          mode: mode || 'plan',
-          model: modelOverride || config?.model || undefined,
-          effort: effortOverride || undefined,
-        }),
-        signal: controller.signal,
+      await executeStream({
+        projectId,
+        fullMessage,
+        sessionId: currentSessionId,
+        mode: mode || 'plan',
+        model: modelOverride || config?.model || undefined,
+        effort: effortOverride || undefined,
+        controller,
+        ctx,
+        actions,
       })
-
-      console.debug('[chat] fetch response', { status: res.status })
-
-      if (!res.ok) {
-        const errData = await res.json()
-        throw new Error(errData.error || 'Request failed')
-      }
-
-      const reader = res.body?.getReader()
-      if (!reader) throw new Error('No response body')
-
-      await readSSEStream(reader, ctx, actions)
-
-      // Session 不存在 → 自動重試（用新 session）
-      if (ctx.retryWithFreshSession) {
-        console.debug('[chat] retrying with fresh session')
-        // 重置 context 給重試用
-        ctx.retryWithFreshSession = false
-
-        const retryRes = await fetch('/api/claude-chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId, message: fullMessage, sessionId: null, mode: mode || 'plan' }),
-          signal: controller.signal,
-        })
-
-        if (retryRes.ok) {
-          const retryReader = retryRes.body?.getReader()
-          if (retryReader) {
-            await readSSEStream(retryReader, ctx, actions)
-          }
-        }
-      }
 
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
@@ -717,33 +782,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       const sid = sessionIdRef.current || ctx.newSessionIdForHistory
       if (sid && !config?.ephemeral) {
         setMessages(prev => {
-          const userMsgCount = prev.filter(m => m.role === 'user').length
-          fetch('/api/claude-chat/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              projectId,
-              sessionId: sid,
-              messageCount: userMsgCount,
-            }),
-          }).catch(() => {})
-          // 持久化訊息
-          const persistable = prev.map(m => {
-            if (m.images) {
-              const { images, ...rest } = m
-              return rest
-            }
-            return m
-          })
-          fetch('/api/claude-chat/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              projectId,
-              sessionId: sid,
-              messages: persistable,
-            }),
-          }).catch(() => {})
+          persistSession(projectId, sid, prev)
           return prev
         })
       }
