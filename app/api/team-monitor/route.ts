@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           for (const msg of inboxMessages) {
             let msgType: string = 'message'
             let summary = msg.summary || ''
-            let text = msg.text
+            let text: string | undefined = msg.text
 
             // Detect structured notifications from JSON text
             try {
