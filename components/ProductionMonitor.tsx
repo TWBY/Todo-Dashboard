@@ -1,38 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useDevServer } from '@/contexts/DevServerContext';
 
 export default function ProductionMonitor() {
-  const [cpuPercent, setCpuPercent] = useState<number | null>(null);
-  const failCountRef = useRef(0);
+  const { systemCpu } = useDevServer();
 
-  const fetchStatus = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const res = await fetch('/api/dev-server', { signal });
-      if (res.ok) {
-        const data = await res.json();
-        setCpuPercent(data.systemCpu ?? null);
-        failCountRef.current = 0;
-      } else {
-        failCountRef.current++;
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      failCountRef.current++;
-    }
-  }, []);
+  if (systemCpu === null) return null;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchStatus(controller.signal);
-    const interval = setInterval(() => fetchStatus(controller.signal), 15000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
-  }, [fetchStatus]);
-
-  if (cpuPercent === null) return null;
+  const cpuPercent = systemCpu;
 
   const barColor = cpuPercent >= 80 ? '#ef4444' : cpuPercent >= 50 ? '#fb923c' : '#818cf8';
   const dotColor = cpuPercent >= 50 ? '#fb923c' : '#818cf8';

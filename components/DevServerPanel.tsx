@@ -4,38 +4,23 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/lib/types';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
-import PulsingDots from '@/components/PulsingDots';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
-
-interface PortStatus {
-  projectId: string;
-  port: number;
-  isRunning: boolean;
-  pid?: number;
-  projectPath?: string;
-  memoryMB?: number;
-  cpuPercent?: number;
-}
+import Spinner from '@/components/Spinner';
+import { useToast } from '@/contexts/ToastContext';
 
 interface DevServerPanelProps {
   projects: Project[];
   onUpdate?: (project: Project, category: 'projects' | 'courseFiles' | 'utilityTools') => void;
 }
 
-interface Toast {
-  message: string;
-  type: 'success' | 'error';
-}
-
 export default function DevServerPanel({ projects, onUpdate }: DevServerPanelProps) {
-  const [statuses, setStatuses] = useState<PortStatus[]>([]);
+  const { statuses, isInitialLoad, refresh } = useDevServer();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [recentlyStarted, setRecentlyStarted] = useState<Record<string, boolean>>({});
-  const [toast, setToast] = useState<Toast | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const { copy, isCopied } = useCopyToClipboard();
@@ -66,11 +51,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     return () => ro.disconnect();
   }, []);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
-
   // 檢查 Production server 狀態
   const checkProdStatus = useCallback(async () => {
     try {
@@ -87,6 +67,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
       // ignore
     }
   }, []);
+
+  // fetchStatuses is now handled by DevServerContext — use refresh() for on-demand updates
+  const fetchStatuses = refresh;
 
   const handleProdStart = useCallback(async () => {
     setProdLoading(true);
@@ -150,6 +133,11 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   }, [showToast]);
 
+  // Check production status on mount
+  useEffect(() => {
+    checkProdStatus();
+  }, [checkProdStatus]);
+
   const handleProdReload = useCallback(async () => {
     setProdLoading(true);
     try {
@@ -205,44 +193,14 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   }, [showToast]);
 
-  const fetchStatuses = useCallback(async (signal?: AbortSignal) => {
-    setIsRefreshing(true);
-    try {
-      const res = await fetch('/api/dev-server', { signal });
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setStatuses(data.data || []);
-    } catch {
-      // 靜默處理，dev:watch 會自動重啟 server
-    } finally {
-      setIsRefreshing(false);
-      setIsInitialLoad(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchStatuses(controller.signal);
-    checkProdStatus();
-    // Refresh every 15 seconds
-    const interval = setInterval(() => {
-      fetchStatuses(controller.signal);
-      checkProdStatus();
-    }, 15000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
-  }, [fetchStatuses, checkProdStatus]);
-
   // Auto-refresh when projects list changes (e.g., new project added to dev server)
+  const prevProjectsLenRef = useRef(projects.length);
   useEffect(() => {
-    if (!isInitialLoad) {
-      fetchStatuses();
+    if (!isInitialLoad && projects.length !== prevProjectsLenRef.current) {
+      prevProjectsLenRef.current = projects.length;
+      refresh();
     }
-  }, [projects, isInitialLoad, fetchStatuses]);
+  }, [projects.length, isInitialLoad, refresh]);
 
   const handleAction = async (projectId: string, action: 'start' | 'stop') => {
     setLoading(prev => ({ ...prev, [projectId]: true }));
@@ -361,37 +319,144 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const projectsWithPort = projects
     .filter(p => p.devPort)
     .sort((a, b) => {
-      // 排隊邏輯：先加入的在前，後加入的在後
       const aTime = a.devAddedAt || a.updatedAt || '';
       const bTime = b.devAddedAt || b.updatedAt || '';
       return aTime.localeCompare(bTime);
     });
 
-  const getStatus = (projectId: string): PortStatus | undefined => {
+  const getStatus = (projectId: string) => {
     return statuses.find(s => s.projectId === projectId);
   };
+
+  // Pin Todo-Dashboard to top, then split running vs stopped
+  const todoDashboard = projectsWithPort.find(p => p.id === 'dashboard');
+  const otherProjects = projectsWithPort.filter(p => p.id !== 'dashboard');
+  const runningProjects = otherProjects.filter(p => getStatus(p.id)?.isRunning);
+  const stoppedProjects = otherProjects.filter(p => !getStatus(p.id)?.isRunning);
+  const pinnedRunning = todoDashboard && getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
+  const pinnedStopped = todoDashboard && !getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
 
   // Production 自我保護：從 4000 訪問時，不能停止 Production server
   const isProdSelf = currentPort === 4000;
 
-  return (
-    <div
-      className="relative"
-    >
-      {/* Toast */}
-      {toast && (
-        <div
-          className="fixed bottom-4 right-4 z-50 px-4 py-2 rounded-lg text-base font-medium shadow-lg animate-fade-in"
-          style={{
-            backgroundColor: toast.type === 'error' ? 'rgba(220, 38, 38, 0.9)' : 'rgba(5, 150, 105, 0.9)',
-            color: 'white',
-          }}
-        >
-          {toast.message}
-        </div>
-      )}
+  // 統一按鈕樣式
+  const btnBase = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]';
+  const btnStyle = {
+    fontSize: 'var(--text-sm)',
+    fontWeight: 'var(--font-weight-semibold)' as const,
+    lineHeight: 'var(--leading-compact)',
+    letterSpacing: 'var(--tracking-ui)',
+  };
 
-      <div ref={headerBtnsRef} className="flex items-center justify-between mb-4">
+  const renderProjectRow = (project: Project) => {
+    const status = getStatus(project.id);
+    const isRunning = status?.isRunning || false;
+    const isLoading = loading[project.id] || false;
+    const isRemoving = removingIds.has(project.id);
+    const isSelf = project.devPort === currentPort;
+    const showO = isRunning && !isLoading;
+    const showS = !(isSelf && isRunning);
+
+    return (
+      <div
+        key={project.id}
+        className="grid transition-[grid-template-rows] duration-500"
+        style={{ gridTemplateRows: isRemoving ? '0fr' : '1fr' }}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div
+            className={`py-2 px-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
+              isRemoving ? 'opacity-0 scale-95 -translate-x-4' : ''
+            }`}
+            style={{ backgroundColor: 'var(--background-secondary)' }}
+          >
+            {/* Grid: [名稱 1fr] [port] [O] [S] [C] [X] — 固定 4 欄按鈕 */}
+            <div className="flex items-center gap-2">
+              {/* 左：名稱（truncate） */}
+              <span
+                className="font-medium text-sm truncate cursor-pointer hover:opacity-70 transition-opacity min-w-0 flex-1"
+                onClick={() => copy(project.path)}
+                title={project.path}
+              >
+                {project.displayName || project.name}
+              </span>
+              {isCopied(project.path) && (
+                <span className="text-xs text-green-500 flex-shrink-0">Copied</span>
+              )}
+              {isLoading && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full animate-pulse flex-shrink-0"
+                  style={{ backgroundColor: 'rgba(250, 204, 21, 0.2)', color: '#facc15' }}>
+                  {isRunning ? '...' : '...'}
+                </span>
+              )}
+
+              {/* 右：固定 4 欄（O + S + C + X），每欄 w-8 */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {/* O: Open browser — 佔位或按鈕 */}
+                {showO ? (
+                  <button
+                    onClick={() => handleOpenBrowser(project)}
+                    className={btnBase}
+                    style={{ backgroundColor: '#222222', color: '#cccccc', border: '1px solid #333333', ...btnStyle }}
+                    title="在瀏覽器中開啟"
+                  >
+                    O
+                  </button>
+                ) : (
+                  <span className="w-8" />
+                )}
+
+                {/* S: Start/Stop — 佔位或按鈕 */}
+                {showS ? (
+                  <button
+                    onClick={() => handleAction(project.id, isRunning ? 'stop' : 'start')}
+                    disabled={isLoading}
+                    className={`${btnBase} disabled:cursor-not-allowed disabled:opacity-60`}
+                    style={{
+                      backgroundColor: isLoading ? '#333333' : isRunning ? '#3d1515' : '#15332a',
+                      color: isLoading ? '#999999' : isRunning ? '#ef4444' : '#10b981',
+                      border: isLoading ? '1px solid #444444' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+                      ...btnStyle,
+                    }}
+                    title={isRunning ? '停止' : '啟動'}
+                  >
+                    {isLoading ? <Spinner /> : 'S'}
+                  </button>
+                ) : (
+                  <span className="w-8" />
+                )}
+
+                {/* C: Claude chat */}
+                <button
+                  onClick={() => addPanel(project.id, project.displayName || project.name)}
+                  className={btnBase}
+                  style={{ backgroundColor: '#111a22', color: '#999999', border: '1px solid #333333', ...btnStyle }}
+                  title="開啟 Claude 對話視窗"
+                >
+                  C
+                </button>
+
+                {/* X: Remove */}
+                <button
+                  onClick={() => handleRemoveFromDev(project)}
+                  disabled={isLoading}
+                  className={`${btnBase} disabled:opacity-50`}
+                  style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', ...btnStyle }}
+                  title="離開 Station"
+                >
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative">
+      <div ref={headerBtnsRef} className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-lg flex items-center gap-2">
           <span
             className="cursor-pointer hover:opacity-70 transition-opacity"
@@ -400,253 +465,84 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
           >
             Station
           </span>
-          {isCopied('Station') && (
-            <span className="text-sm text-green-500">已複製！</span>
-          )}
-          <span
-            className="text-xs px-1.5 py-0.5 rounded-full"
-            style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}
-          >
-            {currentPort === 3000 ? `D-${versionConfig.development}` : currentPort === 4000 ? `P-${versionConfig.production}` : `v-${versionConfig.development}`}
-          </span>
-          {isUpdating && (
-            <span className="text-sm px-2 py-0.5 rounded-full animate-pulse"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#999999' }}>
-              更新中...
+          {currentPort === 3000 && versionConfig.development && (
+            <span
+              className="text-xs font-mono px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+              title="Development 版本"
+            >
+              D-{versionConfig.development}
             </span>
           )}
+          {currentPort === 4000 && versionConfig.production && (
+            <span
+              className="text-xs font-mono px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+              title="Production 版本"
+            >
+              P-{versionConfig.production}
+            </span>
+          )}
+          {isCopied('Station') && (
+            <span className="text-sm text-green-500">Copied</span>
+          )}
         </h2>
-        <div className="flex items-center gap-1.5 relative">
+        <div className="flex items-center gap-1.5">
+          <span className="w-8" />
           <button
             onClick={handleProdReload}
             disabled={prodLoading}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center disabled:opacity-60 disabled:cursor-not-allowed`}
-            style={{
-              backgroundColor: '#1f2937',
-              color: '#9ca3af',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              lineHeight: 'var(--leading-compact)',
-              letterSpacing: 'var(--tracking-ui)',
-              border: '1px solid #374151',
-            }}
+            className={`${btnBase} disabled:opacity-60 disabled:cursor-not-allowed`}
+            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151', ...btnStyle }}
             title="重新啟動 Production 4000"
           >
-            {prodLoading ? (
-              <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            ) : compact ? 'R' : 'Reload'}
+            {prodLoading ? <Spinner /> : 'R'}
           </button>
           <button
             onClick={toggleBuildPanel}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
-            style={{
-              backgroundColor: '#332815',
-              color: '#f59e0b',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              lineHeight: 'var(--leading-compact)',
-              letterSpacing: 'var(--tracking-ui)',
-              border: '1px solid #4a3520',
-            }}
+            className={btnBase}
+            style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520', ...btnStyle }}
             title="版本升級與打包流程"
           >
-            {compact ? 'P' : 'Pack'}
+            P
           </button>
           <button
             onClick={() => router.push('/changelog')}
-            className={`${compact ? 'w-7 h-7 justify-center' : 'px-2.5 py-1'} rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex items-center`}
-            style={{
-              backgroundColor: '#1f1533',
-              color: '#a78bfa',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              lineHeight: 'var(--leading-compact)',
-              letterSpacing: 'var(--tracking-ui)',
-              border: '1px solid #3b2663',
-            }}
+            className={btnBase}
+            style={{ backgroundColor: '#1f1533', color: '#a78bfa', border: '1px solid #3b2663', ...btnStyle }}
             title="版本歷史"
           >
-            {compact ? 'L' : 'Log'}
+            L
           </button>
         </div>
       </div>
 
       {isInitialLoad ? (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="py-2.5 px-3 rounded-[var(--radius-medium)] animate-pulse"
+              className="p-3 rounded-lg animate-pulse"
               style={{ backgroundColor: 'var(--background-secondary)' }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="h-4 rounded" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + i * 30}px` }} />
-                  <div className="h-4 w-8 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-7 w-12 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                  <div className="h-7 w-12 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                  <div className="h-7 w-6 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="h-4 rounded flex-1" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }} />
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div>
-          {projectsWithPort.map((project, index) => {
-            const status = getStatus(project.id);
-            const isRunning = status?.isRunning || false;
-            const isLoading = loading[project.id] || false;
-            const isRecentlyStarted = recentlyStarted[project.id] || false;
-            const isRemoving = removingIds.has(project.id);
-            const isSelf = project.devPort === currentPort;
-
-            return (
-              <div
-                key={project.id}
-                className="grid transition-[grid-template-rows] duration-500"
-                style={{ gridTemplateRows: isRemoving ? '0fr' : '1fr' }}
-              >
-              <div className={`overflow-hidden min-h-0${index > 0 ? ' pt-2' : ''}`}>
-              <div
-                className={`py-2.5 px-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
-                  isRemoving ? 'opacity-0 scale-95 -translate-x-4' : ''
-                }`}
-                style={{ backgroundColor: 'var(--background-secondary)', containerType: 'inline-size' }}
-              >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="font-medium text-base truncate cursor-pointer hover:opacity-70 transition-opacity"
-                        onClick={() => copy(project.path)}
-                        title="點擊複製路徑"
-                      >
-                        {project.displayName || project.name}
-                      </span>
-                      {isCopied(project.path) && (
-                        <span className="text-sm text-green-500 flex-shrink-0">已複製！</span>
-                      )}
-                      <span
-                        className="text-sm font-mono px-1.5 py-0.5 rounded hidden @[280px]:inline-flex"
-                        style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
-                      >
-                        {formatPort(project.devPort!)}
-                      </span>
-                      {isLoading && (
-                        <span className="text-sm px-2 py-0.5 rounded-full animate-pulse"
-                          style={{ backgroundColor: 'rgba(250, 204, 21, 0.2)', color: '#facc15' }}>
-                          {isRunning ? '停止中...' : '啟動中...'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0 justify-end">
-                  <button
-                    onClick={() => handleOpenBrowser(project)}
-                    className={`px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
-                      isRunning && !isLoading ? '' : 'hidden'
-                    }`}
-                    style={{
-                      backgroundColor: '#222222',
-                      color: '#cccccc',
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      lineHeight: 'var(--leading-compact)',
-                      letterSpacing: 'var(--tracking-ui)',
-                      border: '1px solid #333333',
-                    }}
-                    title="在瀏覽器中開啟"
-                    tabIndex={isRunning && !isLoading ? 0 : -1}
-                  >
-                    <span className="@[420px]:hidden">O</span>
-                    <span className="hidden @[420px]:inline">Open</span>
-                  </button>
-                  {!(isSelf && isRunning) && (
-                  <button
-                    onClick={() => handleAction(project.id, isRunning ? 'stop' : 'start')}
-                    disabled={isLoading}
-                    className="px-2.5 py-1.5 rounded-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2 justify-center hover:shadow-md hover:scale-[1.02]"
-                    style={{
-                      backgroundColor: isLoading ? '#333333' : isRunning ? '#3d1515' : '#15332a',
-                      color: isLoading ? '#999999' : isRunning ? '#ef4444' : '#10b981',
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      lineHeight: 'var(--leading-compact)',
-                      letterSpacing: 'var(--tracking-ui)',
-                      border: isLoading ? '1px solid #444444' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
-                    }}
-                    title={isRunning ? '停止' : '啟動'}
-                  >
-                    {isLoading ? (
-                      <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                    ) : isRunning ? (
-                      <>
-                        <span className="@[420px]:hidden">S</span>
-                        <span className="hidden @[420px]:inline">Stop</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="@[420px]:hidden">S</span>
-                        <span className="hidden @[420px]:inline">Start</span>
-                      </>
-                    )}
-                  </button>
-                  )}
-                  <button
-                    onClick={() => addPanel(project.id, project.displayName || project.name)}
-                    className="px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-                    style={{
-                      backgroundColor: '#111a22',
-                      color: '#999999',
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      lineHeight: 'var(--leading-compact)',
-                      letterSpacing: 'var(--tracking-ui)',
-                      border: '1px solid #333333',
-                    }}
-                    title="開啟 Claude 對話視窗"
-                  >
-                    <span className="@[420px]:hidden">C</span>
-                    <span className="hidden @[420px]:inline">Chat</span>
-                  </button>
-                  <button
-                    onClick={() => handleRemoveFromDev(project)}
-                    disabled={isLoading}
-                    className="px-1.5 py-1.5 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50"
-                    style={{
-                      backgroundColor: 'var(--background-tertiary)',
-                      color: 'var(--text-tertiary)',
-                      fontSize: 'var(--text-sm)',
-                      lineHeight: 'var(--leading-compact)',
-                    }}
-                    title="離開 Station"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              </div>
-              </div>
-              </div>
-            );
-          })}
+        <div className="space-y-1">
+          {pinnedRunning.map(p => renderProjectRow(p))}
+          {runningProjects.map(p => renderProjectRow(p))}
+          {[...pinnedStopped, ...stoppedProjects].map(p => renderProjectRow(p))}
         </div>
       )}
 
-      {projectsWithPort.length === 0 && (
-        <p className="text-base text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
+      {projectsWithPort.length === 0 && !isInitialLoad && (
+        <p className="text-xs text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
           Station 目前沒有進駐的專案
         </p>
       )}

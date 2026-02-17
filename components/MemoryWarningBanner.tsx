@@ -1,20 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
-
-interface ExternalProcess {
-  name: string;
-  memoryMB: number;
-}
-
-interface SystemMemory {
-  pressureLevel: 'normal' | 'warning' | 'critical';
-  usedGB: number;
-  totalGB: number;
-  usedPercent: number;
-  suggestedStops: string[];
-  topProcesses: ExternalProcess[];
-}
+import { useState, useCallback } from 'react';
+import { useDevServer } from '@/contexts/DevServerContext';
 
 const LEVEL_COLORS = {
   normal: { dot: '#22c55e', bar: '#22c55e' },
@@ -32,78 +19,8 @@ function formatMB(mb: number): string {
   return mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${mb}MB`;
 }
 
-// ── Shared Context ─────────────────────────────────────────
-
-interface MemoryContextValue {
-  systemMemory: SystemMemory | null;
-  killingApps: Set<string>;
-  handleKillApp: (appName: string) => void;
-}
-
-const MemoryContext = createContext<MemoryContextValue>({
-  systemMemory: null,
-  killingApps: new Set(),
-  handleKillApp: () => {},
-});
-
-export function MemoryProvider({ children }: { children: React.ReactNode }) {
-  const [systemMemory, setSystemMemory] = useState<SystemMemory | null>(null);
-  const [killingApps, setKillingApps] = useState<Set<string>>(new Set());
-  const failCountRef = useRef(0);
-
-  const fetchData = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const res = await fetch('/api/dev-server', { signal });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setSystemMemory(data.systemMemory || null);
-      failCountRef.current = 0;
-    } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
-        failCountRef.current++;
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchData(controller.signal);
-    const interval = setInterval(() => fetchData(controller.signal), 15000);
-    return () => {
-      controller.abort();
-      clearInterval(interval);
-    };
-  }, [fetchData]);
-
-  const handleKillApp = useCallback(async (appName: string) => {
-    setKillingApps(prev => new Set(prev).add(appName));
-    try {
-      await fetch('/api/dev-server', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'kill-app', appName }),
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await fetchData();
-    } catch { /* ignore */ }
-    setKillingApps(prev => {
-      const next = new Set(prev);
-      next.delete(appName);
-      return next;
-    });
-  }, [fetchData]);
-
-  return (
-    <MemoryContext.Provider value={{ systemMemory, killingApps, handleKillApp }}>
-      {children}
-    </MemoryContext.Provider>
-  );
-}
-
-// ── Memory Bar (compact) ───────────────────────────────────
-
 export default function MemoryWarningBanner() {
-  const { systemMemory } = useContext(MemoryContext);
+  const { systemMemory } = useDevServer();
 
   if (!systemMemory) return null;
 
@@ -141,10 +58,27 @@ export default function MemoryWarningBanner() {
   );
 }
 
-// ── Process Kill Buttons (independent) ─────────────────────
-
 export function ProcessKillButtons() {
-  const { systemMemory, killingApps, handleKillApp } = useContext(MemoryContext);
+  const { systemMemory, refresh } = useDevServer();
+  const [killingApps, setKillingApps] = useState<Set<string>>(new Set());
+
+  const handleKillApp = useCallback(async (appName: string) => {
+    setKillingApps(prev => new Set(prev).add(appName));
+    try {
+      await fetch('/api/dev-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'kill-app', appName }),
+      });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await refresh();
+    } catch { /* ignore */ }
+    setKillingApps(prev => {
+      const next = new Set(prev);
+      next.delete(appName);
+      return next;
+    });
+  }, [refresh]);
 
   if (!systemMemory?.topProcesses?.length) return null;
 
