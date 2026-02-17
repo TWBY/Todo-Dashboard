@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
 import { ModelBadge } from '@/components/SkillArchitecture';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import BlogChatPanel from '@/components/BlogChatPanel';
+import SubpageShell from '@/components/SubpageShell';
 
 // --- Types & Data ---
 
@@ -194,47 +193,34 @@ function StatusBadge({ label, color }: { label: string; color: 'green' | 'blue' 
 // --- Page ---
 
 export default function BlogPipelinePage() {
-  const router = useRouter();
   const { copy, isCopied } = useCopyToClipboard(1000);
 
 
   return (
-      <div
-        className="min-h-screen flex"
-        style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)' }}
-      >
-        {/* Left: Pipeline (scrollable) */}
-        <div className="flex-1 min-w-0 overflow-y-auto h-screen">
-          <div className="max-w-[820px] mx-auto px-5 sm:px-8 pt-8 pb-12">
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
-              <div className="flex items-center gap-5">
-                <button
-                  onClick={() => router.push('/')}
-                  className="px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer"
-                  style={{
-                    backgroundColor: 'var(--background-tertiary)',
-                    color: 'var(--text-tertiary)',
-                  }}
-                >
-                  ← 儀表板
-                </button>
-                <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  Blog 編輯流水線
-                </h1>
-              </div>
-              <div className="flex items-center gap-5">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-[2px]" style={{ backgroundColor: 'var(--text-tertiary)' }} />
-                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>依序執行</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0" style={{ borderTop: '2px dashed var(--text-tertiary)' }} />
-                  <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>條件執行</span>
-                </div>
-              </div>
-            </div>
-
+    <SubpageShell
+      title="Blog 編輯流水線"
+      headerRight={
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-[2px]" style={{ backgroundColor: 'var(--text-tertiary)' }} />
+            <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>依序執行</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-0" style={{ borderTop: '2px dashed var(--text-tertiary)' }} />
+            <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>條件執行</span>
+          </div>
+        </div>
+      }
+      sidePanel={
+        <div
+          className="hidden lg:flex flex-col w-[420px] shrink-0"
+          style={{ borderLeft: '1px solid var(--border-color)' }}
+        >
+          <BlogChatPanel />
+        </div>
+      }
+    >
+      <div className="max-w-[820px] mx-auto px-5 sm:px-8 pt-8 pb-12">
             {/* Phase 1 */}
             <PhaseHeader phase="Phase 1" title="收斂討論" />
             <SkillNode node={PHASE_1} copy={copy} isCopied={isCopied} />
@@ -386,15 +372,7 @@ export default function BlogPipelinePage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right: Blog Chat Panel (lg+ only) */}
-        <div
-          className="hidden lg:flex flex-col w-[420px] shrink-0 h-screen sticky top-0"
-          style={{ borderLeft: '1px solid var(--border-color)' }}
-        >
-          <BlogChatPanel />
-        </div>
       </div>
+    </SubpageShell>
   );
 }

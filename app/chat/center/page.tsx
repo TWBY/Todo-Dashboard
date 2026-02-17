@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import SubpageShell from '@/components/SubpageShell'
 import {
   CHAT_FEATURES,
   generatePortingChecklist,
@@ -163,7 +163,6 @@ function ConfiguratorRow({
 // --- Page ---
 
 export default function ChatCenterPage() {
-  const router = useRouter()
   const { copy, isCopied } = useCopyToClipboard(2000)
 
   // 展示區：哪張卡片展開
@@ -220,29 +219,8 @@ export default function ChatCenterPage() {
   const copied = isCopied(checklist)
 
   return (
-    <div
-      style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)' }}
-    >
-      {/* Content (scrollable) */}
-      <div className="min-w-0 overflow-y-auto">
-        <div className="max-w-[820px] mx-auto px-5 sm:px-8 pt-8 pb-12">
-
-          {/* Header */}
-          <div className="flex items-center gap-5 mb-8">
-            <button
-              onClick={() => router.push('/')}
-              className="px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer"
-              style={{
-                backgroundColor: 'var(--background-tertiary)',
-                color: 'var(--text-tertiary)',
-              }}
-            >
-              ← 儀表板
-            </button>
-            <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Chat 功能中心
-            </h1>
-          </div>
+    <SubpageShell title="Chat 功能中心">
+      <div className="max-w-[820px] mx-auto px-5 sm:px-8 pt-8 pb-12">
 
           {/* Section 1: 功能展示 */}
           <section className="mb-12">
@@ -431,8 +409,7 @@ export default function ChatCenterPage() {
             </section>
           )}
 
-        </div>
       </div>
-    </div>
+    </SubpageShell>
   )
 }

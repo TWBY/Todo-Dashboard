@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import ChatContent from '@/components/ChatContent'
+import SubpageShell from '@/components/SubpageShell'
 import type { Project } from '@/lib/types'
 
 type Source = 'brickverse' | 'coursefiles' | 'utility'
@@ -120,7 +120,6 @@ function statusLabel(status: PkgStatus | ClaudeStatus): string {
 type TabId = 'cities' | 'residents' | 'audit' | 'rules'
 
 export default function PortsPage() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('cities')
   const [entries, setEntries] = useState<PortEntry[]>([])
   const [prodRunning, setProdRunning] = useState(false)
@@ -336,40 +335,25 @@ export default function PortsPage() {
   ]
 
   return (
-    <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', minHeight: '100vh' }} className="flex flex-col">
-      {/* Header: 固定頂部 */}
-      <div style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }} className="sticky top-0 z-40">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/')}
-              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02]"
-              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)' }}
-            >
-              <i className="fa-solid fa-arrow-left text-xs" />
-            </button>
-            <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Port 管理
-            </h1>
-          </div>
-          {/* Chat 開關按鈕 */}
-          <button
-            onClick={() => setChatOpen(prev => !prev)}
-            className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-            style={{
-              backgroundColor: chatOpen ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
-              color: chatOpen ? '#0184ff' : 'var(--text-tertiary)',
-              border: chatOpen ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
-            }}
-          >
-            <i className="fa-solid fa-comment-dots text-xs" />
-            管理員
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="px-4 border-t border-t-[var(--border-color)]" style={{ backgroundColor: 'var(--background-secondary)' }}>
-          <div className="flex gap-0 overflow-x-auto">
+    <SubpageShell
+      title="Port 管理"
+      headerRight={
+        <button
+          onClick={() => setChatOpen(prev => !prev)}
+          className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
+          style={{
+            backgroundColor: chatOpen ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
+            color: chatOpen ? '#0184ff' : 'var(--text-tertiary)',
+            border: chatOpen ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
+          }}
+        >
+          <i className="fa-solid fa-comment-dots text-xs" />
+          管理員
+        </button>
+      }
+      headerExtension={
+        <div style={{ backgroundColor: 'var(--background-secondary)' }}>
+          <div className="px-4 flex gap-0 overflow-x-auto border-t border-t-[var(--border-color)]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -386,12 +370,24 @@ export default function PortsPage() {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* 主體：左右分欄 */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* 左側：Tab 內容 */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 pb-16">
+      }
+      sidePanel={
+        chatOpen ? (
+          <div
+            className="flex flex-col shrink-0"
+            style={{
+              width: '420px',
+              minWidth: '420px',
+              borderLeft: '1px solid var(--border-color)',
+              backgroundColor: 'var(--background-secondary)',
+            }}
+          >
+            <ChatContent projectId="port-manager" projectName="Port 管理員" compact />
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="px-4 py-6 pb-16">
 
         {/* Tab: 城市 */}
         {activeTab === 'cities' && (
@@ -813,28 +809,8 @@ export default function PortsPage() {
           </div>
         )}
 
-        </div>
-
-        {/* 右側：Chat Panel */}
-        {chatOpen && (
-          <div
-            className="flex flex-col"
-            style={{
-              width: '420px',
-              minWidth: '420px',
-              borderLeft: '1px solid var(--border-color)',
-              backgroundColor: 'var(--background-secondary)',
-            }}
-          >
-            <ChatContent
-              projectId="port-manager"
-              projectName="Port 管理員"
-              compact
-            />
-          </div>
-        )}
       </div>
-    </div>
+    </SubpageShell>
   )
 }
 
