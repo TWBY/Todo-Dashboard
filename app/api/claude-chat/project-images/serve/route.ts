@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { join, resolve, extname } from 'path'
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
-import type { Project } from '@/lib/types'
+import { loadAllProjects } from '@/lib/data'
 
 const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -28,10 +27,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid path' }, { status: 403 })
     }
 
-    const brickverseProjects = await readJsonFile<Project>('projects.json')
-    const courseFiles = await readJsonFile<Project>('coursefiles.json')
-    const utilityTools = await readJsonFile<Project>('utility-tools.json')
-    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+    const projects = await loadAllProjects()
 
     const project = projects.find(p => p.id === projectId)
     if (!project) {

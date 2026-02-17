@@ -1,11 +1,15 @@
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 export async function GET() {
   try {
-    const raw = execSync(
+    const { stdout } = await execAsync(
       'git log --format="%h|%s|%ai"',
-      { encoding: 'utf-8', cwd: process.cwd() }
-    ).trim()
+      { encoding: 'utf-8', cwd: process.cwd(), maxBuffer: 1024 * 1024 }
+    )
+    const raw = stdout.trim()
 
     if (!raw) {
       return Response.json([])

@@ -1,5 +1,4 @@
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
-import type { Project } from '@/lib/types'
+import { loadAllProjects } from '@/lib/data'
 import { createSDKQuery, setActiveQuery, removeActiveQuery } from '@/lib/claude-session-manager'
 import type { SDKMessage } from '@/lib/claude-session-manager'
 
@@ -17,10 +16,7 @@ export async function POST(request: Request) {
     }
 
     // 解析專案路徑
-    const brickverseProjects = await readJsonFile<Project>('projects.json')
-    const courseFiles = await readJsonFile<Project>('coursefiles.json')
-    const utilityTools = await readJsonFile<Project>('utility-tools.json')
-    const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+    const projects = await loadAllProjects()
     // port-manager 是虛擬專案，指向 Todo-Dashboard 自身
     const VIRTUAL_PROJECTS: Record<string, string> = {
       'port-manager': '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',

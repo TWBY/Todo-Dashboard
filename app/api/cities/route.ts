@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server'
-import { readJsonFile } from '@/lib/data'
-import type { Project } from '@/lib/types'
+import { loadAllProjectsWithCities } from '@/lib/data'
 
 export async function GET() {
-  const [projects, courseFiles, utilityTools] = await Promise.all([
-    readJsonFile<Project>('projects.json'),
-    readJsonFile<Project>('coursefiles.json'),
-    readJsonFile<Project>('utility-tools.json'),
-  ])
+  const { projects, courseFiles, utilityTools } = await loadAllProjectsWithCities()
 
   return NextResponse.json({
     projects: projects.sort((a, b) => a.name.localeCompare(b.name)),

@@ -1,7 +1,6 @@
 import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
-import type { Project } from '@/lib/types'
+import { loadAllProjects } from '@/lib/data'
 
 interface SkillInfo {
   name: string
@@ -86,10 +85,7 @@ export async function GET(request: Request) {
   const globalSkills = await listSkills(join(homeDir, '.claude', 'skills'), 'SKILL.md')
 
   // 載入所有專案
-  const brickverseProjects = await readJsonFile<Project>('projects.json')
-  const courseFiles = await readJsonFile<Project>('coursefiles.json')
-  const utilityTools = await readJsonFile<Project>('utility-tools.json')
-  const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+  const projects = await loadAllProjects()
 
   if (allProjects) {
     // 批次查詢所有專案的 skills

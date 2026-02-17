@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server'
 import { readdir, stat, mkdir, writeFile, unlink, access } from 'fs/promises'
 import { join, relative, extname, resolve } from 'path'
-import { readJsonFile, flattenProjectsWithChildren } from '@/lib/data'
-import type { Project } from '@/lib/types'
+import { loadAllProjects } from '@/lib/data'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'])
 const ALLOWED_UPLOAD_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 
 async function resolveProject(projectId: string) {
-  const brickverseProjects = await readJsonFile<Project>('projects.json')
-  const courseFiles = await readJsonFile<Project>('coursefiles.json')
-  const utilityTools = await readJsonFile<Project>('utility-tools.json')
-  const projects = flattenProjectsWithChildren([...brickverseProjects, ...courseFiles, ...utilityTools])
+  const projects = await loadAllProjects()
   return projects.find(p => p.id === projectId)
 }
 
