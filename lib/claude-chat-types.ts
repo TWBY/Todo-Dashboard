@@ -70,6 +70,7 @@ export interface ChatMessage {
   todos?: TodoItem[] // TodoWrite tool data
   questions?: UserQuestion[] // AskUserQuestion tool data
   planApproval?: { pending: boolean; approved?: boolean } // ExitPlanMode tool data
+  teamEvent?: { type: 'create' | 'delete'; teamName: string; description?: string } // TeamCreate/TeamDelete tool data
   isError?: boolean // Error message from backend
   timestamp: number
 }
@@ -89,6 +90,42 @@ export interface StreamingActivity {
   status: 'connecting' | 'thinking' | 'replying' | 'tool'
   toolName?: string
   toolDetail?: string
+}
+
+// Team Monitor 型別
+export interface TeamMember {
+  name: string
+  agentId: string
+  agentType: string
+  color?: string
+  status: 'working' | 'idle' | 'shutdown'
+}
+
+export interface TeamTask {
+  id: string
+  description: string
+  status: string
+  owner?: string
+}
+
+export interface TeamMessage {
+  from: string
+  to?: string
+  summary: string
+  text?: string
+  timestamp: string
+  color?: string
+  type?: 'message' | 'broadcast' | 'idle' | 'shutdown'
+}
+
+export interface TeamMonitorState {
+  teamName: string
+  description?: string
+  members: TeamMember[]
+  tasks: TeamTask[]
+  messages: TeamMessage[]
+  isActive: boolean
+  startTime: number
 }
 
 // Session metadata for status bar

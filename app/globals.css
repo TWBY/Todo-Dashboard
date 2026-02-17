@@ -335,13 +335,13 @@ option {
 
 /* Streaming chunk 揭露動畫（FlowToken 風格：blur + fade + 微上浮） */
 @keyframes word-reveal {
-  from { opacity: 0; filter: blur(6px); transform: translateY(4px); }
+  from { opacity: 0; filter: blur(2px); transform: translateY(2px); }
   to   { opacity: 1; filter: blur(0); transform: translateY(0); }
 }
 
 .streaming-word-reveal {
   display: inline;
-  animation: word-reveal 0.5s ease-out both;
+  animation: word-reveal 0.4s ease-out both;
 }
 
 /* 清除對話淡出動畫 */
@@ -518,3 +518,42 @@ option {
 .build-ai-output table { width: 100%; border-collapse: collapse; margin: 0.6em 0; font-size: 0.9375rem; }
 .build-ai-output th, .build-ai-output td { padding: 0.6em 1em; border: 1px solid var(--border-color); text-align: left; line-height: 1.7; }
 .build-ai-output th { color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.03); }
+
+/* ── Team Monitor 動畫 ── */
+
+/* 訊息從左邊滑入 */
+@keyframes team-msg-enter {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.team-msg-enter {
+  animation: team-msg-enter 0.4s ease-out forwards;
+}
+
+/* 系統事件淡入 */
+@keyframes team-system-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.team-system-enter {
+  animation: team-system-enter 0.3s ease-out forwards;
+}
+
+/* Activity 文字 cross-fade */
+@keyframes team-activity-cycle {
+  0%, 8% { opacity: 0; transform: translateY(3px); }
+  12%, 88% { opacity: 1; transform: translateY(0); }
+  92%, 100% { opacity: 0; transform: translateY(-3px); }
+}
+.team-activity-line {
+  animation: team-activity-cycle 2.2s ease-in-out;
+}
+
+/* Member card working glow（使用 CSS custom property --member-glow） */
+@keyframes member-working-glow {
+  0%, 100% { box-shadow: inset 2px 0 6px -3px var(--member-glow); }
+  50% { box-shadow: inset 2px 0 12px -3px var(--member-glow), 0 0 8px -4px var(--member-glow); }
+}
+.member-card-working {
+  animation: member-working-glow 2.5s ease-in-out infinite;
+}
