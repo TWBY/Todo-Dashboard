@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing team name' }, { status: 400 })
   }
 
+  // DEV mock: redirect to mock endpoint
+  if (teamName === '__mock__') {
+    const mockUrl = new URL('/api/team-monitor/mock', request.nextUrl.origin)
+    const mockRes = await fetch(mockUrl)
+    const mockData = await mockRes.json()
+    return NextResponse.json(mockData)
+  }
+
   const teamDir = path.join(CLAUDE_DIR, 'teams', teamName)
   const taskDir = path.join(CLAUDE_DIR, 'tasks', teamName)
 
@@ -27,11 +35,9 @@ export async function GET(request: NextRequest) {
         try {
           const raw = await readFile(path.join(taskDir, f), 'utf-8')
           const task = JSON.parse(raw)
-          // 擷取簡短標題：優先用 subject 角色名，否則取 description 第一行（去掉 markdown 標記）
           let title = ''
           if (task.description) {
             const desc = String(task.description)
-            // 取第一行非空文字，去掉 markdown # 和 ## 前綴
             const firstLine = desc.split('\n').find(l => l.trim().length > 0)?.trim() || ''
             title = firstLine.replace(/^#+\s*/, '').slice(0, 60)
             if (firstLine.length > 60) title += '...'
@@ -46,8 +52,12 @@ export async function GET(request: NextRequest) {
       }
     } catch { /* no task directory */ }
 
-    // 3. Read all inbox messages
-    const messages: Array<{ from: string; to: string; summary: string; text?: string; timestamp: string; color?: string; type?: string }> = []
+    // 3. Read ALL inbox messages (every recipient's inbox = bidirectional view)
+    const allMessages: Array<{
+      from: string; to: string; summary: string; text?: string
+      timestamp: string; color?: string; type: string
+    }> = []
+
     const inboxDir = path.join(teamDir, 'inboxes')
     try {
       const inboxFiles = await readdir(inboxDir)
@@ -60,25 +70,35 @@ export async function GET(request: NextRequest) {
             from: string; text: string; summary?: string; timestamp: string; color?: string
           }>
           for (const msg of inboxMessages) {
-            // Detect idle/shutdown notifications from JSON text
             let msgType: string = 'message'
             let summary = msg.summary || ''
+            let text = msg.text
+
+            // Detect structured notifications from JSON text
             try {
               const parsed = JSON.parse(msg.text)
               if (parsed.type === 'idle_notification') {
                 msgType = 'idle'
-                summary = `${msg.from} is idle`
+                summary = parsed.lastToolUse
+                  ? `${msg.from} 閒置中（上次操作：${parsed.lastToolUse}）`
+                  : `${msg.from} 閒置中`
+                text = undefined
               } else if (parsed.type === 'shutdown_request') {
                 msgType = 'shutdown'
-                summary = parsed.reason || 'Shutdown requested'
+                summary = parsed.content || parsed.reason || '要求關閉'
+                text = undefined
+              } else if (parsed.type === 'shutdown_response') {
+                msgType = 'shutdown'
+                summary = parsed.approve ? `${msg.from} 已確認關閉` : `${msg.from} 拒絕關閉：${parsed.content || ''}`
+                text = undefined
               }
             } catch { /* not JSON, use raw text */ }
 
-            messages.push({
+            allMessages.push({
               from: msg.from,
               to: recipientName,
-              summary: summary || msg.text?.slice(0, 80) || '',
-              text: msgType === 'message' ? msg.text : undefined,
+              summary: summary || (msg.text?.slice(0, 80) ?? ''),
+              text: msgType === 'message' ? text : undefined,
               timestamp: msg.timestamp,
               color: msg.color,
               type: msgType,
@@ -88,18 +108,34 @@ export async function GET(request: NextRequest) {
       }
     } catch { /* no inbox directory */ }
 
-    // Sort messages by timestamp
-    messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    // Sort all messages by timestamp
+    allMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 
-    // Build member status from inbox activity
+    // 4. Build member status from task status + message activity
     const members = (config.members || []).map((m: { name: string; agentId: string; agentType: string; color?: string }) => {
-      // Check if member has sent an idle notification as their last message
-      const memberMessages = messages.filter(msg => msg.from === m.name)
-      const lastMsg = memberMessages[memberMessages.length - 1]
-      const status = lastMsg?.type === 'idle' ? 'idle'
-        : lastMsg?.type === 'shutdown' ? 'shutdown'
-        : memberMessages.length > 0 ? 'idle' // has sent messages but no explicit status → assume idle (historical data)
-        : 'working' // no messages yet → might still be working
+      const memberSentMessages = allMessages.filter(msg => msg.from === m.name)
+      const lastSent = memberSentMessages[memberSentMessages.length - 1]
+
+      // Check if member has any in_progress task
+      const hasActiveTask = tasks.some(t => t.owner === m.name && t.status === 'in_progress')
+
+      // Determine status:
+      // 1. Last message is shutdown → shutdown
+      // 2. Has in_progress task → working
+      // 3. Last message is idle → idle
+      // 4. No messages yet → working (just spawned)
+      // 5. Otherwise → idle
+      let status: 'working' | 'idle' | 'shutdown' = 'idle'
+      if (lastSent?.type === 'shutdown') {
+        status = 'shutdown'
+      } else if (hasActiveTask) {
+        status = 'working'
+      } else if (!lastSent) {
+        status = 'working' // just spawned, no messages yet
+      } else if (lastSent.type === 'idle') {
+        status = 'idle'
+      }
+
       return {
         name: m.name,
         agentId: m.agentId,
@@ -109,13 +145,25 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // 5. Separate messages into user messages and system events
+    const userMessages = allMessages.filter(m => m.type === 'message')
+    const systemEvents = allMessages
+      .filter(m => m.type === 'idle' || m.type === 'shutdown')
+      .map(m => ({
+        type: m.type,
+        from: m.from,
+        summary: m.summary,
+        timestamp: m.timestamp,
+      }))
+
     return NextResponse.json({
       teamName: config.name,
       description: config.description,
       createdAt: config.createdAt,
       members,
       tasks: tasks.sort((a, b) => Number(a.id) - Number(b.id)),
-      messages: messages.filter(m => m.type === 'message'), // Only real messages, not idle/shutdown
+      messages: userMessages,
+      systemEvents,
     })
   } catch (err) {
     return NextResponse.json(

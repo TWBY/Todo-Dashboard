@@ -22,21 +22,21 @@ export async function GET() {
   <h2>Team Monitor — API Test</h2>
 
   <div class="info">
-    <p><strong>Real data (ct-fix):</strong></p>
-    <p><a href="/api/team-monitor?name=ct-fix" target="_blank">/api/team-monitor?name=ct-fix</a></p>
-    <p>Uses historical team data from <code>~/.claude/teams/ct-fix/</code></p>
+    <p><strong>Mock data (via __mock__):</strong></p>
+    <p><a href="/api/team-monitor?name=__mock__" target="_blank">/api/team-monitor?name=__mock__</a></p>
+    <p>Simulated team data — 1-minute lifecycle with all states</p>
   </div>
 
   <div class="info">
-    <p><strong>Mock data:</strong></p>
+    <p><strong>Mock data (direct):</strong></p>
     <p><a href="/api/team-monitor/mock" target="_blank">/api/team-monitor/mock</a></p>
-    <p>Simulated team data for visual testing</p>
+    <p>Same mock data, direct endpoint</p>
   </div>
 
   <div class="info">
     <p><strong>To test the full panel in Chat UI:</strong></p>
-    <p>The TeamMonitorPanel will automatically appear when Claude uses the <code>TeamCreate</code> tool during a Chat session.</p>
-    <p>For dev testing, the panel can be triggered by opening the Dashboard and starting a task that uses Agent Team (e.g. <code>/audit</code>).</p>
+    <p>Click the <code>DEV: Test Team Monitor</code> button on the Dashboard chat page (dev only).</p>
+    <p>Or start a real Agent Team session — the panel appears when Claude uses <code>TeamCreate</code>.</p>
   </div>
 </body>
 </html>`

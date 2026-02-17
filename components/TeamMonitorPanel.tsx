@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import type { TeamMember, TeamTask, TeamMessage } from '@/lib/claude-chat-types'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { TeamMember, TeamTask, TeamMessage, TeamSystemEvent } from '@/lib/claude-chat-types'
 import { useTeamMonitor } from '@/hooks/useTeamMonitor'
 
 // ── 成員顏色 ──
@@ -18,98 +18,15 @@ function getMemberColor(color?: string): string {
   return MEMBER_COLORS[color] || color
 }
 
-// ── Activity Simulation 模板 ──
-const ACTIVITY_TEMPLATES: Record<string, string[]> = {
-  investigate: [
-    'Reading ClaudeProcessManager.swift...',
-    'Analyzing exit code paths...',
-    'Tracing signal handler registration...',
-    'Checking process lifecycle hooks...',
-    'Inspecting AsyncStream termination...',
-    'Reading bridge.mjs execution flow...',
-    'Analyzing EOF handler behavior...',
-  ],
-  research: [
-    'Searching Apple Developer Forums...',
-    'Reading SwiftUI MenuBarExtra docs...',
-    'Analyzing StackOverflow results...',
-    'Reviewing GitHub issues...',
-    'Scanning WWDC session notes...',
-    'Reading structured concurrency docs...',
-    'Checking swift-async-algorithms...',
-  ],
-  test: [
-    'Building test harness with Xcode...',
-    'Running minimal reproduction app...',
-    'Comparing stdout vs stderr capture...',
-    'Profiling memory allocation...',
-    'Validating hypothesis with mock process...',
-    'Compiling MenuBarTestApp.swift...',
-    'Monitoring process exit behavior...',
-  ],
-  default: [
-    'Reading source files...',
-    'Analyzing code patterns...',
-    'Searching codebase...',
-    'Reviewing documentation...',
-    'Processing results...',
-    'Checking dependencies...',
-    'Examining configuration...',
-  ],
-}
-
-function getTemplateKey(desc: string): string {
-  const lower = desc.toLowerCase()
-  if (lower.includes('調查') || lower.includes('investigat') || lower.includes('分析')) return 'investigate'
-  if (lower.includes('搜尋') || lower.includes('research') || lower.includes('文獻')) return 'research'
-  if (lower.includes('測試') || lower.includes('test') || lower.includes('驗證')) return 'test'
-  return 'default'
-}
-
-// ── Activity Simulator Hook ──
-function useActivitySimulator(members: TeamMember[], tasks: TeamTask[]) {
-  const [activities, setActivities] = useState<Map<string, string>>(new Map())
-
-  useEffect(() => {
-    if (members.length === 0) {
-      setActivities(new Map())
-      return
-    }
-
-    const memberTemplates = members.map(m => {
-      const task = tasks.find(t => t.owner === m.name)
-      const key = task ? getTemplateKey(task.description) : 'default'
-      return { name: m.name, templates: ACTIVITY_TEMPLATES[key] }
-    })
-
-    const initial = new Map<string, string>()
-    memberTemplates.forEach(({ name, templates }) => {
-      initial.set(name, templates[0])
-    })
-    setActivities(initial)
-
-    const counters = new Map<string, number>()
-    memberTemplates.forEach(({ name }) => counters.set(name, 0))
-
-    const intervals = memberTemplates.map(({ name, templates }, idx) => {
-      const member = members.find(m => m.name === name)
-      const isWorking = member?.status === 'working'
-      const interval = isWorking ? 1500 : 4000
-      return setInterval(() => {
-        const count = (counters.get(name) || 0) + 1
-        counters.set(name, count)
-        setActivities(prev => {
-          const next = new Map(prev)
-          next.set(name, templates[count % templates.length])
-          return next
-        })
-      }, interval + idx * 200)
-    })
-
-    return () => intervals.forEach(clearInterval)
-  }, [members, tasks])
-
-  return activities
+// ── 從任務狀態衍生真實活動描述 ──
+function getMemberActivity(member: TeamMember, tasks: TeamTask[]): string | null {
+  if (member.status === 'shutdown') return null
+  const activeTask = tasks.find(t => t.owner === member.name && t.status === 'in_progress')
+  if (activeTask) return activeTask.description
+  const completedCount = tasks.filter(t => t.owner === member.name && t.status === 'completed').length
+  if (completedCount > 0) return `已完成 ${completedCount} 項任務`
+  if (member.status === 'working') return '啟動中...'
+  return null
 }
 
 // ── Progressive Reveal Hook（僅用於 Messages） ──
@@ -136,7 +53,7 @@ function useProgressiveReveal(allMessages: TeamMessage[]) {
     timersRef.current.forEach(clearTimeout)
     timersRef.current = []
 
-    let delay = 600 // 先讓 Members + Tasks 有時間顯示
+    let delay = 600
     allMessages.forEach((_, i) => {
       delay += 400 + Math.min((allMessages[i].summary?.length || 0) * 2, 300)
       const timer = setTimeout(() => setVisibleCount(i + 1), delay)
@@ -160,10 +77,10 @@ function useProgressiveReveal(allMessages: TeamMessage[]) {
 // ══════════════════════════════════════════════
 function MembersList({
   members,
-  activities,
+  tasks,
 }: {
   members: TeamMember[]
-  activities: Map<string, string>
+  tasks: TeamTask[]
 }) {
   return (
     <div className="space-y-1">
@@ -171,7 +88,7 @@ function MembersList({
         const color = getMemberColor(m.color)
         const isWorking = m.status === 'working'
         const isShutdown = m.status === 'shutdown'
-        const activity = activities.get(m.name)
+        const activity = getMemberActivity(m, tasks)
 
         return (
           <div
@@ -211,7 +128,6 @@ function MembersList({
               </div>
               {activity && (
                 <div
-                  key={activity}
                   className={`text-[13px] mt-0.5 truncate ${isWorking ? 'shimmer-text team-activity-line' : ''}`}
                   style={{ color: isWorking ? '#555' : '#333' }}
                 >
@@ -275,7 +191,7 @@ function TasksList({ tasks, members }: { tasks: TeamTask[]; members: TeamMember[
 }
 
 // ══════════════════════════════════════════════
-// SECTION 3: Messages
+// SECTION 3: Messages + System Events
 // ══════════════════════════════════════════════
 function MessageItem({ msg, members, isLatest }: {
   msg: TeamMessage
@@ -345,6 +261,21 @@ function MessageItem({ msg, members, isLatest }: {
   )
 }
 
+function SystemEventItem({ event }: { event: TeamSystemEvent }) {
+  const isShutdown = event.type === 'shutdown'
+  return (
+    <div className="flex items-center gap-2 py-1.5" style={{ color: '#484f58' }}>
+      <i className={`fa-solid ${isShutdown ? 'fa-power-off' : 'fa-pause'} text-[9px]`} />
+      <span className="text-[12px] flex-1 min-w-0 truncate">{event.summary}</span>
+      <span className="text-[11px] font-mono flex-shrink-0">
+        {new Date(event.timestamp).toLocaleTimeString('zh-TW', {
+          hour: '2-digit', minute: '2-digit',
+        })}
+      </span>
+    </div>
+  )
+}
+
 // ══════════════════════════════════════════════
 // Main Panel
 // ══════════════════════════════════════════════
@@ -355,14 +286,15 @@ interface TeamMonitorPanelProps {
 }
 
 export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMonitorPanelProps) {
-  const { data } = useTeamMonitor(teamName || null)
+  const { data, markInactive } = useTeamMonitor(teamName || null)
   const [elapsed, setElapsed] = useState(0)
+  const [membersExpanded, setMembersExpanded] = useState(true)
+  const [tasksExpanded, setTasksExpanded] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
   const isNearBottomRef = useRef(true)
-  // 用面板 mount 時間作為起點（不是團隊建立時間）
   const mountTimeRef = useRef(Date.now())
 
-  // Elapsed timer — 從面板開啟時開始計時
+  // Elapsed timer
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsed(Math.floor((Date.now() - mountTimeRef.current) / 1000))
@@ -370,19 +302,46 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
     return () => clearInterval(timer)
   }, [])
 
-  // Progressive reveal（僅用於 Messages）
-  const { visibleMessages, isRevealing } = useProgressiveReveal(data?.messages || [])
+  // Auto-detect all members shutdown → mark inactive
+  useEffect(() => {
+    if (!data || data.members.length === 0) return
+    const allDone = data.members.every(m => m.status === 'shutdown' || m.status === 'idle')
+    const hasShutdown = data.members.some(m => m.status === 'shutdown')
+    if (allDone && hasShutdown && data.isActive) {
+      markInactive()
+    }
+  }, [data, markInactive])
 
-  // Activity simulation
-  const activities = useActivitySimulator(data?.members || [], data?.tasks || [])
+  // Merge messages + system events into timeline
+  const timeline = (() => {
+    if (!data) return []
+    const items: Array<{ type: 'message' | 'event'; data: TeamMessage | TeamSystemEvent; timestamp: string }> = []
+    for (const msg of data.messages) {
+      items.push({ type: 'message', data: msg, timestamp: msg.timestamp })
+    }
+    for (const evt of data.systemEvents) {
+      items.push({ type: 'event', data: evt, timestamp: evt.timestamp })
+    }
+    items.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    return items
+  })()
 
-  // Auto-scroll messages
+  // Progressive reveal for timeline
+  const { visibleMessages: visibleTimeline, isRevealing } = useProgressiveReveal(
+    // Adapt timeline to TeamMessage shape for the hook
+    timeline.map(item => item.type === 'message'
+      ? item.data as TeamMessage
+      : { from: (item.data as TeamSystemEvent).from, summary: (item.data as TeamSystemEvent).summary, timestamp: item.timestamp } as TeamMessage
+    )
+  )
+
+  // Auto-scroll
   useEffect(() => {
     const el = scrollRef.current
     if (el && isNearBottomRef.current) {
       el.scrollTop = el.scrollHeight
     }
-  }, [visibleMessages.length])
+  }, [visibleTimeline.length])
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
@@ -401,7 +360,6 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
     >
       {/* Header */}
       <div className="flex-shrink-0 pb-2 mb-2" style={{ borderBottom: '1px solid #151a22' }}>
-        {/* Top Row: Title + Close Button */}
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="font-semibold text-lg truncate" style={{ color: '#c9d1d9' }}>
             Team: {teamName}
@@ -420,7 +378,6 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
           )}
         </div>
 
-        {/* Bottom Row: Stats + Status + Timer */}
         <div className="flex items-center justify-between">
           {data && (
             <span className="text-[12px]" style={{ color: '#484f58' }}>
@@ -428,7 +385,7 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
             </span>
           )}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {data?.isActive && (
+            {data?.isActive ? (
               <span className="flex items-center gap-1">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#58a6ff' }} />
@@ -436,7 +393,14 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
                 </span>
                 <span className="text-[12px]" style={{ color: '#58a6ff' }}>執行中</span>
               </span>
-            )}
+            ) : data ? (
+              <span className="flex items-center gap-1">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ backgroundColor: '#3fb950' }} />
+                </span>
+                <span className="text-[12px]" style={{ color: '#3fb950' }}>已完成</span>
+              </span>
+            ) : null}
             <span className="text-[12px] font-mono" style={{ color: '#484f58' }}>
               {elapsedStr}
             </span>
@@ -453,29 +417,47 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
 
       {data && (
         <>
-          {/* ── Section 1: Members ── */}
+          {/* ── Section 1: Members（可摺疊） ── */}
           <div className="flex-shrink-0 pb-2 mb-2" style={{ borderBottom: '1px solid #151a22' }}>
-            <div className="text-[12px] font-medium uppercase tracking-wider mb-1.5" style={{ color: '#333' }}>
-              Members
-            </div>
-            <MembersList members={data.members} activities={activities} />
+            <button
+              onClick={() => setMembersExpanded(!membersExpanded)}
+              className="w-full text-left text-[12px] font-medium uppercase tracking-wider transition-colors hover:text-text-primary"
+              style={{ color: '#555' }}
+            >
+              <i className={`fa-solid fa-chevron-${membersExpanded ? 'down' : 'right'} text-[9px] mr-1.5`} />
+              Members ({data.members.length})
+            </button>
+            {membersExpanded && (
+              <div className="mt-1.5">
+                <MembersList members={data.members} tasks={data.tasks} />
+              </div>
+            )}
           </div>
 
-          {/* ── Section 2: Tasks ── */}
+          {/* ── Section 2: Tasks（可摺疊） ── */}
           <div className="flex-shrink-0 pb-2 mb-2" style={{ borderBottom: '1px solid #151a22' }}>
-            <div className="text-[12px] font-medium uppercase tracking-wider mb-1.5" style={{ color: '#333' }}>
-              Tasks
-            </div>
-            <TasksList tasks={data.tasks} members={data.members} />
+            <button
+              onClick={() => setTasksExpanded(!tasksExpanded)}
+              className="w-full text-left text-[12px] font-medium uppercase tracking-wider transition-colors hover:text-text-primary"
+              style={{ color: '#555' }}
+            >
+              <i className={`fa-solid fa-chevron-${tasksExpanded ? 'down' : 'right'} text-[9px] mr-1.5`} />
+              Tasks ({data.tasks.length})
+            </button>
+            {tasksExpanded && (
+              <div className="mt-1.5">
+                <TasksList tasks={data.tasks} members={data.members} />
+              </div>
+            )}
           </div>
 
-          {/* ── Section 3: Messages ── */}
+          {/* ── Section 3: Timeline (Messages + System Events) ── */}
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="text-[12px] font-medium uppercase tracking-wider mb-1.5 flex-shrink-0" style={{ color: '#333' }}>
               Messages
-              {visibleMessages.length > 0 && (
+              {data.messages.length > 0 && (
                 <span className="ml-1.5 normal-case tracking-normal" style={{ color: '#2a2a2a' }}>
-                  ({visibleMessages.length})
+                  ({data.messages.length})
                 </span>
               )}
             </div>
@@ -485,14 +467,26 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
               onScroll={handleScroll}
               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
             >
-              {visibleMessages.map((msg, i) => (
-                <MessageItem
-                  key={`${msg.from}-${msg.timestamp}`}
-                  msg={msg}
-                  members={data.members}
-                  isLatest={i === visibleMessages.length - 1 && isRevealing}
-                />
-              ))}
+              {visibleTimeline.map((item, i) => {
+                const original = timeline[i]
+                if (!original) return null
+                if (original.type === 'event') {
+                  return (
+                    <SystemEventItem
+                      key={`evt-${original.timestamp}`}
+                      event={original.data as TeamSystemEvent}
+                    />
+                  )
+                }
+                return (
+                  <MessageItem
+                    key={`msg-${(original.data as TeamMessage).from}-${original.timestamp}`}
+                    msg={original.data as TeamMessage}
+                    members={data.members}
+                    isLatest={i === visibleTimeline.length - 1 && isRevealing}
+                  />
+                )
+              })}
 
               {/* Typing indicator */}
               {isRevealing && (
@@ -506,7 +500,7 @@ export default function TeamMonitorPanel({ teamName, panelId, onClose }: TeamMon
               )}
 
               {/* 空狀態 */}
-              {!isRevealing && visibleMessages.length === 0 && (
+              {!isRevealing && visibleTimeline.length === 0 && (
                 <div className="text-[14px] py-2" style={{ color: '#333' }}>
                   等待訊息...
                 </div>

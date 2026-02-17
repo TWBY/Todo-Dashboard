@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { TeamMember, TeamTask, TeamMessage } from '@/lib/claude-chat-types'
+import type { TeamMember, TeamTask, TeamMessage, TeamSystemEvent } from '@/lib/claude-chat-types'
 
 interface TeamMonitorData {
   teamName: string
@@ -9,6 +9,7 @@ interface TeamMonitorData {
   members: TeamMember[]
   tasks: TeamTask[]
   messages: TeamMessage[]
+  systemEvents: TeamSystemEvent[]
   isActive: boolean
   startTime: number
 }
@@ -19,12 +20,26 @@ export function useTeamMonitor(teamName: string | null) {
   const [data, setData] = useState<TeamMonitorData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const isActiveRef = useRef(true) // 追蹤團隊是否仍在運作
+  const isActiveRef = useRef(true)
+
+  const stopPolling = useCallback(() => {
+    isActiveRef.current = false
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }, [])
 
   const fetchTeamData = useCallback(async (name: string) => {
     try {
       const res = await fetch(`/api/team-monitor?name=${encodeURIComponent(name)}`)
       if (!res.ok) {
+        if (res.status === 404) {
+          // Team deleted — stop polling, mark inactive
+          stopPolling()
+          setData(prev => prev ? { ...prev, isActive: false } : null)
+          return
+        }
         const errData = await res.json().catch(() => ({}))
         throw new Error(errData.error || `HTTP ${res.status}`)
       }
@@ -35,6 +50,7 @@ export function useTeamMonitor(teamName: string | null) {
         members: json.members || [],
         tasks: json.tasks || [],
         messages: json.messages || [],
+        systemEvents: json.systemEvents || [],
         isActive: isActiveRef.current,
         startTime: json.createdAt || Date.now(),
       })
@@ -42,9 +58,8 @@ export function useTeamMonitor(teamName: string | null) {
     } catch (err) {
       setError(String(err))
     }
-  }, [])
+  }, [stopPolling])
 
-  // 開始/停止輪詢
   useEffect(() => {
     if (!teamName) {
       setData(null)
@@ -52,11 +67,8 @@ export function useTeamMonitor(teamName: string | null) {
     }
 
     isActiveRef.current = true
-
-    // 立即拉一次
     fetchTeamData(teamName)
 
-    // 定時輪詢
     intervalRef.current = setInterval(() => {
       if (isActiveRef.current) {
         fetchTeamData(teamName)
@@ -64,22 +76,14 @@ export function useTeamMonitor(teamName: string | null) {
     }, POLL_INTERVAL)
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
+      stopPolling()
     }
-  }, [teamName, fetchTeamData])
+  }, [teamName, fetchTeamData, stopPolling])
 
-  // 標記團隊結束
   const markInactive = useCallback(() => {
-    isActiveRef.current = false
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
+    stopPolling()
     setData(prev => prev ? { ...prev, isActive: false } : null)
-  }, [])
+  }, [stopPolling])
 
   return { data, error, markInactive }
 }
