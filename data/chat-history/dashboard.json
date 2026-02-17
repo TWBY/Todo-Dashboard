@@ -3,9 +3,9 @@
     "sessionId": "a425c4ea-2838-46b0-95d1-3898e2f63534",
     "projectId": "dashboard",
     "title": "Untitled",
-    "messageCount": 50,
+    "messageCount": 160,
     "createdAt": 1771243957899,
-    "lastActiveAt": 1771254322167
+    "lastActiveAt": 1771306850144
   },
   {
     "sessionId": "2b4e2d58-e514-4c5a-b5f9-60d79b9382c5",
@@ -227,9 +227,9 @@
     "sessionId": "9e27fdd3-4626-45ff-b493-8a17c319bc28",
     "projectId": "dashboard",
     "title": "現在訊息漸進式揭露的方式跟效果好像沒有了，不確定是不是被移除？",
-    "messageCount": 5,
+    "messageCount": 9,
     "createdAt": 1771252032433,
-    "lastActiveAt": 1771254477727
+    "lastActiveAt": 1771262461352
   },
   {
     "sessionId": "8ca4ccaa-6069-4ef1-b857-fabaa3627164",
@@ -278,5 +278,77 @@
     "messageCount": 1,
     "createdAt": 1771254727217,
     "lastActiveAt": 1771254762844
+  },
+  {
+    "sessionId": "61d7c4fa-ac6d-47d5-af96-addef27e70d0",
+    "projectId": "dashboard",
+    "title": "/rescan",
+    "messageCount": 12,
+    "createdAt": 1771257834514,
+    "lastActiveAt": 1771260668596
+  },
+  {
+    "sessionId": "70451e40-535d-4e48-b43c-6acc5910227c",
+    "projectId": "dashboard",
+    "title": "/rescan",
+    "messageCount": 1,
+    "createdAt": 1771260551836,
+    "lastActiveAt": 1771260551836
+  },
+  {
+    "sessionId": "fab34068-b53f-4ba5-a0c0-f2837f55f58e",
+    "projectId": "dashboard",
+    "title": "我想問一下，我現在在 Chat 裡面有選擇不同的模型。如果我今天在 Chat 是使用 Sonnet，但我現在執行的是 r",
+    "messageCount": 6,
+    "createdAt": 1771260661190,
+    "lastActiveAt": 1771261726670
+  },
+  {
+    "sessionId": "7ac544c4-16aa-4b3c-a437-25792660a8a4",
+    "projectId": "dashboard",
+    "title": "/rescan",
+    "messageCount": 2,
+    "createdAt": 1771260816611,
+    "lastActiveAt": 1771260910480
+  },
+  {
+    "sessionId": "db57a816-d593-4513-8eed-8e242eb420be",
+    "projectId": "dashboard",
+    "title": "/rescan",
+    "messageCount": 1,
+    "createdAt": 1771262071552,
+    "lastActiveAt": 1771262071552
+  },
+  {
+    "sessionId": "c632b42c-a56d-450e-98ff-21ca8a146e7b",
+    "projectId": "dashboard",
+    "title": "Read 1771262345915-e9kidg.png\n›\n對，那個藍色框框就是 Task (Agent) 執行中的",
+    "messageCount": 32,
+    "createdAt": 1771262599079,
+    "lastActiveAt": 1771296772650
+  },
+  {
+    "sessionId": "5cd047fa-e3bf-40a8-a0d3-21b5149a831a",
+    "projectId": "dashboard",
+    "title": "Token refresh failed (400): {\"type\":\"error\",\"error\":{\"type\":",
+    "messageCount": 1,
+    "createdAt": 1771293607139,
+    "lastActiveAt": 1771293617091
+  },
+  {
+    "sessionId": "990d94a6-6a56-4eaf-bac3-8adc5154df8f",
+    "projectId": "dashboard",
+    "title": "因為這個 Chat 面板實在太好用了，我可能會把它用在各個地方，也會在不同地方測試一些實驗性的功能。\n\n因此，我需要在 ",
+    "messageCount": 4,
+    "createdAt": 1771305099344,
+    "lastActiveAt": 1771306261498
+  },
+  {
+    "sessionId": "a6092d29-4c0c-445c-a6ed-99f73d1b54e0",
+    "projectId": "dashboard",
+    "title": "pack 按鈕的左邊要有 reload 4000 的按鈕，就是關閉，然後重新開啟",
+    "messageCount": 1,
+    "createdAt": 1771306963038,
+    "lastActiveAt": 1771306986764
   }
 ]

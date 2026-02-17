@@ -35,16 +35,6 @@
     "updatedAt": "2026-02-15T08:17:21.304Z"
   },
   {
-    "id": "generate-image",
-    "productId": "UT-0007",
-    "name": "GenerateImage",
-    "path": "/Users/ruanbaiye/Documents/UtilityTools/GenerateImage",
-    "description": "圖片生成工具。",
-    "techStack": [],
-    "createdAt": "2025-10-28T00:00:00.000Z",
-    "updatedAt": "2026-02-15T12:41:37.808Z"
-  },
-  {
     "id": "meta-ads-lab",
     "productId": "UT-0020",
     "name": "MetaAdsLab",
@@ -151,5 +141,27 @@
     "updatedAt": "2026-02-15T15:01:52.697Z",
     "devPort": 3013,
     "devAddedAt": "2026-02-15T15:01:52.697Z"
+  },
+  {
+    "id": "test",
+    "productId": "UT-0024",
+    "name": "test",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/test",
+    "description": "",
+    "techStack": [],
+    "createdAt": "2026-02-17T00:00:00.000Z",
+    "updatedAt": "2026-02-17T00:00:00.000Z"
+  },
+  {
+    "id": "security-monitor",
+    "productId": "UT-0025",
+    "name": "SecurityMonitor",
+    "path": "/Users/ruanbaiye/Documents/UtilityTools/SecurityMonitor",
+    "description": "Real-time threat detection and monitoring system",
+    "techStack": [],
+    "createdAt": "2026-02-17T00:00:00.000Z",
+    "updatedAt": "2026-02-16T17:13:36.220Z",
+    "devPort": 3015,
+    "devAddedAt": "2026-02-16T17:13:36.220Z"
   }
 ]
