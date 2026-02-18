@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
+
+const ChatTestOverlay = dynamic(() => import('./ChatTestOverlay'), { ssr: false });
 
 // ─── 類型定義 ───
 interface TooltipInfo {
@@ -382,7 +385,7 @@ function ToggleButton({
     <button
       data-debug-overlay
       onClick={onToggle}
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
       style={{
         zIndex: 9998,
         backgroundColor: isActive ? '#1f3a5f' : '#0d1117',
@@ -416,10 +419,51 @@ function ToggleButton({
   );
 }
 
+// ─── Chat Lab 按鈕 ───
+function ChatLabButton({
+  onClick,
+  isOpen,
+}: {
+  onClick: () => void;
+  isOpen: boolean;
+}) {
+  return (
+    <button
+      data-debug-overlay
+      onClick={onClick}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+      style={{
+        backgroundColor: isOpen ? '#1a0e3a' : '#0d1117',
+        border: `1px solid ${isOpen ? '#5a2a9a' : '#2a3f5a'}`,
+        color: isOpen ? '#bc8cff' : '#4a6580',
+        fontSize: '0.75rem',
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontWeight: 600,
+        boxShadow: isOpen
+          ? '0 0 12px rgba(188,140,255,0.2), 0 4px 12px rgba(0,0,0,0.6)'
+          : '0 4px 12px rgba(0,0,0,0.6)',
+        cursor: 'pointer',
+        letterSpacing: '0.04em',
+      }}
+      title="開啟 Chat Test Lab"
+    >
+      <i className="fa-solid fa-flask-vial" style={{ fontSize: '0.7rem' }} />
+      <span>Chat</span>
+      {isOpen && (
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
+          style={{ backgroundColor: '#bc8cff' }}
+        />
+      )}
+    </button>
+  );
+}
+
 // ─── 主元件 ───
 export default function ComponentDebugOverlay() {
   const { isDev, isActive, setIsActive, tooltipInfo, copied } = useComponentDebug();
   const [mounted, setMounted] = useState(false);
+  const [chatTestOpen, setChatTestOpen] = useState(false);
 
   // 等 client-side mount 後才渲染（避免 SSR mismatch）
   useEffect(() => {
@@ -431,8 +475,15 @@ export default function ComponentDebugOverlay() {
 
   return createPortal(
     <>
-      {/* Toggle 按鈕 */}
-      <ToggleButton isActive={isActive} onToggle={() => setIsActive(v => !v)} />
+      {/* 底部按鈕組 */}
+      <div
+        data-debug-overlay
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2"
+        style={{ zIndex: 9998 }}
+      >
+        <ToggleButton isActive={isActive} onToggle={() => setIsActive(v => !v)} />
+        <ChatLabButton onClick={() => setChatTestOpen(v => !v)} isOpen={chatTestOpen} />
+      </div>
 
       {/* Tooltip：isActive 且有 hover 目標才顯示 */}
       {isActive && tooltipInfo && (
@@ -446,6 +497,11 @@ export default function ComponentDebugOverlay() {
             copied={copied}
           />
         </div>
+      )}
+
+      {/* Chat Test Lab */}
+      {chatTestOpen && (
+        <ChatTestOverlay onClose={() => setChatTestOpen(false)} />
       )}
     </>,
     document.body

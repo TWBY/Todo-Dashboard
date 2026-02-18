@@ -8,39 +8,96 @@ import { ClaudeUsageBar, MemoryCpuBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
 import { ProcessKillButtons } from './MemoryWarningBanner';
 
+const CDP_INTERVAL = 10
+const SDK_INTERVAL = 30
+
 function CdpStatusBadge() {
-  const [active, setActive] = useState<boolean | null>(null)
+  const [status, setStatus] = useState<{ portOpen: boolean; cdpResponding: boolean; browser: string | null } | null>(null)
+  const [sdkOk, setSdkOk] = useState<boolean | null>(null)
+  const [countdown, setCountdown] = useState(CDP_INTERVAL)
+  const [restarting, setRestarting] = useState(false)
+
+  const checkStatus = useCallback(() => {
+    fetch('/api/cdp-status')
+      .then(r => r.json())
+      .then(d => setStatus({ portOpen: d.portOpen, cdpResponding: d.cdpResponding, browser: d.browser }))
+      .catch(() => setStatus({ portOpen: false, cdpResponding: false, browser: null }))
+    setCountdown(CDP_INTERVAL)
+  }, [])
 
   useEffect(() => {
-    const check = () => {
-      fetch('/api/cdp-status')
+    checkStatus()
+    const pollId = setInterval(checkStatus, CDP_INTERVAL * 1000)
+    const tickId = setInterval(() => setCountdown(c => c > 0 ? c - 1 : 0), 1000)
+    return () => { clearInterval(pollId); clearInterval(tickId) }
+  }, [checkStatus])
+
+  useEffect(() => {
+    const checkSdk = () => {
+      fetch('/api/cdp-sdk-test')
         .then(r => r.json())
-        .then(d => setActive(d.active))
-        .catch(() => setActive(false))
+        .then(d => setSdkOk(d.ok))
+        .catch(() => setSdkOk(false))
     }
-    check()
-    const id = setInterval(check, 10000)
+    checkSdk()
+    const id = setInterval(checkSdk, SDK_INTERVAL * 1000)
     return () => clearInterval(id)
   }, [])
 
-  if (active === null) return null
+  const handleRestart = useCallback((withCdp: boolean) => {
+    setRestarting(true)
+    fetch('/api/cdp-restart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cdp: withCdp }),
+    }).finally(() => {
+      setTimeout(() => {
+        setRestarting(false)
+        checkStatus()
+      }, 4000)
+    })
+  }, [checkStatus])
+
+  if (status === null) return null
+
+  const { portOpen, cdpResponding, browser } = status
+  const cdpActive = portOpen && cdpResponding
+
+  const Row = ({ ok, label, detail }: { ok: boolean | null; label: string; detail: string }) => (
+    <div className="flex items-center gap-1.5">
+      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: ok === null ? '#6b7280' : ok ? '#4ade80' : '#ef4444' }} />
+      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+      <span className="text-xs ml-auto" style={{ color: 'var(--text-tertiary)' }}>{detail}</span>
+    </div>
+  )
 
   return (
     <div
-      className="flex-shrink-0 mt-3 px-3 py-1.5 rounded-lg flex items-center gap-2"
+      className="flex-shrink-0 mt-3 px-3 py-2 rounded-lg"
       style={{ backgroundColor: 'var(--background-secondary)' }}
-      title={active ? 'Arc CDP 已連線（port 9222）' : 'Arc CDP 未連線 — 請執行：pkill -a Arc; open -a Arc --args --remote-debugging-port=9222'}
     >
-      <span
-        className="w-2 h-2 rounded-full flex-shrink-0"
-        style={{ backgroundColor: active ? '#4ade80' : '#ef4444' }}
-      />
-      <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-        Arc CDP {active ? '已連線' : '未連線'}
-      </span>
-      {!active && (
-        <i className="fa-solid fa-circle-info text-xs ml-auto" style={{ color: 'var(--text-tertiary)' }} />
-      )}
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Arc CDP</span>
+        <span className="text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.5 }}>{countdown}s</span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Row ok={portOpen} label="Port 9222" detail={portOpen ? '監聽中' : '未開啟'} />
+        <Row ok={cdpResponding} label="CDP 端點" detail={cdpResponding ? (browser?.split('/')[0] ?? '回應') : portOpen ? '無回應' : '—'} />
+        <Row ok={sdkOk} label="SDK MCP" detail={sdkOk === null ? '測試中...' : sdkOk ? '可用' : '不可用'} />
+      </div>
+      <button
+        onClick={() => handleRestart(!cdpActive)}
+        disabled={restarting}
+        className="mt-2 w-full text-xs py-1 px-2 rounded cursor-pointer"
+        style={{
+          backgroundColor: restarting ? 'var(--background-tertiary)' : cdpActive ? 'transparent' : 'var(--accent-color, #0184ff)',
+          color: restarting ? 'var(--text-tertiary)' : cdpActive ? 'var(--text-secondary)' : '#fff',
+          opacity: restarting ? 0.6 : 1,
+          border: cdpActive ? '1px solid var(--border-color)' : 'none',
+        }}
+      >
+        {restarting ? '重新啟動中...' : cdpActive ? '關閉 CDP 重啟' : '開啟 CDP 重啟'}
+      </button>
     </div>
   )
 }
