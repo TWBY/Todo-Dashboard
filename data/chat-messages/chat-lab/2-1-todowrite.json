@@ -1,0 +1,44 @@
+[
+  {
+    "id": "fixture-2-1-01",
+    "role": "user",
+    "content": "請建立一個任務清單",
+    "timestamp": 1700000400000
+  },
+  {
+    "id": "fixture-2-1-02",
+    "role": "assistant",
+    "content": "好的，建立中。",
+    "timestamp": 1700000401000
+  },
+  {
+    "id": "fixture-2-1-03",
+    "role": "tool",
+    "toolName": "TodoWrite",
+    "content": "{\"todos\":[{\"content\":\"研究競品\",\"status\":\"completed\",\"activeForm\":\"研究競品中\"},{\"content\":\"設計 UI mockup\",\"status\":\"in_progress\",\"activeForm\":\"設計 UI mockup 中\"},{\"content\":\"撰寫技術文件\",\"status\":\"pending\",\"activeForm\":\"撰寫技術文件中\"}]}",
+    "todos": [
+      {
+        "content": "研究競品",
+        "status": "completed",
+        "activeForm": "研究競品中"
+      },
+      {
+        "content": "設計 UI mockup",
+        "status": "in_progress",
+        "activeForm": "設計 UI mockup 中"
+      },
+      {
+        "content": "撰寫技術文件",
+        "status": "pending",
+        "activeForm": "撰寫技術文件中"
+      }
+    ],
+    "timestamp": 1700000402000
+  },
+  {
+    "id": "fixture-2-1-04",
+    "role": "assistant",
+    "content": "任務清單建立完成，目前進度如上。",
+    "timestamp": 1700000403000
+  }
+]

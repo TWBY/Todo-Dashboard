@@ -1,0 +1,42 @@
+[
+  {
+    "id": "fixture-2-2-01",
+    "role": "user",
+    "content": "幫我選擇一個前端框架",
+    "timestamp": 1700000500000
+  },
+  {
+    "id": "fixture-2-2-02",
+    "role": "assistant",
+    "content": "讓我問你幾個問題來幫你選擇。",
+    "timestamp": 1700000501000
+  },
+  {
+    "id": "fixture-2-2-03",
+    "role": "tool",
+    "toolName": "AskUserQuestion",
+    "content": "{\"questions\":[{\"question\":\"你的專案規模是？\",\"header\":\"專案規模\",\"options\":[{\"label\":\"小型\",\"description\":\"個人或小團隊，少於 5 頁面\"},{\"label\":\"中型\",\"description\":\"5-20 頁面，中等複雜度\"},{\"label\":\"大型\",\"description\":\"企業級，高複雜度\"}],\"multiSelect\":false}]}",
+    "questions": [
+      {
+        "question": "你的專案規模是？",
+        "header": "專案規模",
+        "options": [
+          {
+            "label": "小型",
+            "description": "個人或小團隊，少於 5 頁面"
+          },
+          {
+            "label": "中型",
+            "description": "5-20 頁面，中等複雜度"
+          },
+          {
+            "label": "大型",
+            "description": "企業級，高複雜度"
+          }
+        ],
+        "multiSelect": false
+      }
+    ],
+    "timestamp": 1700000502000
+  }
+]

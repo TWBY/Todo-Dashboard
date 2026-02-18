@@ -1,0 +1,32 @@
+[
+  {
+    "id": "fixture-2-6-01",
+    "role": "user",
+    "content": "組建一個 Agent Team",
+    "timestamp": 1700000900000
+  },
+  {
+    "id": "fixture-2-6-02",
+    "role": "assistant",
+    "content": "好的，組建中。",
+    "timestamp": 1700000901000
+  },
+  {
+    "id": "fixture-2-6-03",
+    "role": "tool",
+    "toolName": "TeamCreate",
+    "content": "{\"team_name\":\"refactor-team\",\"description\":\"前端重構任務\"}",
+    "teamEvent": {
+      "type": "create",
+      "teamName": "refactor-team",
+      "description": "前端重構任務"
+    },
+    "timestamp": 1700000902000
+  },
+  {
+    "id": "fixture-2-6-04",
+    "role": "assistant",
+    "content": "Team 已組建，成員正在就位。",
+    "timestamp": 1700000903000
+  }
+]

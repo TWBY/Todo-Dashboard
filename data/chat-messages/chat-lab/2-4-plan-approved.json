@@ -1,0 +1,25 @@
+[
+  {
+    "id": "fixture-2-4-01",
+    "role": "user",
+    "content": "請設計架構",
+    "timestamp": 1700000700000
+  },
+  {
+    "id": "fixture-2-4-02",
+    "role": "assistant",
+    "content": "我來設計一下。",
+    "timestamp": 1700000701000
+  },
+  {
+    "id": "fixture-2-4-03",
+    "role": "tool",
+    "toolName": "ExitPlanMode",
+    "content": "# 系統架構設計計畫\n\n## 概覽\n\n本計畫將建立一個模組化、可擴展的前端架構，採用 Next.js 14 App Router。\n\n## 目錄結構\n\n```\nsrc/\n  app/              # Next.js App Router 頁面\n  components/       # 共用 UI 元件\n    ui/             # 基礎 UI 元件（Button、Input 等）\n    features/       # 功能性元件\n  hooks/            # Custom React hooks\n  lib/              # 工具函式與設定\n  store/            # Zustand 狀態管理\n  types/            # TypeScript 型別定義\n```\n\n## 技術選型\n\n| 層次 | 技術 | 理由 |\n|------|------|------|\n| Framework | Next.js 14 | App Router、Server Components |\n| 狀態管理 | Zustand | 輕量、無 boilerplate |\n| 樣式 | Tailwind CSS | 開發效率高 |\n| 測試 | Vitest + Testing Library | 速度快、API 簡潔 |\n\n## 執行步驟\n\n1. 初始化 Next.js 專案並設定 TypeScript\n2. 安裝並設定 Tailwind CSS\n3. 建立基礎目錄結構\n4. 實作共用元件庫\n5. 設定 Zustand store\n6. 撰寫整合測試",
+    "planApproval": {
+      "pending": false,
+      "approved": true
+    },
+    "timestamp": 1700000702000
+  }
+]

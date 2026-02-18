@@ -1,0 +1,27 @@
+[
+  {
+    "id": "fixture-2-5-01",
+    "role": "user",
+    "content": "執行一個複雜分析",
+    "timestamp": 1700000800000
+  },
+  {
+    "id": "fixture-2-5-02",
+    "role": "assistant",
+    "content": "我來啟動一個子 agent 執行。",
+    "timestamp": 1700000801000
+  },
+  {
+    "id": "fixture-2-5-03",
+    "role": "tool",
+    "toolName": "Task",
+    "content": "{\"description\":\"分析專案程式碼\",\"subagent_type\":\"Explore\",\"prompt\":\"分析 src/ 目錄的程式碼品質\"}",
+    "timestamp": 1700000802000
+  },
+  {
+    "id": "fixture-2-5-04",
+    "role": "assistant",
+    "content": "子 agent 已完成，結果如下：\n\n程式碼品質分析顯示整體結構良好，有幾個值得注意的地方：\n\n1. `src/components/` 下有 3 個元件超過 200 行，建議拆分\n2. 部分 hooks 有重複邏輯，可以抽取為共用 utility\n3. 型別定義散落各處，建議集中到 `src/types/` 目錄\n\n整體可維護性評分：7/10。",
+    "timestamp": 1700000810000
+  }
+]

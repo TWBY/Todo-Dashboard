@@ -1,0 +1,14 @@
+[
+  {
+    "id": "fixture-1-2-01",
+    "role": "user",
+    "content": "請展示各種 Markdown 格式",
+    "timestamp": 1700000100000
+  },
+  {
+    "id": "fixture-1-2-02",
+    "role": "assistant",
+    "content": "# 大標題範例\n\n這是一個大標題，使用單個 `#` 符號。\n\n## 小標題範例\n\n這是小標題，使用兩個 `##` 符號。\n\n---\n\n## 文字格式\n\n- **粗體文字**：用兩個星號包覆\n- *斜體文字*：用單個星號包覆\n- **_粗體加斜體_**：組合使用\n- `inline code`：用反引號包覆\n\n## 程式碼區塊（TypeScript）\n\n```typescript\ninterface User {\n  id: string\n  name: string\n  email: string\n  createdAt: Date\n}\n\nfunction greetUser(user: User): string {\n  return `Hello, ${user.name}! Your ID is ${user.id}.`\n}\n\nconst user: User = {\n  id: 'usr-001',\n  name: 'Alice',\n  email: 'alice@example.com',\n  createdAt: new Date()\n}\n\nconsole.log(greetUser(user))\n```\n\n## 有序列表\n\n1. 第一步：安裝相依套件\n2. 第二步：設定環境變數\n3. 第三步：啟動開發伺服器\n4. 第四步：開啟瀏覽器測試\n\n## 無序列表\n\n- React\n- TypeScript\n- Tailwind CSS\n  - 響應式設計\n  - 主題系統\n- Next.js\n\n## 表格（3行3列）\n\n| 框架 | 語言 | 特色 |\n|------|------|------|\n| React | JavaScript/TypeScript | 元件化、虛擬 DOM |\n| Vue | JavaScript/TypeScript | 漸進式框架、雙向綁定 |\n| Angular | TypeScript | 完整框架、依賴注入 |\n\n以上就是常見的 Markdown 格式展示！",
+    "timestamp": 1700000101000
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "fixture-1-4-01",
+    "role": "user",
+    "content": "請幫我分析這個專案的程式碼。",
+    "timestamp": 1700000300000
+  },
+  {
+    "id": "fixture-1-4-02",
+    "role": "assistant",
+    "content": "API Error: Request failed with status 529 — Overloaded. The API is temporarily unavailable due to high traffic. Please try again in a few moments.\n\nIf this issue persists, check the Anthropic status page or contact support.",
+    "isError": true,
+    "timestamp": 1700000301000
+  }
+]

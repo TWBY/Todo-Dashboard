@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fixture-1-1-01",
+    "role": "user",
+    "content": "你好！你是誰？",
+    "timestamp": 1700000000000
+  },
+  {
+    "id": "fixture-1-1-02",
+    "role": "assistant",
+    "content": "你好！我是 Claude，Anthropic 開發的 AI 助理。我可以幫助你回答問題、撰寫程式碼、分析資料等。有什麼我可以幫你的嗎？",
+    "timestamp": 1700000001000
+  },
+  {
+    "id": "fixture-1-1-03",
+    "role": "user",
+    "content": "你能做什麼？",
+    "timestamp": 1700000002000
+  },
+  {
+    "id": "fixture-1-1-04",
+    "role": "assistant",
+    "content": "我可以做很多事情！包括：回答各種問題、協助撰寫和除錯程式碼、分析文件和資料、翻譯不同語言、幫助你思考和規劃專案，以及進行創意寫作。你有特定的需求嗎？",
+    "timestamp": 1700000003000
+  },
+  {
+    "id": "fixture-1-1-05",
+    "role": "user",
+    "content": "太好了，那我們開始吧！",
+    "timestamp": 1700000004000
+  },
+  {
+    "id": "fixture-1-1-06",
+    "role": "assistant",
+    "content": "當然！請告訴我你想做什麼，我很樂意幫忙。",
+    "timestamp": 1700000005000
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "id": "fixture-2-8-01",
+    "role": "user",
+    "content": "制定重構計畫",
+    "timestamp": 1700001100000
+  },
+  {
+    "id": "fixture-2-8-02",
+    "role": "assistant",
+    "content": "我來寫一份計畫。",
+    "timestamp": 1700001101000
+  },
+  {
+    "id": "fixture-2-8-03",
+    "role": "tool",
+    "toolName": "Write",
+    "content": "{\"file_path\":\"/Users/test/.claude/plans/refactor-plan.md\",\"content\":\"# 重構計畫\\n\\n## 目標\\n- 提升程式碼可維護性\\n- 減少重複程式碼\\n- 建立統一的元件設計系統\\n\\n## 步驟\\n1. 抽取共用元件\\n2. 整合 CSS\\n3. 更新測試\\n\\n## 時程\\n- Week 1: 元件拆分\\n- Week 2: 樣式整合\\n- Week 3: 測試覆蓋\"}",
+    "timestamp": 1700001102000
+  }
+]

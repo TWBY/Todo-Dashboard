@@ -1,0 +1,48 @@
+[
+  {
+    "id": "fixture-2-7-01",
+    "role": "user",
+    "content": "讀取並分析一些檔案",
+    "timestamp": 1700001000000
+  },
+  {
+    "id": "fixture-2-7-02",
+    "role": "assistant",
+    "content": "我來讀取檔案。",
+    "timestamp": 1700001001000
+  },
+  {
+    "id": "fixture-2-7-03",
+    "role": "tool",
+    "toolName": "Read",
+    "content": "{\"file_path\":\"/src/app/page.tsx\"}",
+    "timestamp": 1700001002000
+  },
+  {
+    "id": "fixture-2-7-04",
+    "role": "tool",
+    "toolName": "Glob",
+    "content": "{\"pattern\":\"**/*.tsx\"}",
+    "timestamp": 1700001003000
+  },
+  {
+    "id": "fixture-2-7-05",
+    "role": "tool",
+    "toolName": "Grep",
+    "content": "{\"pattern\":\"useState\",\"path\":\"/src\"}",
+    "timestamp": 1700001004000
+  },
+  {
+    "id": "fixture-2-7-06",
+    "role": "tool",
+    "toolName": "Read",
+    "content": "{\"file_path\":\"/src/components/Button.tsx\"}",
+    "timestamp": 1700001005000
+  },
+  {
+    "id": "fixture-2-7-07",
+    "role": "assistant",
+    "content": "分析完成，以下是結果：\n\n共找到 12 個 `.tsx` 檔案。`useState` 在 8 個元件中被使用，其中 `page.tsx` 有 5 個 `useState` 呼叫，建議考慮用 `useReducer` 整合狀態邏輯。`Button.tsx` 結構乾淨，可作為其他元件的參考範本。",
+    "timestamp": 1700001006000
+  }
+]

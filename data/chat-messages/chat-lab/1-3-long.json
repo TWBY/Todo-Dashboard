@@ -1,0 +1,122 @@
+[
+  {
+    "id": "fixture-1-3-01",
+    "role": "user",
+    "content": "我想重構一個 Todo 應用，應該從哪裡開始？",
+    "timestamp": 1700000200000
+  },
+  {
+    "id": "fixture-1-3-02",
+    "role": "assistant",
+    "content": "建議從分析現有程式碼結構開始，找出重複邏輯和可抽取的元件。",
+    "timestamp": 1700000201000
+  },
+  {
+    "id": "fixture-1-3-03",
+    "role": "user",
+    "content": "目前程式碼全部都在一個 App.js 裡，大概 500 行。",
+    "timestamp": 1700000202000
+  },
+  {
+    "id": "fixture-1-3-04",
+    "role": "assistant",
+    "content": "典型的「上帝元件」問題。第一步可以把 TodoList、TodoItem、TodoForm 各自抽成獨立元件。",
+    "timestamp": 1700000203000
+  },
+  {
+    "id": "fixture-1-3-05",
+    "role": "user",
+    "content": "狀態管理怎麼辦？現在都是 useState 放在最頂層。",
+    "timestamp": 1700000204000
+  },
+  {
+    "id": "fixture-1-3-06",
+    "role": "assistant",
+    "content": "可以考慮用 useReducer 配合 Context，或是引入 Zustand 這種輕量狀態管理庫。",
+    "timestamp": 1700000205000
+  },
+  {
+    "id": "fixture-1-3-07",
+    "role": "user",
+    "content": "Zustand 和 Redux 比起來哪個好？",
+    "timestamp": 1700000206000
+  },
+  {
+    "id": "fixture-1-3-08",
+    "role": "assistant",
+    "content": "對 Todo 應用來說 Zustand 更合適，設定簡單、沒有 boilerplate，學習曲線低很多。",
+    "timestamp": 1700000207000
+  },
+  {
+    "id": "fixture-1-3-09",
+    "role": "user",
+    "content": "好，那 TypeScript 要怎麼加進去？",
+    "timestamp": 1700000208000
+  },
+  {
+    "id": "fixture-1-3-10",
+    "role": "assistant",
+    "content": "先定義 Todo 的 interface，然後把 .js 改成 .tsx，讓 TypeScript 的錯誤提示引導你修正型別問題。",
+    "timestamp": 1700000209000
+  },
+  {
+    "id": "fixture-1-3-11",
+    "role": "user",
+    "content": "CSS 部分呢？現在用的是 plain CSS，想換成 Tailwind。",
+    "timestamp": 1700000210000
+  },
+  {
+    "id": "fixture-1-3-12",
+    "role": "assistant",
+    "content": "可以漸進式遷移，一個元件一個元件換，不用一次全部改掉，風險比較低。",
+    "timestamp": 1700000211000
+  },
+  {
+    "id": "fixture-1-3-13",
+    "role": "user",
+    "content": "測試呢？現在完全沒有測試。",
+    "timestamp": 1700000212000
+  },
+  {
+    "id": "fixture-1-3-14",
+    "role": "assistant",
+    "content": "重構的好時機加測試！先用 Vitest + Testing Library 寫幾個關鍵的單元測試，確保重構不破壞功能。",
+    "timestamp": 1700000213000
+  },
+  {
+    "id": "fixture-1-3-15",
+    "role": "user",
+    "content": "有沒有建議的資料夾結構？",
+    "timestamp": 1700000214000
+  },
+  {
+    "id": "fixture-1-3-16",
+    "role": "assistant",
+    "content": "推薦 feature-based 結構：`src/features/todos/` 下放 components、hooks、store，比按類型分層更好維護。",
+    "timestamp": 1700000215000
+  },
+  {
+    "id": "fixture-1-3-17",
+    "role": "user",
+    "content": "API 的部分要怎麼處理？現在是直接 fetch 在元件裡。",
+    "timestamp": 1700000216000
+  },
+  {
+    "id": "fixture-1-3-18",
+    "role": "assistant",
+    "content": "把 API 呼叫抽到 custom hooks 或 service 層，元件只負責 UI 邏輯，關注點分離更清晰。",
+    "timestamp": 1700000217000
+  },
+  {
+    "id": "fixture-1-3-19",
+    "role": "user",
+    "content": "整個重構大概要多久？",
+    "timestamp": 1700000218000
+  },
+  {
+    "id": "fixture-1-3-20",
+    "role": "assistant",
+    "content": "500 行的 App 漸進式重構，估計 2-3 天可以完成主要部分，加上測試大概一週。循序漸進不要急！",
+    "timestamp": 1700000219000
+  }
+]
