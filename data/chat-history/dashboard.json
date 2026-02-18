@@ -686,5 +686,29 @@
     "messageCount": 1,
     "createdAt": 1771423955447,
     "lastActiveAt": 1771423973513
+  },
+  {
+    "sessionId": "57d71198-2268-4c23-adc8-9d44dbc7fac4",
+    "projectId": "dashboard",
+    "title": "/cdp-test",
+    "messageCount": 1,
+    "createdAt": 1771424216702,
+    "lastActiveAt": 1771424227803
+  },
+  {
+    "sessionId": "438a4f43-53fe-423f-bead-19d700aa5b06",
+    "projectId": "dashboard",
+    "title": "# Claude Code Extension vs Dashboard SDK 環境差異\n\n## 核心差異（一句話）\n",
+    "messageCount": 1,
+    "createdAt": 1771425186618,
+    "lastActiveAt": 1771425190103
+  },
+  {
+    "sessionId": "d6907e25-0a44-4679-98ad-25340f06079b",
+    "projectId": "dashboard",
+    "title": "# Claude Code Extension vs Dashboard SDK 環境差異\n\n## 核心差異（一句話）\n",
+    "messageCount": 1,
+    "createdAt": 1771425193745,
+    "lastActiveAt": 1771425196498
   }
 ]
