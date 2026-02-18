@@ -403,9 +403,9 @@
     "sessionId": "f4ec4037-098b-408b-a1bb-4e3f2b971d5b",
     "projectId": "dashboard",
     "title": "我現在要來寫一篇文章，主題是有關於 AI Coding 的故事。這是一個很長的故事，要從我十年前（2015 年）開始寫程",
-    "messageCount": 168,
+    "messageCount": 169,
     "createdAt": 1771334625532,
-    "lastActiveAt": 1771412012025
+    "lastActiveAt": 1771412371313
   },
   {
     "sessionId": "44ff2ffe-dd8c-4431-94e5-7c356c76ceb0",
@@ -475,9 +475,9 @@
     "sessionId": "9fce295c-a951-43f9-be37-78190713eb16",
     "projectId": "dashboard",
     "title": "--\n1%\n4h44m\n62%\n80%\n3d8h\n+28%\n40%\n-\n狀態的顯示需要下上空格。像是「80 %」「3 d",
-    "messageCount": 39,
+    "messageCount": 47,
     "createdAt": 1771395427147,
-    "lastActiveAt": 1771408149571
+    "lastActiveAt": 1771412827479
   },
   {
     "sessionId": "563a54dd-342c-4575-b38c-79c263da2975",
@@ -502,5 +502,13 @@
     "messageCount": 2,
     "createdAt": 1771412159084,
     "lastActiveAt": 1771412227480
+  },
+  {
+    "sessionId": "ea4c16e5-3500-4f5a-97f2-23eae331b751",
+    "projectId": "dashboard",
+    "title": "為何 reload 按鈕按下去後顯示「Project has no devPort configured」",
+    "messageCount": 11,
+    "createdAt": 1771412426567,
+    "lastActiveAt": 1771413031118
   }
 ]

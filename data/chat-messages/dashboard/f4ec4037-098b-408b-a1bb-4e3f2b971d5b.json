@@ -12476,5 +12476,11 @@
     "role": "assistant",
     "content": "✅ **Build 成功！**\n\n現在：\n- ✅ 首頁 Station 標題左邊會顯示 `Dev 1.18.0` 或 `Prod 1.18.0`\n- ✅ 頁面頂部只有紅/藍裝飾條（沒有版本號）\n- ✅ 其他地方都不顯示版本號\n\n完全符合你的要求！",
     "timestamp": 1771412008858
+  },
+  {
+    "id": "4724e177-871d-4ea1-856a-1a3a4dd92b62",
+    "role": "user",
+    "content": "為何 reload 按鈕按下後，顯示「首頁的 Station 標題左邊會顯示」",
+    "timestamp": 1771412369364
   }
 ]
