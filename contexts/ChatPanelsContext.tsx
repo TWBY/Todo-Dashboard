@@ -49,6 +49,7 @@ interface ChatPanelsContextValue {
   removePanel: (panelId: string) => void
   duplicatePanel: (panelId: string) => void
   updatePanelSession: (panelId: string, sessionId: string) => void
+  updatePanelTeamName: (panelId: string, teamName: string) => void
 }
 
 function loadPanels(): ChatPanelState[] {
@@ -135,8 +136,19 @@ export function ChatPanelsProvider({ children }: { children: React.ReactNode }) 
     })
   }, [])
 
+  const updatePanelTeamName = useCallback((panelId: string, teamName: string) => {
+    setOpenPanels(prev => {
+      const idx = prev.findIndex(p => p.panelId === panelId)
+      if (idx === -1) return prev
+      if (prev[idx].teamName === teamName) return prev // 避免無意義更新
+      const next = [...prev]
+      next[idx] = { ...next[idx], teamName }
+      return next
+    })
+  }, [])
+
   return (
-    <ChatPanelsContext.Provider value={{ openPanels, addPanel, removePanel, duplicatePanel, updatePanelSession }}>
+    <ChatPanelsContext.Provider value={{ openPanels, addPanel, removePanel, duplicatePanel, updatePanelSession, updatePanelTeamName }}>
       {children}
     </ChatPanelsContext.Provider>
   )

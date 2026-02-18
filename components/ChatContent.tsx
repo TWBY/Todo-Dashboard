@@ -892,6 +892,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const [elapsed, setElapsed] = useState(0)
   const [autoResolvedModel, setAutoResolvedModel] = useState<string | null>(null)
   const [activeTeam, setActiveTeam] = useState<{ name: string; description?: string } | null>(null)
+  const [isMessagesReady, setIsMessagesReady] = useState(false)
   const dragCounterRef = useRef(0)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -913,7 +914,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
 
   const effectiveModel = modelProp || modelChoice
   const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
-  const { addPanel } = useChatPanels()
+  const { addPanel, openPanels, updatePanelTeamName } = useChatPanels()
 
   // 偵測 Team 事件（TeamCreate / TeamDelete）→ 追蹤 activeTeam state（不自動開啟面板）
   // 掃描所有訊息推斷最終 team 狀態，確保 component remount 時按鈕不會消失
@@ -944,7 +945,32 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       // create 是最後狀態 → team 仍活躍，按鈕應持續顯示
       setActiveTeam(latestCreate)
     }
+
+    // 標記訊息掃描已完成，允許 fallback useEffect 執行
+    setIsMessagesReady(true)
   }, [messages, projectId])
+
+  // Fallback：如果 messages 沒有 teamEvent，從 ~/.claude/teams/ 掃描復原最新 team
+  // 確保系統重啟後按鈕仍然出現（但確認訊息掃描已完成且真的沒有 team）
+  useEffect(() => {
+    if (!isMessagesReady) return       // 訊息掃描尚未完成
+    if (isLoadingHistory) return       // 歷史仍在載入中
+    if (activeTeam !== null) return    // messages 已找到 team
+
+    // 此時可確認：messages 真的沒有 teamEvent，才去查 teams 目錄
+    fetch('/api/team-monitor/list')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.teams?.length > 0) {
+          setActiveTeam(prev => {
+            // 雙重防護：再次確認 messages 沒有設 activeTeam
+            if (prev !== null) return prev
+            return { name: data.teams[0].name, description: data.teams[0].description }
+          })
+        }
+      })
+      .catch(() => {})
+  }, [isMessagesReady, isLoadingHistory, activeTeam])
 
   // Mount 時自動恢復上次的 session（僅在 mount 時執行一次）
   const hasResumedRef = useRef(false)
@@ -990,16 +1016,26 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     if (sessionId && onSessionIdChange) onSessionIdChange(sessionId)
   }, [sessionId, onSessionIdChange])
 
-  // 手動開啟 Team Monitor 面板
+  // 手動開啟 Team Monitor 面板（若已存在則 upsert，而非重複建立）
   const handleOpenTeamMonitor = useCallback(() => {
     if (!activeTeam) return
     const teamName = activeTeam.name
-    addPanel(projectId, `Team: ${teamName}`, {
-      type: 'team-monitor',
-      teamName,
-      ephemeral: true
-    })
-  }, [activeTeam, projectId, addPanel])
+
+    // 先檢查是否已有 team-monitor panel 開啟
+    const existingPanel = openPanels.find(p => p.type === 'team-monitor')
+    if (existingPanel && existingPanel.teamName !== teamName) {
+      // 已有 panel，但 teamName 需要更新（可能是換了 team）
+      updatePanelTeamName(existingPanel.panelId, teamName)
+    } else if (!existingPanel) {
+      // 沒有 panel，新建一個
+      addPanel(projectId, `Team: ${teamName}`, {
+        type: 'team-monitor',
+        teamName,
+        ephemeral: true
+      })
+    }
+    // 若已有 panel 且 teamName 相同，什麼都不做（panel 已開啟）
+  }, [activeTeam, projectId, addPanel, updatePanelTeamName, openPanels])
 
   // 批准計畫時自動切換 mode 到 edit（planOnly 模式下不切換，改為自動存回 Scratch Pad）
   const isApprovingRef = useRef(false)

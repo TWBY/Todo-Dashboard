@@ -547,6 +547,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           >
             {panel.type === 'team-monitor' ? (
               <TeamMonitorPanel
+                key={panel.teamName}
                 teamName={panel.teamName || ''}
                 panelId={panel.panelId}
                 onClose={() => handlePanelClose(panel.panelId)}
