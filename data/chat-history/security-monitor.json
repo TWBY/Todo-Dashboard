@@ -30,5 +30,13 @@
     "messageCount": 17,
     "createdAt": 1771337542039,
     "lastActiveAt": 1771339647118
+  },
+  {
+    "sessionId": "ea10a1b6-0cb6-41f6-b20c-bcbfbced4c79",
+    "projectId": "security-monitor",
+    "title": "Untitled",
+    "messageCount": 46,
+    "createdAt": 1771343539341,
+    "lastActiveAt": 1771346493002
   }
 ]

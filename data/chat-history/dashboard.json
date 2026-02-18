@@ -403,9 +403,9 @@
     "sessionId": "f4ec4037-098b-408b-a1bb-4e3f2b971d5b",
     "projectId": "dashboard",
     "title": "我現在要來寫一篇文章，主題是有關於 AI Coding 的故事。這是一個很長的故事，要從我十年前（2015 年）開始寫程",
-    "messageCount": 21,
+    "messageCount": 168,
     "createdAt": 1771334625532,
-    "lastActiveAt": 1771337804165
+    "lastActiveAt": 1771412012025
   },
   {
     "sessionId": "44ff2ffe-dd8c-4431-94e5-7c356c76ceb0",
@@ -422,5 +422,85 @@
     "messageCount": 1,
     "createdAt": 1771336518131,
     "lastActiveAt": 1771336577403
+  },
+  {
+    "sessionId": "403f2045-299d-4b56-bdeb-b1f4ce83c0cb",
+    "projectId": "dashboard",
+    "title": "那個現在打包的頁面要稍微調整一下。\n\n原本「重新整理」、「重新執行」跟「開始建立」的按鈕是在左邊，然後「X」在右邊。我希",
+    "messageCount": 4,
+    "createdAt": 1771343858467,
+    "lastActiveAt": 1771343987796
+  },
+  {
+    "sessionId": "fde3920c-879a-4621-a7d0-251aca24d6f0",
+    "projectId": "dashboard",
+    "title": "研究為何 cdp 也就是/check-console 好像使用不了？",
+    "messageCount": 2,
+    "createdAt": 1771344693919,
+    "lastActiveAt": 1771344744149
+  },
+  {
+    "sessionId": "9fef4818-f3ca-4cb6-a5e2-fa0ae5b6c844",
+    "projectId": "dashboard",
+    "title": "你現在 sonnet 跟 opus 模型的型號版號是多少",
+    "messageCount": 1,
+    "createdAt": 1771393209162,
+    "lastActiveAt": 1771393210917
+  },
+  {
+    "sessionId": "8451af10-5c63-4ffe-8a10-d008a92419ce",
+    "projectId": "dashboard",
+    "title": "Untitled",
+    "messageCount": 11,
+    "createdAt": 1771393230816,
+    "lastActiveAt": 1771393871568
+  },
+  {
+    "sessionId": "30cd11ea-606a-4c95-80fb-bb0c9623c73b",
+    "projectId": "dashboard",
+    "title": "/env-check",
+    "messageCount": 5,
+    "createdAt": 1771393894972,
+    "lastActiveAt": 1771394376771
+  },
+  {
+    "sessionId": "ee9797b9-a0fa-4e07-a077-7bc8f8547a8c",
+    "projectId": "dashboard",
+    "title": "/env-check",
+    "messageCount": 1,
+    "createdAt": 1771394048830,
+    "lastActiveAt": 1771394069776
+  },
+  {
+    "sessionId": "9fce295c-a951-43f9-be37-78190713eb16",
+    "projectId": "dashboard",
+    "title": "--\n1%\n4h44m\n62%\n80%\n3d8h\n+28%\n40%\n-\n狀態的顯示需要下上空格。像是「80 %」「3 d",
+    "messageCount": 39,
+    "createdAt": 1771395427147,
+    "lastActiveAt": 1771408149571
+  },
+  {
+    "sessionId": "563a54dd-342c-4575-b38c-79c263da2975",
+    "projectId": "dashboard",
+    "title": "一開始執行 agent team 時，會有按鈕讓我點開來看  agent team 面板，但是如果視窗跳掉，按鈕就會消失",
+    "messageCount": 1,
+    "createdAt": 1771403031052,
+    "lastActiveAt": 1771403031052
+  },
+  {
+    "sessionId": "fdacbd04-ea49-4d0c-ad0e-2b5b646a3f81",
+    "projectId": "dashboard",
+    "title": "我的 prod 想要用 PM2 來開啟",
+    "messageCount": 7,
+    "createdAt": 1771404230540,
+    "lastActiveAt": 1771405215707
+  },
+  {
+    "sessionId": "955f4966-e8e1-4030-9220-495397496bff",
+    "projectId": "dashboard",
+    "title": "把 bash 跟權限幾乎都開啟來，現在限制太多",
+    "messageCount": 2,
+    "createdAt": 1771412159084,
+    "lastActiveAt": 1771412227480
   }
 ]

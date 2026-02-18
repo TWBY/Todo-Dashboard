@@ -61,7 +61,7 @@
       }
     ],
     "createdAt": "2026-02-09T00:00:00.000Z",
-    "updatedAt": "2026-02-17T07:55:17.866Z"
+    "updatedAt": "2026-02-18T06:13:38.503Z"
   },
   {
     "id": "course-template",
@@ -87,7 +87,6 @@
     "description": "課程內容總結與編輯中心，統整所有課程資訊。",
     "techStack": [],
     "children": [],
-    "devPort": 3019,
     "createdAt": "2026-02-14T00:00:00.000Z",
     "updatedAt": "2026-02-14T15:19:59.823Z"
   }
