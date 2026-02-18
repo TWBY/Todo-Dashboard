@@ -1,0 +1,14 @@
+[
+  {
+    "id": "ae7abea2-48b8-4f28-ad61-2f38e7ff26a1",
+    "role": "user",
+    "content": "回覆「好」",
+    "timestamp": 1771416151668
+  },
+  {
+    "id": "67df2e7e-764d-4bff-9f9f-87af33f631e5",
+    "role": "assistant",
+    "content": "好",
+    "timestamp": 1771416156905
+  }
+]

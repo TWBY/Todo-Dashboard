@@ -1,0 +1,60 @@
+[
+  {
+    "id": "e5781531-fef7-43b1-9e7f-8921b140d05b",
+    "role": "user",
+    "content": "/chat-test",
+    "timestamp": 1771419903332
+  },
+  {
+    "id": "9fd2d159-3e52-4e96-b4d8-25679938f55e",
+    "role": "assistant",
+    "content": "好的，開始執行 Chat Panel 自動化測試。\n\n先確認 dev server 狀態並詢問測試情境選擇。",
+    "timestamp": 1771419907518
+  },
+  {
+    "id": "304af29f-4f22-471b-b5f1-291c21b5bcf8",
+    "role": "tool",
+    "content": "{\n  \"command\": \"lsof -i :3001 -t\",\n  \"description\": \"Check if dev server is running on port 3001\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "lsof -i :3001 -t",
+    "timestamp": 1771419909546
+  },
+  {
+    "id": "a3264df1-182f-4983-beb8-d026ffeb4a91",
+    "role": "assistant",
+    "content": "Dev server 已在運行，繼續建立新分頁並導航。",
+    "timestamp": 1771419910828
+  },
+  {
+    "id": "4f59e14f-c7e4-4b1e-9b54-c9d3cba7c6fb",
+    "role": "tool",
+    "content": "",
+    "toolName": "AskUserQuestion",
+    "questions": [
+      {
+        "question": "要執行哪些測試情境？",
+        "header": "測試",
+        "multiSelect": true,
+        "options": [
+          {
+            "label": "全部執行 (Recommended)",
+            "description": "依序執行所有測試情境"
+          },
+          {
+            "label": "僅 Fresh Chat",
+            "description": "測試全新對話的第一條訊息"
+          },
+          {
+            "label": "僅 Session 續接",
+            "description": "測試在既有對話中送第二條訊息"
+          },
+          {
+            "label": "僅 Console 驗證",
+            "description": "只檢查 console debug log 是否正常輸出"
+          }
+        ]
+      }
+    ],
+    "timestamp": 1771419914819
+  }
+]
