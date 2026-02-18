@@ -19,6 +19,7 @@ export default function ScratchPad() {
     addPanel(DASHBOARD_PROJECT_ID, DASHBOARD_PROJECT_NAME, { emailMode: true });
   };
 
+
   return (
     <div>
       <div className="flex flex-col gap-2">
@@ -44,6 +45,16 @@ export default function ScratchPad() {
             suppressHydrationWarning
           >
             Email
+          </button>
+          <button
+            onClick={() => router.push('/docs')}
+            className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+            style={{
+              backgroundColor: 'var(--background-tertiary)',
+              color: 'var(--text-tertiary)',
+            }}
+          >
+            技術文件
           </button>
           <button
             onClick={toggleLeftPanel}
