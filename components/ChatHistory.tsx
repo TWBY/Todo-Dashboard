@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { ChatSessionRecord } from '@/lib/claude-chat-types'
 
 function relativeTime(timestamp: number): string {
@@ -38,6 +38,7 @@ interface ChatHistoryProps {
 export default function ChatHistory({ projectId, currentSessionId, onResumeSession }: ChatHistoryProps) {
   const [sessions, setSessions] = useState<ChatSessionRecord[]>([])
   const [expanded, setExpanded] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const fetchSessions = useCallback(() => {
     fetch(`/api/claude-chat/history?projectId=${encodeURIComponent(projectId)}`)
@@ -50,12 +51,23 @@ export default function ChatHistory({ projectId, currentSessionId, onResumeSessi
     fetchSessions()
   }, [fetchSessions])
 
+  useEffect(() => {
+    if (!expanded) return
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setExpanded(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [expanded])
+
   const todaySessions = sessions.filter(s => isToday(s.lastActiveAt))
   const yesterdaySessions = sessions.filter(s => isYesterday(s.lastActiveAt))
   const olderSessions = sessions.filter(s => !isToday(s.lastActiveAt) && !isYesterday(s.lastActiveAt))
 
   return (
-    <div className="flex-shrink-0 mb-2">
+    <div ref={containerRef} className="flex-shrink-0 mb-2">
       {/* Toggle bar */}
       <button
         onClick={() => setExpanded(prev => !prev)}
