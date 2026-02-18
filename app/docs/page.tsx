@@ -684,7 +684,27 @@ export default function DocsPage() {
   const [activeTab, setActiveTab] = useState('env-compare')
 
   return (
-    <SubpageShell title="技術文件">
+    <SubpageShell
+      title="技術文件"
+      sidePanel={
+        <aside
+          style={{
+            width: 360,
+            borderLeft: '1px solid var(--border-color)',
+            backgroundColor: 'var(--background-secondary)',
+          }}
+          className="flex flex-col shrink-0"
+        >
+          <ClaudeChatPanel
+            projectId="dashboard"
+            projectName="文件助手"
+            isFixed
+            ephemeral
+            systemPrompt={DOCS_ASSISTANT_PROMPT}
+          />
+        </aside>
+      }
+    >
       <div className="flex min-h-full">
 
         {/* Left sidebar */}
@@ -726,27 +746,6 @@ export default function DocsPage() {
           {activeTab === 'mcp'         && <McpTab />}
           {activeTab === 'gaps'        && <GapsTab />}
         </main>
-
-        {/* Right Chat panel */}
-        <aside
-          style={{
-            width: 360,
-            borderLeft: '1px solid var(--border-color)',
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
-            backgroundColor: 'var(--background-secondary)',
-          }}
-          className="flex flex-col shrink-0"
-        >
-          <ClaudeChatPanel
-            projectId="dashboard"
-            projectName="文件助手"
-            isFixed
-            ephemeral
-            systemPrompt={DOCS_ASSISTANT_PROMPT}
-          />
-        </aside>
 
       </div>
     </SubpageShell>
