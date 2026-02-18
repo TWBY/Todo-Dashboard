@@ -82,6 +82,7 @@ interface UseClaudeChatReturn {
 interface UseClaudeChatConfig {
   model?: string
   ephemeral?: boolean
+  systemPromptAppend?: string
 }
 
 // --- 串流事件處理器（主迴圈 & 重試共用） ---
@@ -518,11 +519,12 @@ async function executeStream(opts: {
   mode: ChatMode
   model?: string
   effort?: string
+  systemPromptAppend?: string
   controller: AbortController
   ctx: StreamContext
   actions: StreamActions
 }): Promise<void> {
-  const { projectId, fullMessage, sessionId, mode, model, effort, controller, ctx, actions } = opts
+  const { projectId, fullMessage, sessionId, mode, model, effort, systemPromptAppend, controller, ctx, actions } = opts
 
   console.debug('[chat] fetching /api/claude-chat', { projectId, sessionId })
   const res = await fetch('/api/claude-chat', {
@@ -535,6 +537,7 @@ async function executeStream(opts: {
       mode,
       model: model || undefined,
       effort: effort || undefined,
+      systemPromptAppend: systemPromptAppend || undefined,
     }),
     signal: controller.signal,
   })
@@ -566,6 +569,7 @@ async function executeStream(opts: {
         mode,
         model: model || undefined,
         effort: effort || undefined,
+        systemPromptAppend: systemPromptAppend || undefined,
       }),
       signal: controller.signal,
     })
@@ -762,6 +766,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
         mode: mode || 'plan',
         model: modelOverride || config?.model || undefined,
         effort: effortOverride || undefined,
+        systemPromptAppend: config?.systemPromptAppend,
         controller,
         ctx,
         actions,

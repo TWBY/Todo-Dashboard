@@ -866,6 +866,7 @@ interface ChatContentProps {
   initialMessage?: string
   initialMode?: 'plan' | 'edit'
   ephemeral?: boolean
+  systemPrompt?: string
   ref?: Ref<ChatContentHandle>
   onSessionIdChange?: (sessionId: string) => void
   onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => void
@@ -876,7 +877,7 @@ interface SkillInfo { name: string; description: string; model?: 'haiku' | 'sonn
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, ref, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, systemPrompt, ref, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   // input 改為 uncontrolled（不觸發 React re-render），只在送出/清空時用 ref 讀取
   const inputRef = useRef('')
   const hasInputRef = useRef(false) // 用 ref 避免 onChange 閉包 stale
@@ -918,7 +919,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }, [allSkills, slashFilter])
 
   const effectiveModel = modelProp || modelChoice
-  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
+  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral, systemPromptAppend: systemPrompt })
   const { addPanel, openPanels, updatePanelTeamName } = useChatPanels()
 
   // 暴露 stopStream 給父元件（用於 Chat Test Lab 中斷串流）

@@ -18,10 +18,11 @@ interface ClaudeChatPanelProps {
   initialMode?: 'plan' | 'edit'
   ephemeral?: boolean
   theme?: 'default' | 'green'
+  systemPrompt?: string
   onClose?: () => void
 }
 
-export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, model, sessionId, initialMessage, initialMode, ephemeral, theme = 'default', onClose }: ClaudeChatPanelProps) {
+export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, model, sessionId, initialMessage, initialMode, ephemeral, theme = 'default', systemPrompt, onClose }: ClaudeChatPanelProps) {
   const { duplicatePanel, updatePanelSession } = useChatPanels()
   const [chatKey, setChatKey] = useState(0)
   const [isClearing, setIsClearing] = useState(false)
@@ -137,6 +138,7 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           initialMessage={initialMessage}
           initialMode={initialMode}
           ephemeral={ephemeral}
+          systemPrompt={systemPrompt}
           onSessionIdChange={handleSessionChange}
           onSessionMetaChange={handleSessionMetaChange}
           onPanelStatusChange={setPanelStatus}

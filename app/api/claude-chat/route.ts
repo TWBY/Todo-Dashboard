@@ -6,7 +6,7 @@ export const maxDuration = 300
 
 export async function POST(request: Request) {
   try {
-    const { projectId, message, sessionId, mode, model, effort } = await request.json()
+    const { projectId, message, sessionId, mode, model, effort, systemPromptAppend } = await request.json()
 
     if (!projectId || !message) {
       return new Response(JSON.stringify({ error: 'Missing projectId or message' }), {
@@ -50,6 +50,7 @@ export async function POST(request: Request) {
       sessionId,                          // resume existing session
       sessionId ? undefined : newSessionId, // new session ID
       effort,
+      systemPromptAppend,
     )
 
     // 註冊 activeQuery（供 /answer endpoint 在 ExitPlanMode 後切換 permissionMode）

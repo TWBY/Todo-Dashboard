@@ -73,6 +73,7 @@ function buildQueryOptions(
   existingSessionId?: string | null,
   newSessionId?: string,
   effort?: 'low' | 'medium' | 'high',
+  systemPromptAppend?: string,
 ): Options {
   const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'
 
@@ -84,7 +85,7 @@ function buildQueryOptions(
     systemPrompt: {
       type: 'preset',
       preset: 'claude_code',
-      append: 'IMPORTANT: When your ExitPlanMode tool call is approved, the user has already confirmed they want you to proceed. Start implementing immediately without summarizing the plan again or asking for confirmation. Do NOT say things like "準備開始實作嗎？" or "Ready to start?" — just begin working.',
+      append: 'IMPORTANT: When your ExitPlanMode tool call is approved, the user has already confirmed they want you to proceed. Start implementing immediately without summarizing the plan again or asking for confirmation. Do NOT say things like "準備開始實作嗎？" or "Ready to start?" — just begin working.' + (systemPromptAppend ? '\n\n' + systemPromptAppend : ''),
     },
     includePartialMessages: true,
     env: {
@@ -130,12 +131,13 @@ export function createSDKQuery(
   existingSessionId?: string | null,
   newSessionId?: string,
   effort?: 'low' | 'medium' | 'high',
+  systemPromptAppend?: string,
 ): { queryInstance: Query; abortController: AbortController; toolStats: ToolStats } {
   const abortController = new AbortController()
   const sessionId = existingSessionId || newSessionId || 'unknown'
   const toolStats: ToolStats = {}
 
-  const opts = buildQueryOptions(projectPath, mode, model, existingSessionId, newSessionId, effort)
+  const opts = buildQueryOptions(projectPath, mode, model, existingSessionId, newSessionId, effort, systemPromptAppend)
   opts.abortController = abortController
 
   // canUseTool：攔截 AskUserQuestion/ExitPlanMode

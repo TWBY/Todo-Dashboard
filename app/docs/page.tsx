@@ -2,6 +2,46 @@
 
 import { useState } from 'react'
 import SubpageShell from '@/components/SubpageShell'
+import ClaudeChatPanel from '@/components/ClaudeChatPanel'
+
+const DOCS_ASSISTANT_PROMPT = `你是「技術文件助手」，專門服務 Todo-Dashboard 的 /docs 頁面。
+
+這個頁面記錄了以下六個主題的技術知識：
+
+1. **Claude Code 環境比較**
+   - Claude Code Extension（在 Cursor IDE）vs Dashboard SDK 的完整對比
+   - 差異：啟動方式、MCP 工具、IDE 感知、效能
+   - 優劣勢分析，已修復項目 (arc-cdp MCP)
+
+2. **settings.json 設定**
+   - ~/.claude/settings.json 的結構和配置項
+   - env、permissions.allow、permissions.deny、effortLevel、model 等設定
+   - Extension 和 SDK 如何共用此檔
+
+3. **CLAUDE.md 設定檔**
+   - 人類寫給 Claude 的指令和規則
+   - 有全域層級 (~/.claude/CLAUDE.md) 和專案層級 (.claude/CLAUDE.md)
+   - 包含部署注意、Hydration、UI 與樣式慣例、Dev Server Port 管理、Insforge 使用經驗
+
+4. **Memory 系統**
+   - Claude 跨 session 的自動筆記 (MEMORY.md)
+   - 與 CLAUDE.md 的對比與應用情境
+   - 五大使用情境範例：重複錯誤、規則告訴、bug 發現、個人偏好、一次性任務
+
+5. **MCP 設定**
+   - ~/.claude/mcp.json 中的 MCP server 清單
+   - arc-cdp（Arc 瀏覽器）、zeabur（部署）、insforge（資料庫）
+   - Extension vs SDK 的 MCP 支援差異
+
+6. **文件缺口**
+   - 建議補充的 4 個文件項目（優先度標示）
+   - keybindings.json、skills 目錄、claude-session-manager.ts、Auto Memory
+
+你的工作：
+- 回答關於這些技術主題的問題
+- 引導使用者理解 Extension 與 SDK 環境的差異
+- 幫助使用者補充或更新文件內容（提供具體程式碼建議）
+- 保持專業、友善的技術文件助手角色`
 
 interface DocSection {
   title: string
@@ -677,7 +717,7 @@ export default function DocsPage() {
           })}
         </nav>
 
-        {/* Right content */}
+        {/* Center content */}
         <main className="flex-1 px-6 py-6" style={{ maxWidth: '56rem' }}>
           {activeTab === 'env-compare' && <EnvCompareTab />}
           {activeTab === 'settings'    && <SettingsTab />}
@@ -686,6 +726,27 @@ export default function DocsPage() {
           {activeTab === 'mcp'         && <McpTab />}
           {activeTab === 'gaps'        && <GapsTab />}
         </main>
+
+        {/* Right Chat panel */}
+        <aside
+          style={{
+            width: 360,
+            borderLeft: '1px solid var(--border-color)',
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            backgroundColor: 'var(--background-secondary)',
+          }}
+          className="flex flex-col shrink-0"
+        >
+          <ClaudeChatPanel
+            projectId="dashboard"
+            projectName="文件助手"
+            isFixed
+            ephemeral
+            systemPrompt={DOCS_ASSISTANT_PROMPT}
+          />
+        </aside>
 
       </div>
     </SubpageShell>
