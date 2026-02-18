@@ -1453,25 +1453,6 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
             backgroundColor: '#000000',
           }}
         >
-        {/* DEV: Team Monitor 測試按鈕（開發環境才顯示） */}
-        {process.env.NODE_ENV === 'development' && !activeTeam && displayMessages.length === 0 && !emailMode && !isStreaming && (
-          <button
-            onClick={async () => {
-              // 先取得 reset token，確保服務端已重置好
-              const resetRes = await fetch(`/api/team-monitor/mock?reset=${crypto.randomUUID()}`)
-              const resetData = await resetRes.json()
-              if (resetData.reset) {
-                setActiveTeam({ name: '__mock__', description: 'SecurityMonitor 安全儀表板功能強化（Mock）' })
-                addPanel(projectId, 'Team: mock', { type: 'team-monitor', teamName: '__mock__', ephemeral: true })
-              }
-            }}
-            className="text-xs px-2 py-1 rounded mb-2"
-            style={{ backgroundColor: '#0d1117', border: '1px solid #1f3a5f', color: '#58a6ff' }}
-          >
-            DEV: Test Team Monitor
-          </button>
-        )}
-
         {/* emailMode 初始歡迎訊息 */}
         {emailMode && displayMessages.length === 0 && (
           <div className="animate-fade-in">

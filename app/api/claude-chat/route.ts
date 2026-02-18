@@ -17,9 +17,10 @@ export async function POST(request: Request) {
 
     // 解析專案路徑
     const projects = await loadAllProjects()
-    // port-manager 是虛擬專案，指向 Todo-Dashboard 自身
+    // 虛擬專案（不在 projects JSON 裡，但允許 Claude 在指定路徑工作）
     const VIRTUAL_PROJECTS: Record<string, string> = {
       'port-manager': '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',
+      'chat-lab': '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',
     }
 
     const project = projects.find(p => p.id === projectId)
