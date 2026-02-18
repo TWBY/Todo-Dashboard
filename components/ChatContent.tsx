@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, useImperativeHandle, type Ref } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import ProjectImagePicker from '@/components/ProjectImagePicker'
@@ -851,6 +851,10 @@ function MessageList({
 
 export type PanelStatus = 'idle' | 'streaming' | 'waiting' | 'completed'
 
+export interface ChatContentHandle {
+  stopStream: () => void
+}
+
 interface ChatContentProps {
   projectId: string
   projectName: string
@@ -862,6 +866,7 @@ interface ChatContentProps {
   initialMessage?: string
   initialMode?: 'plan' | 'edit'
   ephemeral?: boolean
+  ref?: Ref<ChatContentHandle>
   onSessionIdChange?: (sessionId: string) => void
   onSessionMetaChange?: (meta: { totalInputTokens: number; totalOutputTokens: number; lastDurationMs?: number }) => void
   onPanelStatusChange?: (status: PanelStatus) => void
@@ -871,7 +876,7 @@ interface SkillInfo { name: string; description: string; model?: 'haiku' | 'sonn
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, ref, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   // input 改為 uncontrolled（不觸發 React re-render），只在送出/清空時用 ref 讀取
   const inputRef = useRef('')
   const hasInputRef = useRef(false) // 用 ref 避免 onChange 閉包 stale
@@ -915,6 +920,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const effectiveModel = modelProp || modelChoice
   const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral })
   const { addPanel, openPanels, updatePanelTeamName } = useChatPanels()
+
+  // 暴露 stopStream 給父元件（用於 Chat Test Lab 中斷串流）
+  useImperativeHandle(ref, () => ({
+    stopStream: stopStreaming,
+  }), [stopStreaming])
 
   // 偵測 Team 事件（TeamCreate / TeamDelete）→ 追蹤 activeTeam state（不自動開啟面板）
   // 掃描所有訊息推斷最終 team 狀態，確保 component remount 時按鈕不會消失

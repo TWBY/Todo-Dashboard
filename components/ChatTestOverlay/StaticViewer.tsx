@@ -1,9 +1,7 @@
 'use client'
 import React from 'react'
-import dynamic from 'next/dynamic'
+import ChatContent from '@/components/ChatContent'
 import type { StaticScenario } from './scenarios'
-
-const ChatContent = dynamic(() => import('@/components/ChatContent'), { ssr: false })
 
 interface Props {
   scenario: StaticScenario

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { Project } from '@/lib/types';
 import DevServerPanel from './DevServerPanel';
@@ -8,8 +9,6 @@ import ScratchPad from './ScratchPad';
 import { ClaudeUsageBar, MemoryCpuBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
 import { ProcessKillButtons } from './MemoryWarningBanner';
-
-const ChatTestOverlay = dynamic(() => import('./ChatTestOverlay'), { ssr: false });
 
 const CDP_INTERVAL = 10
 const SDK_INTERVAL = 30
@@ -131,10 +130,10 @@ function flattenProjects(projects: Project[]): Project[] {
 
 
 export default function DashboardContent() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [courseFiles, setCourseFiles] = useState<Project[]>([]);
   const [utilityTools, setUtilityTools] = useState<Project[]>([]);
-  const [chatTestOpen, setChatTestOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/cities')
@@ -192,20 +191,17 @@ export default function DashboardContent() {
           {/* Chat Test Lab 按鈕（僅 dev 環境） */}
           {process.env.NODE_ENV === 'development' && (
             <button
-              onClick={() => setChatTestOpen(v => !v)}
+              onClick={() => router.push('/chat-test')}
               className="flex-shrink-0 mt-3 mx-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono transition-colors"
               style={{
-                backgroundColor: chatTestOpen ? '#1a0e3a' : 'var(--background-secondary)',
-                border: `1px solid ${chatTestOpen ? '#5a2a9a' : 'var(--border-color)'}`,
-                color: chatTestOpen ? '#bc8cff' : 'var(--text-secondary)',
+                backgroundColor: 'var(--background-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
                 cursor: 'pointer',
               }}
             >
               <i className="fa-solid fa-flask-vial" style={{ fontSize: '0.75rem' }} />
               <span>Chat Test Lab</span>
-              {chatTestOpen && (
-                <span className="ml-auto inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#bc8cff' }} />
-              )}
             </button>
           )}
 
@@ -234,10 +230,6 @@ export default function DashboardContent() {
       }
     />
 
-    {/* Chat Test Lab Overlay */}
-    {chatTestOpen && (
-      <ChatTestOverlay onClose={() => setChatTestOpen(false)} />
-    )}
     </>
   );
 }

@@ -579,9 +579,9 @@
     "sessionId": "1106db9f-9e7c-4ddc-b80c-264cee5ea341",
     "projectId": "dashboard",
     "title": "在 3002 測試頁面中，中下有一個 debug 按鈕，我現在需要在他的右邊加上一個「Chat 」裡面要去寫各種 Cha",
-    "messageCount": 1,
+    "messageCount": 8,
     "createdAt": 1771418820754,
-    "lastActiveAt": 1771418974598
+    "lastActiveAt": 1771428188239
   },
   {
     "sessionId": "e1b0f6c0-47ce-42c1-99de-5b962527b7c2",
@@ -710,5 +710,21 @@
     "messageCount": 1,
     "createdAt": 1771425193745,
     "lastActiveAt": 1771425196498
+  },
+  {
+    "sessionId": "48383149-86ad-4530-9911-5d1a2a38bfe6",
+    "projectId": "dashboard",
+    "title": "現在 http://localhost:3002/ports 有錯誤，使用 cdp 檢查",
+    "messageCount": 7,
+    "createdAt": 1771426302850,
+    "lastActiveAt": 1771427026984
+  },
+  {
+    "sessionId": "66b51ab5-c78e-4eb7-8142-a30ed8aba4dc",
+    "projectId": "dashboard",
+    "title": "剛剛有個任務做到一半，需要繼續接手做，以下是歷史文件\n\n/docs 頁面側邊 Tab 改版計畫\nContext\n目前 /",
+    "messageCount": 1,
+    "createdAt": 1771428794297,
+    "lastActiveAt": 1771428794297
   }
 ]

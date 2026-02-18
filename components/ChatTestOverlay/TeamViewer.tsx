@@ -1,9 +1,7 @@
 'use client'
 import React, { useState } from 'react'
-import dynamic from 'next/dynamic'
+import ChatContent from '@/components/ChatContent'
 import type { TeamScenario } from './scenarios'
-
-const ChatContent = dynamic(() => import('@/components/ChatContent'), { ssr: false })
 
 interface Props {
   scenario: TeamScenario
@@ -85,23 +83,30 @@ export default function TeamViewer({ scenario }: Props) {
         )}
       </div>
 
-      {/* Instruction */}
-      <div style={{
-        padding: '6px 16px',
-        backgroundColor: '#040a14',
-        borderBottom: '1px solid #0d1a2a',
-        fontSize: '0.65rem',
-        color: '#2a4a6a',
-        fontFamily: 'monospace',
-        flexShrink: 0,
-      }}>
-        {scenario.description}
-        {mockStarted && (
-          <span style={{ color: '#5a3a8a', marginLeft: 12 }}>
-            → ChatContent 右上角會出現「查看 Agent Team」按鈕（若偵測到 teamEvent 或 ~/claude/teams/ 目錄）
-          </span>
-        )}
-      </div>
+      {/* Steps Guide */}
+      {scenario.steps && scenario.steps.length > 0 && (
+        <div style={{
+          padding: '8px 16px',
+          backgroundColor: '#0a0f1a',
+          borderBottom: '1px solid #0d1a2a',
+          fontSize: '0.65rem',
+          color: '#4a6a8a',
+          fontFamily: 'monospace',
+          flexShrink: 0,
+        }}>
+          {scenario.steps.map((step, idx) => (
+            <div key={idx} style={{ marginBottom: idx < scenario.steps!.length - 1 ? 6 : 0 }}>
+              <span style={{ color: '#6a8a9a' }}>{idx + 1}. {step.action}</span>
+              <span style={{ color: '#2a5a30', marginLeft: 12 }}>→ {step.expect}</span>
+            </div>
+          ))}
+          {scenario.passCondition && (
+            <div style={{ marginTop: 8, color: '#f97316', borderTop: '1px solid #0d1a2a', paddingTop: 6 }}>
+              通過標準：{scenario.passCondition}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Chat area */}
       <div style={{ flex: 1, minHeight: 0 }}>
@@ -110,6 +115,11 @@ export default function TeamViewer({ scenario }: Props) {
           projectId="chat-lab"
           projectName="Chat Lab"
           ephemeral={true}
+          resumeSessionId={
+            mockStarted && 'fixtureSessionId' in scenario && scenario.fixtureSessionId
+              ? scenario.fixtureSessionId
+              : undefined
+          }
         />
       </div>
     </div>
