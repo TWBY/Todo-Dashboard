@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import SubpageShell from '@/components/SubpageShell'
-import ClaudeChatPanel from '@/components/ClaudeChatPanel'
+import ChatContent from '@/components/ChatContent'
 
 const DOCS_ASSISTANT_PROMPT = `你是「技術文件助手」，專門服務 Todo-Dashboard 的 /docs 頁面。
 
@@ -691,14 +691,17 @@ export default function DocsPage() {
           style={{
             width: 360,
             borderLeft: '1px solid var(--border-color)',
-            backgroundColor: 'var(--background-secondary)',
+            backgroundColor: 'var(--background-primary)',
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            padding: '12px 8px',
           }}
           className="flex flex-col shrink-0"
         >
-          <ClaudeChatPanel
+          <ChatContent
             projectId="dashboard"
             projectName="文件助手"
-            isFixed
             ephemeral
             systemPrompt={DOCS_ASSISTANT_PROMPT}
           />
