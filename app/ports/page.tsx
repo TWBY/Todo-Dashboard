@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ChatContent from '@/components/ChatContent'
 import SubpageShell from '@/components/SubpageShell'
 import type { Project } from '@/lib/types'
 
 type Source = 'brickverse' | 'coursefiles' | 'utility'
 type PkgStatus = 'correct' | 'missing-port' | 'wrong-port' | 'no-file'
-type ClaudeStatus = 'registered' | 'no-port' | 'wrong-port' | 'no-file'
 
 interface PortEntry {
   projectId: string
@@ -25,16 +23,28 @@ interface AuditEntry {
   source: Source
   packageJson: PkgStatus
   packageJsonDetail?: string
-  localClaude: ClaudeStatus
-  localClaudePath?: string
-  localClaudeDetail?: string
 }
 
 interface AuditStats {
   total: number
   packageJsonOk: number
-  localClaudeOk: number
   fullyRegistered: number
+  roomsTotal: number
+  roomsUsed: number
+  roomsAvailable: number
+}
+
+interface SeatEntry {
+  projectId: string | null
+  projectName: string | null
+  port: number
+}
+
+interface SeatsResponse {
+  seats: (SeatEntry | null)[]
+  total: number
+  occupied: number
+  available: number
 }
 
 const SOURCE_LABELS: Record<Source, string> = {
@@ -51,14 +61,14 @@ const SOURCE_COLORS: Record<Source, { bg: string; fg: string; border: string }> 
 
 const PRODUCTION_ENTRY: PortEntry = {
   projectId: 'dashboard-production',
-  port: 4000,
+  port: 3001,
   isRunning: false,
   projectPath: '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',
   source: 'brickverse',
 }
 
 function getDisplayName(projectId: string, port: number): string {
-  if (port === 4000) return 'Todo-Dashboard (Production)'
+  if (port === 3001) return 'Todo-Dashboard (Prod)'
   if (projectId.includes('::')) {
     const [parent, child] = projectId.split('::')
     return `${formatId(parent)} / ${child}`
@@ -91,13 +101,11 @@ function formatId(id: string): string {
 }
 
 // 登記狀態的圖示與顏色
-function statusIcon(status: PkgStatus | ClaudeStatus): { icon: string; color: string } {
+function statusIcon(status: PkgStatus): { icon: string; color: string } {
   switch (status) {
     case 'correct':
-    case 'registered':
       return { icon: 'fa-solid fa-check', color: '#22c55e' }
     case 'missing-port':
-    case 'no-port':
       return { icon: 'fa-solid fa-triangle-exclamation', color: '#f97316' }
     case 'wrong-port':
       return { icon: 'fa-solid fa-xmark', color: '#ef4444' }
@@ -106,21 +114,16 @@ function statusIcon(status: PkgStatus | ClaudeStatus): { icon: string; color: st
   }
 }
 
-function statusLabel(status: PkgStatus | ClaudeStatus): string {
+function statusLabel(status: PkgStatus): string {
   switch (status) {
     case 'correct': return '正確'
-    case 'registered': return '已登記'
     case 'missing-port': return '缺少 port'
-    case 'no-port': return '未填 port'
     case 'wrong-port': return 'port 錯誤'
     case 'no-file': return '無檔案'
   }
 }
 
-type TabId = 'cities' | 'residents' | 'audit' | 'rules'
-
 export default function PortsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('residents')
   const [entries, setEntries] = useState<PortEntry[]>([])
   const [prodRunning, setProdRunning] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -132,10 +135,11 @@ export default function PortsPage() {
   const [cityCourseFiles, setCityCourseFiles] = useState<Project[]>([])
   const [cityUtilityTools, setCityUtilityTools] = useState<Project[]>([])
   const [citiesLoaded, setCitiesLoaded] = useState(false)
-  const [chatOpen, setChatOpen] = useState(false)
   const [fixingItems, setFixingItems] = useState<Set<string>>(new Set())
   const [fixAllLoading, setFixAllLoading] = useState(false)
   const [stationLoading, setStationLoading] = useState<Record<string, boolean>>({})
+  const [seats, setSeats] = useState<(SeatEntry | null)[]>([])
+  const [showRules, setShowRules] = useState(false)
 
   // 重新載入審計資料
   const reloadAudit = async () => {
@@ -150,7 +154,7 @@ export default function PortsPage() {
   }
 
   // 單項修復
-  const handleFixItem = async (entryPath: string, port: number, fixType: 'fix-package-json' | 'fix-claude-md') => {
+  const handleFixItem = async (entryPath: string, port: number, fixType: 'fix-package-json') => {
     const key = `${entryPath}:${fixType}`
     setFixingItems(prev => new Set(prev).add(key))
     try {
@@ -247,6 +251,13 @@ export default function PortsPage() {
           source: s.source,
           devBasePath: s.devBasePath,
         })))
+
+        // 載入座位陣列
+        const seatsRes = await fetch('/api/seats')
+        if (seatsRes.ok) {
+          const seatsJson = await seatsRes.json()
+          setSeats(seatsJson.seats ?? [])
+        }
       } finally {
         setLoading(false)
       }
@@ -269,9 +280,9 @@ export default function PortsPage() {
     checkProd()
   }, [])
 
-  // 切換到 audit tab 時載入審計資料
+  // 載入審計資料
   useEffect(() => {
-    if (activeTab !== 'audit' || auditLoaded) return
+    if (auditLoaded) return
     setAuditLoading(true)
     fetch('/api/port-audit')
       .then(res => res.json())
@@ -282,7 +293,7 @@ export default function PortsPage() {
       })
       .catch(() => {})
       .finally(() => setAuditLoading(false))
-  }, [activeTab, auditLoaded])
+  }, [auditLoaded])
 
   // 合併 + 排序
   const allEntries: PortEntry[] = [
@@ -292,25 +303,28 @@ export default function PortsPage() {
 
   // 統計
   const runningCount = allEntries.filter(e => e.isRunning).length
-  const assignedPorts = new Set(allEntries.map(e => e.port))
-  const maxDevPort = Math.max(...allEntries.filter(e => e.port < 4000).map(e => e.port), 3020)
-  const vacantPorts: number[] = []
-  for (let p = 3001; p <= maxDevPort; p++) {
-    if (p !== 4000 && !assignedPorts.has(p)) vacantPorts.push(p)
-  }
-  let nextAvailable = maxDevPort + 1
-  while (nextAvailable === 4000) nextAvailable++
+  const STATION_ROOM_MIN = 3003
+  const STATION_ROOM_MAX = 3010
+  const stationEntries = allEntries.filter(e => e.port >= STATION_ROOM_MIN && e.port <= STATION_ROOM_MAX)
+  const roomsTotal = STATION_ROOM_MAX - STATION_ROOM_MIN + 1
+  const roomsUsed = stationEntries.length
+  const roomsAvailable = roomsTotal - roomsUsed
 
-  // 報戶口完成後：更新城市資料、重新載入居民資料、跳轉 Station
+  // 報戶口完成後：更新城市資料、重新載入居民資料、座位資訊、審計資料
   const handleRegistered = async () => {
     // 重新載入城市資料
     setCitiesLoaded(false)
-    // 重新載入居民資料
+    // 重新載入居民資料 + 座位資訊 + 審計資料
     setLoading(true)
     try {
-      const res = await fetch('/api/dev-server')
-      if (res.ok) {
-        const json = await res.json()
+      const [devRes, seatsRes, auditRes] = await Promise.all([
+        fetch('/api/dev-server'),
+        fetch('/api/seats'),
+        fetch('/api/port-audit'),
+      ])
+
+      if (devRes.ok) {
+        const json = await devRes.json()
         setEntries((json.data ?? []).map((s: PortEntry) => ({
           projectId: s.projectId,
           port: s.port,
@@ -320,339 +334,348 @@ export default function PortsPage() {
           devBasePath: s.devBasePath,
         })))
       }
+
+      if (seatsRes.ok) {
+        const seatsJson = await seatsRes.json()
+        setSeats(seatsJson.seats ?? [])
+      }
+
+      if (auditRes.ok) {
+        const auditJson = await auditRes.json()
+        setAuditEntries(auditJson.entries ?? [])
+        setAuditStats(auditJson.stats ?? null)
+      }
     } finally {
       setLoading(false)
     }
-    // 跳轉到 Station tab
-    setActiveTab('residents')
   }
-
-  const tabs: { id: TabId; label: string }[] = [
-    { id: 'cities', label: '城市' },
-    { id: 'residents', label: 'Station' },
-    { id: 'audit', label: '登記審計' },
-    { id: 'rules', label: '報戶口規範' },
-  ]
 
   return (
     <SubpageShell
       title="Port 管理"
       headerRight={
         <button
-          onClick={() => setChatOpen(prev => !prev)}
+          onClick={() => setShowRules(prev => !prev)}
           className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
           style={{
-            backgroundColor: chatOpen ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
-            color: chatOpen ? '#0184ff' : 'var(--text-tertiary)',
-            border: chatOpen ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
+            backgroundColor: showRules ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
+            color: showRules ? '#0184ff' : 'var(--text-tertiary)',
+            border: showRules ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
           }}
         >
-          <i className="fa-solid fa-comment-dots text-xs" />
-          管理員
+          <i className="fa-solid fa-book text-xs" />
+          查看說明
         </button>
-      }
-      headerExtension={
-        <div style={{ backgroundColor: 'var(--background-secondary)' }}>
-          <div className="px-4 flex gap-0 overflow-x-auto border-t border-t-[var(--border-color)]">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="px-4 py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap border-b-2"
-                style={{
-                  borderBottomColor: activeTab === tab.id ? '#0184ff' : 'transparent',
-                  color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      }
-      sidePanel={
-        chatOpen ? (
-          <div
-            className="flex flex-col shrink-0"
-            style={{
-              width: '420px',
-              minWidth: '420px',
-              borderLeft: '1px solid var(--border-color)',
-              backgroundColor: 'var(--background-secondary)',
-            }}
-          >
-            <ChatContent projectId="port-manager" projectName="Port 管理員" compact />
-          </div>
-        ) : undefined
       }
     >
       <div className="px-4 py-6 pb-16">
 
-        {/* Tab: 城市 */}
-        {activeTab === 'cities' && (
-          citiesLoaded ? (
-            <div className="space-y-8">
-              <CityBlock name="Brickverse" color="#3b82f6" projects={cityProjects} allEntries={allEntries} onEnterStation={() => setActiveTab('residents')} onRegistered={handleRegistered} />
-              <CityBlock name="CourseFiles" color="#f97316" projects={cityCourseFiles} allEntries={allEntries} onEnterStation={() => setActiveTab('residents')} onRegistered={handleRegistered} />
-              <CityBlock name="UtilityTools" color="#a855f7" projects={cityUtilityTools} allEntries={allEntries} onEnterStation={() => setActiveTab('residents')} onRegistered={handleRegistered} />
-            </div>
-          ) : (
-            <div className="space-y-4 px-4 py-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="h-5 w-24 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                  <div className="space-y-1.5">
-                    {[...Array(3 + i)].map((_, j) => (
-                      <div key={j} className="flex items-center gap-3 py-1.5">
-                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                        <div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + j * 20}px` }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+        {/* 主內容：如果顯示說明，只顯示說明；否則顯示城市 + Station + 審計 */}
+        {showRules ? (
+          <div className="space-y-6">
 
-        {/* Tab: 居民表 */}
-        {activeTab === 'residents' && (
-          <>
-            {/* 摘要統計 */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {[
-                { label: 'Station 進駐', value: loading ? '—' : allEntries.length },
-                { label: '在崗工作', value: loading ? '—' : runningCount, highlight: runningCount > 0 },
-                { label: '空號', value: loading ? '—' : vacantPorts.length, warn: vacantPorts.length > 0 },
-                { label: '下一個可用', value: loading ? '—' : nextAvailable },
-              ].map(({ label, value, highlight, warn }) => (
-                <div
-                  key={label}
-                  className="rounded-[var(--radius-small)] px-3 py-2"
-                  style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}
-                >
-                  <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
-                  <div
-                    className="text-xl font-semibold"
-                    style={{ color: highlight ? '#22c55e' : warn ? '#f97316' : 'var(--text-primary)' }}
-                  >
-                    {value}
-                  </div>
+            {/* 座位制度說明 */}
+            <Section title="Station 座位制度">
+              <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Station 有 <strong>8 個座位</strong>（Port 3003 - 3010）。每個進駐的專案占據一個座位。
+                分配規則最簡單：<strong>優先給最小編號的空位</strong>。離開時座位釋出給下一個人。
+              </p>
+              <div className="p-3 rounded-[var(--radius-small)] mb-4" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                <p className="text-sm font-semibold mb-2">座位狀態：</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><i className="fa-solid fa-circle text-lg text-green-500 mr-1" />空位 = 可以進駐</div>
+                  <div><i className="fa-solid fa-circle text-lg text-blue-500 mr-1" />被占用 = 已進駐</div>
                 </div>
-              ))}
-            </div>
-
-            {/* 空號列表 */}
-            {!loading && vacantPorts.length > 0 && (
-              <div
-                className="mb-6 px-3 py-2 rounded-[var(--radius-small)] text-sm"
-                style={{ backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)', color: '#f97316' }}
-              >
-                空號：{vacantPorts.join(', ')}
               </div>
-            )}
+            </Section>
 
-            {/* 居民列表 */}
-            <div className="rounded-[var(--radius-medium)] overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-              {loading ? (
-                <div className="space-y-0">
-                  {[...Array(6)].map((_, i) => (
+            {/* 雙重登記 */}
+            <Section title="雙重登記（進駐必須同時做）">
+              <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                <RegistrationItem
+                  number={1}
+                  title="JSON devPort"
+                  role="紀錄座位"
+                  description="projects.json / coursefiles.json / utility-tools.json 記錄誰坐在哪個座位（port）。"
+                  color="#3b82f6"
+                />
+                <RegistrationItem
+                  number={2}
+                  title="package.json -p flag"
+                  role="執行時讀取"
+                  description="scripts.dev 寫死 -p <port>，讓 Node.js 啟動伺服器時用正確的 port。"
+                  color="#22c55e"
+                />
+              </div>
+              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                一次 API 呼叫會自動同時更新這兩個地方。
+              </p>
+            </Section>
+
+            {/* 進駐 */}
+            <Section title="進駐（坐下）">
+              <ol className="text-base space-y-2" style={{ color: 'var(--text-secondary)' }}>
+                <FlowStep step={1}>從 Dashboard 點「進駐」</FlowStep>
+                <FlowStep step={2}>API 自動分配最小編號的空座位，同步更新 JSON 和 package.json</FlowStep>
+                <FlowStep step={3}>完成！專案現在在 Station 可以被 Start / Open</FlowStep>
+              </ol>
+            </Section>
+
+            {/* 離開 */}
+            <Section title="離開（站起來）">
+              <ol className="text-base space-y-2" style={{ color: 'var(--text-secondary)' }}>
+                <FlowStep step={1}>先停止 dev server（如果正在運行）</FlowStep>
+                <FlowStep step={2}>點「離開」→ API 清除 JSON devPort 和 package.json 的 -p flag</FlowStep>
+                <FlowStep step={3}>座位釋出，下一個人可以坐</FlowStep>
+              </ol>
+            </Section>
+
+            {/* 為什麼需要兩個地方都更新 */}
+            <Section title="為什麼要同時更新 JSON 和 package.json？">
+              <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p>
+                  <strong>JSON</strong> 是 Dashboard 的紀錄簿 — 用來顯示「誰坐在哪個座位」。
+                  <strong>package.json</strong> 是 Node.js 的說明書 — 用來告訴程式「用哪個 port 啟動」。
+                </p>
+                <p>
+                  只更新一個會造成不一致：
+                </p>
+                <ul className="ml-4 space-y-1 text-sm">
+                  <li>只更新 JSON → package.json 說「用 3001」，但沒人在 3001 坐著，混亂</li>
+                  <li>只更新 package.json → 程式用了 3001，但 Dashboard 不知道，找不到</li>
+                </ul>
+                <p>
+                  所以一次 API 呼叫會同時做好這兩件事。
+                </p>
+              </div>
+            </Section>
+          </div>
+        ) : (
+          <>
+            {/* Station Section */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Station（工作園區）</h2>
+                <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)' }}>
+                  {entries.some(e => e.isRunning) ? 'Dev v1.18.0' : 'Prod v1.18.0'}
+                </span>
+              </div>
+
+              {/* VIP 座位 */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  VIP 座位
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {loading ? (
+                    [...Array(2)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-lg p-3 animate-pulse"
+                        style={{ backgroundColor: 'var(--background-tertiary)' }}
+                      >
+                        <div className="h-4 w-12 rounded mb-1" style={{ backgroundColor: 'var(--border-color)' }} />
+                        <div className="h-3 w-16 rounded" style={{ backgroundColor: 'var(--border-color)' }} />
+                      </div>
+                    ))
+                  ) : (
+                    [
+                      { port: 3002, name: 'Todo-Dashboard (Dev)', isRunning: true, isProd: false },
+                      { port: 3001, name: 'Todo-Dashboard (Prod)', isRunning: prodRunning, isProd: true },
+                    ].map(({ port, name, isRunning, isProd }) => (
+                      <div
+                        key={port}
+                        className="rounded-lg p-3 text-sm transition-all flex items-center justify-between"
+                        style={{
+                          backgroundColor: isProd ? 'rgba(59,130,246,0.08)' : 'rgba(239,68,68,0.08)',
+                          border: isProd ? '1px solid rgba(59,130,246,0.2)' : '2px dashed rgba(239,68,68,0.5)',
+                          color: isProd ? '#3b82f6' : '#ef4444',
+                        }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="font-mono font-semibold text-xs mb-1" style={{ color: isProd ? '#3b82f6' : '#ef4444' }}>
+                            {port}
+                          </div>
+                          <div className="text-xs truncate" style={{ color: 'var(--text-primary)' }}>
+                            {name}
+                          </div>
+                        </div>
+                        {isRunning && (
+                          <span
+                            className="ml-2 w-2 h-2 rounded-full shrink-0 animate-port-glow"
+                            style={{ backgroundColor: '#22c55e' }}
+                            title="運行中"
+                          />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Station 座位圖 */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  座位安排（3003 - 3010）
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {loading ? (
+                    [...Array(8)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-lg p-3 animate-pulse"
+                        style={{ backgroundColor: 'var(--background-tertiary)' }}
+                      >
+                        <div className="h-4 w-12 rounded mb-1" style={{ backgroundColor: 'var(--border-color)' }} />
+                        <div className="h-3 w-16 rounded" style={{ backgroundColor: 'var(--border-color)' }} />
+                      </div>
+                    ))
+                  ) : (
+                    seats.map((seat, i) => {
+                      const port = 3003 + i
+                      const isEmpty = seat === null
+                      const entry = isEmpty ? null : allEntries.find(e => e.port === port)
+                      const isLoading = entry ? stationLoading[entry.projectId] : false
+
+                      return (
+                        <div
+                          key={port}
+                          className="rounded-lg p-3 text-sm transition-all flex items-center justify-between group"
+                          style={{
+                            backgroundColor: isEmpty ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)',
+                            border: isEmpty ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(59,130,246,0.2)',
+                            color: isEmpty ? '#22c55e' : '#0184ff',
+                          }}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="font-mono font-semibold text-xs mb-1" style={{ color: isEmpty ? '#22c55e' : '#0184ff' }}>
+                              {port}
+                            </div>
+                            <div className="text-xs truncate" style={{ color: isEmpty ? '#22c55e' : 'var(--text-primary)' }}>
+                              {isEmpty ? '空位' : seat.projectName || '？'}
+                            </div>
+                          </div>
+
+                          {/* 退出按鈕 */}
+                          {!isEmpty && entry && (
+                            <button
+                              onClick={async () => {
+                                setStationLoading(prev => ({ ...prev, [entry.projectId]: true }))
+                                try {
+                                  await fetch('/api/projects', {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ projectId: entry.projectId, action: 'remove-from-dev' }),
+                                  })
+                                  await handleRegistered()
+                                } finally {
+                                  setStationLoading(prev => ({ ...prev, [entry.projectId]: false }))
+                                }
+                              }}
+                              disabled={isLoading}
+                              className="ml-2 px-2 py-1 rounded text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.05] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                              style={{ backgroundColor: '#3d1515', color: '#ef4444', border: '1px solid #5c2020' }}
+                              title="離開 Station"
+                            >
+                              {isLoading ? (
+                                <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                              ) : (
+                                <i className="fa-solid fa-minus" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* 審計 Section */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>登記審計</h2>
+
+              {/* 審計統計 */}
+              {auditStats && (
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {[
+                    { label: '總專案', value: auditStats.total },
+                    { label: 'package.json', value: auditStats.packageJsonOk, highlight: auditStats.packageJsonOk === auditStats.total, warn: auditStats.packageJsonOk < auditStats.total },
+                  ].map(({ label, value, highlight, warn }) => (
                     <div
-                      key={i}
-                      className="flex items-center gap-3 px-3 py-2.5 animate-pulse"
-                      style={{ borderBottom: i < 5 ? '1px solid var(--border-color)' : 'none' }}
+                      key={label}
+                      className="rounded-[var(--radius-small)] px-3 py-2"
+                      style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}
                     >
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                      <div className="w-10 h-3.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }} />
-                      <div className="h-3.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)', width: `${80 + i * 15}px` }} />
+                      <div className="text-sm mb-1" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
+                      <div
+                        className="text-xl font-semibold"
+                        style={{ color: highlight ? '#22c55e' : warn ? '#f97316' : 'var(--text-primary)' }}
+                      >
+                        {value} / {auditStats.total}
+                      </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                allEntries.map((entry, i) => {
-                  const isLast = i === allEntries.length - 1
-                  const isProd = entry.port === 4000
-                  const src = entry.source
-                  const srcColor = src ? SOURCE_COLORS[src] : undefined
-                  const isLoading = stationLoading[entry.projectId] || false
-
-                  return (
-                    <div
-                      key={entry.port}
-                      className="flex items-center px-3 py-2 text-sm"
-                      style={{
-                        borderBottom: isLast ? 'none' : '1px solid var(--border-color)',
-                      }}
-                    >
-                      {/* 左側：狀態圓點 + port + 名稱 */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0${entry.isRunning ? ' animate-port-glow' : ''}`}
-                          style={{ backgroundColor: entry.isRunning ? '#22c55e' : 'var(--text-tertiary)', opacity: entry.isRunning ? 1 : 0.4 }}
-                        />
-                        <span className="font-mono font-medium text-xs w-10 shrink-0" style={{ color: isProd ? '#f97316' : 'var(--text-tertiary)' }}>
-                          {entry.port}
-                        </span>
-                        <span className="truncate font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {getDisplayName(entry.projectId, entry.port)}
-                        </span>
-                        {entry.devBasePath && (
-                          <span className="text-xs font-mono shrink-0" style={{ color: 'var(--text-tertiary)' }}>
-                            {entry.devBasePath}
-                          </span>
-                        )}
-                      </div>
-                      {/* 右側：城市標籤 + 操作按鈕 */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        {isProd ? (
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded"
-                            style={{ backgroundColor: 'rgba(249,115,22,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.15)' }}
-                          >
-                            Production
-                          </span>
-                        ) : src && srcColor ? (
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded"
-                            style={{ backgroundColor: srcColor.bg, color: srcColor.fg, border: `1px solid ${srcColor.border}` }}
-                          >
-                            {SOURCE_LABELS[src]}
-                          </span>
-                        ) : null}
-                        {/* Open 按鈕 */}
-                        {entry.isRunning && !isLoading && !isProd && (
-                          <button
-                            onClick={() => handleStationOpen(entry)}
-                            className="px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-                            style={{ backgroundColor: '#222222', color: '#cccccc', border: '1px solid #333333' }}
-                            title="Open"
-                          >
-                            Open
-                          </button>
-                        )}
-                        {/* Start / Stop 按鈕 */}
-                        {!isProd && (
-                          <button
-                            onClick={() => handleStationAction(entry.projectId, entry.isRunning ? 'stop' : 'start')}
-                            disabled={isLoading}
-                            className="px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                            style={{
-                              backgroundColor: isLoading ? '#333333' : entry.isRunning ? '#3d1515' : '#15332a',
-                              color: isLoading ? '#999999' : entry.isRunning ? '#ef4444' : '#10b981',
-                              border: isLoading ? '1px solid #444444' : entry.isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
-                            }}
-                            title={entry.isRunning ? 'Stop' : 'Start'}
-                          >
-                            {isLoading ? (
-                              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                              </svg>
-                            ) : entry.isRunning ? 'Stop' : 'Start'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
               )}
-            </div>
-          </>
-        )}
 
-        {/* Tab: 登記審計 */}
-        {activeTab === 'audit' && (
-          <>
-            {/* 審計統計 */}
-            {auditStats && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                {[
-                  { label: '總專案', value: auditStats.total },
-                  { label: 'package.json 正確', value: auditStats.packageJsonOk, highlight: auditStats.packageJsonOk === auditStats.total },
-                  { label: '區域戶口已登記', value: auditStats.localClaudeOk, highlight: auditStats.localClaudeOk === auditStats.total },
-                  { label: '完整登記', value: auditStats.fullyRegistered, highlight: auditStats.fullyRegistered === auditStats.total, warn: auditStats.fullyRegistered < auditStats.total },
-                ].map(({ label, value, highlight, warn }) => (
-                  <div
-                    key={label}
-                    className="rounded-[var(--radius-small)] px-3 py-2"
-                    style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}
+              {/* 全部修復按鈕 */}
+              {auditStats && auditStats.fullyRegistered < auditStats.total && (
+                <div className="mb-4">
+                  <button
+                    onClick={handleFixAll}
+                    disabled={fixAllLoading}
+                    className="px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    style={{ backgroundColor: '#15332a', color: '#10b981', border: '1px solid #1a4a3a' }}
                   >
-                    <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>{label}</div>
-                    <div
-                      className="text-xl font-semibold"
-                      style={{ color: highlight ? '#22c55e' : warn ? '#f97316' : 'var(--text-primary)' }}
-                    >
-                      {value} / {auditStats.total}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 全部修復按鈕 */}
-            {auditStats && auditStats.fullyRegistered < auditStats.total && (
-              <div className="mb-4">
-                <button
-                  onClick={handleFixAll}
-                  disabled={fixAllLoading}
-                  className="px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  style={{ backgroundColor: '#15332a', color: '#10b981', border: '1px solid #1a4a3a' }}
-                >
-                  {fixAllLoading ? (
-                    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  ) : (
-                    <i className="fa-solid fa-wrench text-xs" />
-                  )}
-                  全部修復
-                </button>
-              </div>
-            )}
-
-            {/* 審計表格 */}
-            <div className="rounded-[var(--radius-medium)] overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-              {auditLoading ? (
-                <div className="px-3 py-8 text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
-                  審計中...
+                    {fixAllLoading ? (
+                      <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : (
+                      <i className="fa-solid fa-wrench text-xs" />
+                    )}
+                    全部修復
+                  </button>
                 </div>
-              ) : (
-                auditEntries.map((entry, i) => {
-                  const isLast = i === auditEntries.length - 1
-                  const pkgIcon = statusIcon(entry.packageJson)
-                  const claudeIcon = statusIcon(entry.localClaude)
-                  const pkgNeedsFix = entry.packageJson !== 'correct' && entry.packageJson !== 'no-file'
-                  const claudeNeedsFix = entry.localClaude !== 'registered'
-                  const pkgFixing = fixingItems.has(`${entry.path}:fix-package-json`)
-                  const claudeFixing = fixingItems.has(`${entry.path}:fix-claude-md`)
+              )}
 
-                  return (
-                    <div
-                      key={entry.port}
-                      className="flex items-center px-3 py-2 text-sm"
-                      style={{
-                        borderBottom: isLast ? 'none' : '1px solid var(--border-color)',
-                      }}
-                    >
-                      {/* 左側：port + 名稱 */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className="font-mono font-medium text-xs w-10 shrink-0" style={{ color: 'var(--text-tertiary)' }}>{entry.port}</span>
-                        <div className="min-w-0">
+              {/* 審計表格 */}
+              <div className="rounded-[var(--radius-medium)] overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                {auditLoading ? (
+                  <div className="px-3 py-8 text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
+                    審計中...
+                  </div>
+                ) : (
+                  auditEntries.map((entry, i) => {
+                    const isLast = i === auditEntries.length - 1
+                    const pkgIcon = statusIcon(entry.packageJson)
+                    const pkgNeedsFix = entry.packageJson !== 'correct' && entry.packageJson !== 'no-file'
+                    const pkgFixing = fixingItems.has(`${entry.path}:fix-package-json`)
+
+                    return (
+                      <div
+                        key={entry.port}
+                        className="flex items-center px-3 py-2 text-sm"
+                        style={{
+                          borderBottom: isLast ? 'none' : '1px solid var(--border-color)',
+                        }}
+                      >
+                        {/* 左側：port + 名稱 */}
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className="font-mono font-medium text-sm w-10 shrink-0" style={{ color: 'var(--text-tertiary)' }}>{entry.port}</span>
                           <span className="truncate block font-medium">{entry.name}</span>
-                          {entry.localClaudePath && (
-                            <span className="text-xs font-mono block mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                              {entry.localClaudePath}
-                            </span>
-                          )}
                         </div>
-                      </div>
-                      {/* 右側：審計結果 + 修復按鈕 */}
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="flex items-center gap-1.5" title={entry.packageJsonDetail}>
+                        {/* 右側：審計結果 + 修復按鈕 */}
+                        <div className="flex items-center gap-1.5 shrink-0" title={entry.packageJsonDetail}>
                           <i className={`${pkgIcon.icon} text-[10px]`} style={{ color: pkgIcon.color }} />
-                          <span className="text-xs" style={{ color: pkgIcon.color }}>
+                          <span className="text-sm" style={{ color: pkgIcon.color }}>
                             {statusLabel(entry.packageJson)}
                           </span>
                           {pkgNeedsFix && (
@@ -667,168 +690,51 @@ export default function PortsPage() {
                             </button>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5" title={entry.localClaudeDetail}>
-                          <i className={`${claudeIcon.icon} text-[10px]`} style={{ color: claudeIcon.color }} />
-                          <span className="text-xs" style={{ color: claudeIcon.color }}>
-                            {statusLabel(entry.localClaude)}
-                          </span>
-                          {claudeNeedsFix && (
-                            <button
-                              onClick={() => handleFixItem(entry.path, entry.port, 'fix-claude-md')}
-                              disabled={claudeFixing}
-                              className="px-1.5 py-0.5 rounded text-[11px] font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
-                              style={{ backgroundColor: '#15332a', color: '#10b981', border: '1px solid #1a4a3a' }}
-                              title="修復 CLAUDE.md"
-                            >
-                              {claudeFixing ? '...' : '修復'}
-                            </button>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  )
-                })
+                    )
+                  })
+                )}
+              </div>
+
+              {/* 說明 */}
+              {auditStats && (
+                <div
+                  className="mt-4 px-3 py-2 rounded-[var(--radius-small)] text-sm"
+                  style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
+                >
+                  審計檢查 package.json 的 scripts.dev 是否包含正確的 -p flag，以 JSON devPort 為唯一 source of truth。
+                </div>
               )}
             </div>
 
-            {/* 全域居民表說明 */}
-            {auditStats && (
-              <div
-                className="mt-4 px-3 py-2 rounded-[var(--radius-small)] text-xs"
-                style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
-              >
-                全域居民表（~/.claude/CLAUDE.md）由 /port-sync Skill 統一管理同步，不在此處審計。
-                此表審計的是各專案自身的 package.json 與區域 CLAUDE.md。
-              </div>
-            )}
+            {/* 城市 Section - 移到最下面 */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>城市</h2>
+              {citiesLoaded ? (
+                <div className="space-y-6">
+                  <CityBlock name="Brickverse" color="#3b82f6" projects={cityProjects} allEntries={allEntries} onEnterStation={() => {}} onRegistered={handleRegistered} />
+                  <CityBlock name="CourseFiles" color="#f97316" projects={cityCourseFiles} allEntries={allEntries} onEnterStation={() => {}} onRegistered={handleRegistered} />
+                  <CityBlock name="UtilityTools" color="#a855f7" projects={cityUtilityTools} allEntries={allEntries} onEnterStation={() => {}} onRegistered={handleRegistered} />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="h-5 w-24 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                      <div className="space-y-1.5">
+                        {[...Array(3 + i)].map((_, j) => (
+                          <div key={j} className="flex items-center gap-3 py-1.5">
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
+                            <div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + j * 20}px` }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
-        )}
-
-        {/* Tab: 報戶口規範 */}
-        {activeTab === 'rules' && (
-          <div className="space-y-6">
-
-            {/* 世界觀 */}
-            <Section title="世界觀">
-              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-                Todo-Dashboard 是一個<strong>國家</strong>，國內有三座城市：Brickverse、CourseFiles、Utility。
-                國家裡有一個工作園區叫 <strong>Station</strong>，進入 Station 必須持有身份證（報戶口）。
-                只有在 Station 裡的專案才能被啟動工作。
-              </p>
-              <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                <TierItem
-                  tier={1}
-                  label="國外"
-                  color="var(--text-tertiary)"
-                  description="不在任何 JSON 裡，Dashboard 完全不知道這個專案的存在"
-                />
-                <TierItem
-                  tier={2}
-                  label="城市居民"
-                  color="#3b82f6"
-                  description="已登記在 JSON（projects / coursefiles / utility-tools），住在城市裡但還沒進 Station"
-                />
-                <TierItem
-                  tier={3}
-                  label="Station 進駐"
-                  color="#f59e0b"
-                  description="有 devPort、已完成三重登記（報戶口），可以被 Start / Open / Chat"
-                />
-                <TierItem
-                  tier={4}
-                  label="在崗工作中"
-                  color="#22c55e"
-                  description="已按下 Start，dev server 正在運行（isRunning: true）"
-                />
-              </div>
-            </Section>
-
-            {/* Station 身份證：報戶口制度 */}
-            <Section title="Station 身份證（報戶口制度）">
-              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-                要從城市居民（Tier 2）進入 Station（Tier 3），必須辦好身份證 — 完成<strong>三重登記</strong>，缺一不可。
-                所有登記與同步操作由 <code className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>/port-sync</code> Skill（Port 保姆）統一執行。
-              </p>
-              <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                <RegistrationItem
-                  number={1}
-                  title="JSON 資料檔"
-                  role="唯一真相來源"
-                  description="projects.json / utility-tools.json / coursefiles.json 的 devPort 欄位。在 Dashboard UI 操作修改。"
-                  color="#3b82f6"
-                />
-                <RegistrationItem
-                  number={2}
-                  title="package.json"
-                  role="執行依據"
-                  description="scripts.dev 必須寫死 -p <port>（如 next dev -p 3001），不可省略。Todo-Dashboard (port 3000) 因為是 Next.js 預設值，可以不寫。"
-                  color="#22c55e"
-                />
-                <RegistrationItem
-                  number={3}
-                  title="CLAUDE.md 雙重登記"
-                  role="身分證明"
-                  description="分為全域居民表（~/.claude/CLAUDE.md）和區域戶口（各專案自己的 CLAUDE.md）。全域是統一查詢入口，區域是每個專案知道自己住在哪。"
-                  color="#a855f7"
-                />
-              </div>
-            </Section>
-
-            {/* 區域戶口格式 */}
-            <Section title="區域戶口格式">
-              <div
-                className="rounded-[var(--radius-small)] p-3 font-mono text-xs leading-relaxed"
-                style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}
-              >
-                <div style={{ color: 'var(--text-tertiary)' }}>## Dev Server</div>
-                <div className="mt-2" style={{ color: 'var(--text-tertiary)' }}>| 環境 | Port | 指令 |</div>
-                <div style={{ color: 'var(--text-tertiary)' }}>|------|------|------|</div>
-                <div>| 開發 | <span style={{ color: '#3b82f6' }}>`3001`</span> | <span style={{ color: '#22c55e' }}>`npm run dev`</span> |</div>
-              </div>
-              <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
-                位置優先級：先找 .claude/CLAUDE.md，再找根目錄 CLAUDE.md。沒有就新建在根目錄。
-              </p>
-            </Section>
-
-            {/* 進駐 Station（搬入） */}
-            <Section title="進駐 Station（搬入流程）">
-              <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
-                城市居民（Tier 2）要進入 Station（Tier 3）的完整步驟：
-              </p>
-              <ol className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
-                <FlowStep step={1}>查全域居民表，找下一個可用 port（目前 3000~3020 全滿，下一個：<strong>{nextAvailable}</strong>）</FlowStep>
-                <FlowStep step={2}>在專案 package.json 的 scripts.dev 加上 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>-p {'<port>'}</code></FlowStep>
-                <FlowStep step={3}>在專案 CLAUDE.md 登記 Dev Server port（區域戶口）</FlowStep>
-                <FlowStep step={4}>在全域居民表（~/.claude/CLAUDE.md）新增一行</FlowStep>
-                <FlowStep step={5}>在 Dashboard JSON 加上 devPort → 專案出現在 Station 面板</FlowStep>
-              </ol>
-            </Section>
-
-            {/* 離開 Station（搬出） */}
-            <Section title="離開 Station（搬出流程）">
-              <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
-                從 Station（Tier 3）退回城市居民（Tier 2）。在 Station 面板按 ✕ 或手動操作：
-              </p>
-              <ol className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
-                <FlowStep step={1}>從全域居民表刪除該行</FlowStep>
-                <FlowStep step={2}>從 Dashboard JSON 移除 devPort</FlowStep>
-                <FlowStep step={3}>區域 CLAUDE.md 的 Dev Server 區段移除</FlowStep>
-                <FlowStep step={4}>釋出的 port 號變成空號，後續新專案可填入</FlowStep>
-              </ol>
-            </Section>
-
-            {/* 注意事項 */}
-            <Section title="注意事項">
-              <ul className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
-                <li>啟動 dev server 前必須查居民表，確認 port 正確</li>
-                <li>嚴禁憑空指定 port，必須以 package.json 和居民表為準</li>
-                <li>JSON 是唯一真相來源 — 如果 package.json 或 CLAUDE.md 不一致，以 JSON 為準</li>
-                <li>Port 4000 保留給 Todo-Dashboard Production（next start -p 4000）</li>
-                <li>不是所有城市居民都需要進 Station — 沒有 dev server 需求的專案留在城市即可</li>
-                <li>執行 <code className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>/port-sync</code> 可自動巡邏並修正所有不一致</li>
-              </ul>
-            </Section>
-          </div>
         )}
 
       </div>
@@ -844,7 +750,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       className="rounded-[var(--radius-medium)] p-4"
       style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}
     >
-      <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+      <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>{title}</h2>
       {children}
     </div>
   )
@@ -860,19 +766,19 @@ function RegistrationItem({ number, title, role, description, color }: {
     >
       <div className="flex items-center gap-2">
         <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+          className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
           style={{ backgroundColor: color + '20', color }}
         >
           {number}
         </div>
         <div className="flex flex-col">
-          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          <div className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
             {title}
           </div>
-          <div className="text-xs" style={{ color }}>{role}</div>
+          <div className="text-sm" style={{ color }}>{role}</div>
         </div>
       </div>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
     </div>
   )
 }
@@ -887,14 +793,14 @@ function TierItem({ tier, label, color, description }: {
     >
       <div className="flex items-center gap-2">
         <div
-          className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0"
+          className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold shrink-0"
           style={{ backgroundColor: color + '20', color }}
         >
           {tier}
         </div>
-        <div className="text-sm font-medium" style={{ color }}>{label}</div>
+        <div className="text-base font-medium" style={{ color }}>{label}</div>
       </div>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
     </div>
   )
 }
@@ -903,7 +809,7 @@ function FlowStep({ step, children }: { step: number; children: React.ReactNode 
   return (
     <li className="flex gap-3 items-start">
       <span
-        className="w-6 h-6 rounded flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5"
+        className="w-6 h-6 rounded flex items-center justify-center text-sm font-mono font-bold shrink-0 mt-0.5"
         style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
       >
         {step}
@@ -983,7 +889,7 @@ function UnregisterButton({ onClick, loading }: { onClick: () => void; loading: 
     <button
       onClick={(e) => { e.stopPropagation(); onClick() }}
       disabled={loading}
-      className="px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 opacity-0 group-hover:opacity-100"
+      className="px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
       style={{ backgroundColor: '#3d1515', color: '#ef4444', border: '1px solid #5c2020' }}
       title="離開 Station"
     >
@@ -999,8 +905,8 @@ function UnregisterButton({ onClick, loading }: { onClick: () => void; loading: 
   )
 }
 
-function ResidentCard({ name, description, tier, port, onRegister, onUnregister, onEnterStation }: {
-  name: string; description?: string; tier: 2 | 3 | 4; port?: number
+function ResidentCard({ name, tier, port, showPort = false, onRegister, onUnregister, onEnterStation }: {
+  name: string; tier: 2 | 3 | 4; port?: number; showPort?: boolean
   onRegister?: () => Promise<void>; onUnregister?: () => Promise<void>; onEnterStation?: () => void
 }) {
   const [loading, setLoading] = useState(false)
@@ -1019,19 +925,14 @@ function ResidentCard({ name, description, tier, port, onRegister, onUnregister,
     >
       <TierDot tier={tier} />
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{name}</span>
-        {description ? (
-          <span className="text-xs ml-2" style={{ color: 'var(--text-tertiary)' }}>{description}</span>
-        ) : (
-          <span className="text-xs ml-2 italic" style={{ color: 'var(--text-tertiary)', opacity: 0.5 }}>未填寫描述</span>
-        )}
+        <span className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>{name}</span>
       </div>
-      {port && <PortTag port={port} />}
+      {showPort && port && <PortTag port={port} />}
       {/* Tier 2: 顯示「+」報戶口 */}
       {tier === 2 && onRegister && (
         <RegisterButton onClick={() => handleAction(onRegister)} loading={loading} />
       )}
-      {/* Tier 3/4: hover 顯示「−」退出 Station */}
+      {/* Tier 3/4: 顯示「−」退出 Station（不用 hover，直接顯示） */}
       {isStation && onUnregister && (
         <UnregisterButton onClick={() => handleAction(onUnregister)} loading={loading} />
       )}
@@ -1054,7 +955,7 @@ function DistrictBlock({ name, districtId, childProjects, allEntries, onRegister
       style={{ border: '1px solid var(--border-color)' }}
     >
       <div
-        className="px-3 py-1.5 text-xs font-semibold"
+        className="px-3 py-1.5 text-sm font-semibold"
         style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}
       >
         {name}
@@ -1066,9 +967,9 @@ function DistrictBlock({ name, districtId, childProjects, allEntries, onRegister
             <ResidentCard
               key={child.name}
               name={child.name}
-              description={child.description}
               tier={tier}
               port={child.devPort}
+              showPort={false}
               onRegister={() => onRegister(districtId, child.name)}
               onUnregister={() => onUnregister(districtId, child.name)}
               onEnterStation={onEnterStation}
@@ -1163,9 +1064,9 @@ function CityBlock({ name, color, projects, allEntries, onEnterStation, onRegist
                 <ResidentCard
                   key={project.id}
                   name={project.displayName || project.name}
-                  description={project.description?.slice(0, 40) || undefined}
                   tier={tier}
                   port={project.devPort}
+                  showPort={false}
                   onRegister={() => handleRegister(project.id)}
                   onUnregister={() => handleUnregister(project.id)}
                   onEnterStation={onEnterStation}

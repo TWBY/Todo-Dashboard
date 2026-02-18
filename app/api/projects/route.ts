@@ -4,6 +4,11 @@ import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '@/lib/data';
 import type { Project } from '@/lib/types';
 
+// Station 房間限制：3003 到 3010
+const STATION_ROOM_MIN = 3003;
+const STATION_ROOM_MAX = 3010;
+
+
 function generateProductId(existingIds: string[]): string {
   const now = new Date();
   const year = String(now.getFullYear()).slice(-1);
@@ -33,19 +38,26 @@ export async function GET() {
   return NextResponse.json({ data: projects });
 }
 
-function findNextAvailablePort(allProjects: Project[]): number {
+function findNextAvailablePort(allProjects: Project[]): number | null {
   const usedPorts = new Set<number>();
   for (const p of allProjects) {
-    if (p.devPort) usedPorts.add(p.devPort);
+    if (p.devPort && p.devPort >= STATION_ROOM_MIN && p.devPort <= STATION_ROOM_MAX) {
+      usedPorts.add(p.devPort);
+    }
     if (p.children) {
       for (const c of p.children) {
-        if (c.devPort) usedPorts.add(c.devPort);
+        if (c.devPort && c.devPort >= STATION_ROOM_MIN && c.devPort <= STATION_ROOM_MAX) {
+          usedPorts.add(c.devPort);
+        }
       }
     }
   }
-  let port = 3001;
-  while (usedPorts.has(port) || port === 4000) port++;
-  return port;
+  // FIFO：從最小編號開始找第一個空位
+  for (let port = STATION_ROOM_MIN; port <= STATION_ROOM_MAX; port++) {
+    if (!usedPorts.has(port)) return port;
+  }
+  // 房間已滿
+  return null;
 }
 
 // --- 三重登記 helpers ---
@@ -81,61 +93,6 @@ async function removePackageJsonPort(projectPath: string): Promise<void> {
     pkg.scripts.dev = pkg.scripts.dev.replace(/\s+-p\s+\d+/g, '').replace(/\s+--port\s+\d+/g, '')
     await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
   } catch { /* ignore */ }
-}
-
-const DEV_SERVER_TABLE = (port: number) =>
-  `\n## Dev Server\n\n| 環境 | Port | 指令 |\n|------|------|------|\n| 開發 | \`${port}\` | \`npm run dev\` |\n`
-
-/** 在專案 CLAUDE.md 登記 Dev Server port（區域戶口） */
-async function updateClaudeMdPort(projectPath: string, port: number): Promise<void> {
-  // 優先用 .claude/CLAUDE.md，其次根目錄 CLAUDE.md
-  const dotClaudePath = join(projectPath, '.claude', 'CLAUDE.md')
-  const rootClaudePath = join(projectPath, 'CLAUDE.md')
-
-  let claudePath: string
-  if (await fileExists(dotClaudePath)) {
-    claudePath = dotClaudePath
-  } else if (await fileExists(rootClaudePath)) {
-    claudePath = rootClaudePath
-  } else {
-    // 新建在根目錄
-    claudePath = rootClaudePath
-    await writeFile(claudePath, `# ${projectPath.split('/').pop()}\n${DEV_SERVER_TABLE(port)}`, 'utf-8')
-    return
-  }
-
-  const content = await readFile(claudePath, 'utf-8')
-  // 如果已有 Dev Server 區段，替換
-  const devServerRegex = /\n## Dev Server\n[\s\S]*?(?=\n## |\n# |$)/
-  if (devServerRegex.test(content)) {
-    const updated = content.replace(devServerRegex, DEV_SERVER_TABLE(port))
-    await writeFile(claudePath, updated, 'utf-8')
-  } else {
-    // 追加到末尾
-    await writeFile(claudePath, content.trimEnd() + '\n' + DEV_SERVER_TABLE(port), 'utf-8')
-  }
-}
-
-/** 從專案 CLAUDE.md 移除 Dev Server 區段 */
-async function removeClaudeMdPort(projectPath: string): Promise<void> {
-  const dotClaudePath = join(projectPath, '.claude', 'CLAUDE.md')
-  const rootClaudePath = join(projectPath, 'CLAUDE.md')
-
-  let claudePath: string
-  if (await fileExists(dotClaudePath)) {
-    claudePath = dotClaudePath
-  } else if (await fileExists(rootClaudePath)) {
-    claudePath = rootClaudePath
-  } else {
-    return
-  }
-
-  const content = await readFile(claudePath, 'utf-8')
-  const devServerRegex = /\n## Dev Server\n[\s\S]*?(?=\n## |\n# |$)/
-  if (devServerRegex.test(content)) {
-    const updated = content.replace(devServerRegex, '')
-    await writeFile(claudePath, updated.trimEnd() + '\n', 'utf-8')
-  }
 }
 
 /** 解析專案路徑：直接專案 vs child（CourseFiles 子專案） */
@@ -189,6 +146,11 @@ export async function PATCH(request: Request) {
   if (action === 'add-to-dev') {
     const allProjects = [...brickverseProjects, ...courseFiles, ...utilityTools];
     const devPort = findNextAvailablePort(allProjects);
+
+    if (devPort === null) {
+      return NextResponse.json({ error: 'Station 房間已滿（3003-3010），無法進駐' }, { status: 409 });
+    }
+
     const devAddedAt = new Date().toISOString();
 
     if (childName) {
@@ -205,12 +167,9 @@ export async function PATCH(request: Request) {
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
 
-    // 三重登記：package.json + CLAUDE.md
+    // 雙重登記：package.json
     const projectPath = resolveProjectPath(targetList[targetIndex], childName);
-    await Promise.all([
-      updatePackageJsonPort(projectPath, devPort),
-      updateClaudeMdPort(projectPath, devPort),
-    ]);
+    await updatePackageJsonPort(projectPath, devPort);
 
     return NextResponse.json({ devPort, devAddedAt });
   }
@@ -237,11 +196,8 @@ export async function PATCH(request: Request) {
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
 
-    // 三重清理：package.json + CLAUDE.md
-    await Promise.all([
-      removePackageJsonPort(projectPath),
-      removeClaudeMdPort(projectPath),
-    ]);
+    // 雙重清理：package.json
+    await removePackageJsonPort(projectPath);
 
     return NextResponse.json({ success: true });
   }
