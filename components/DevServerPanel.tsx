@@ -153,7 +153,14 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
       const data = await res.json();
       if (res.ok) {
         setProdRunning(true);
-        showToast(data.message || 'Production 已重新啟動', 'success');
+        showToast('重啟中，即將重新整理…', 'success');
+        // 3秒後淡出，4秒後 hard reload
+        setTimeout(() => {
+          document.body.classList.add('page-exit');
+        }, 3000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000);
       } else {
         showToast(data.error || 'Reload 失敗', 'error');
       }
