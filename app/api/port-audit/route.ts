@@ -4,6 +4,10 @@ import path from 'path'
 import { readJsonFile, flattenProjectsWithChildren, loadAllProjects } from '@/lib/data'
 import type { Project } from '@/lib/types'
 
+// Station 房間限制
+const STATION_ROOM_MIN = 3003
+const STATION_ROOM_MAX = 3010
+
 interface AuditEntry {
   name: string
   port: number
@@ -11,9 +15,6 @@ interface AuditEntry {
   source: 'brickverse' | 'coursefiles' | 'utility'
   packageJson: 'correct' | 'missing-port' | 'wrong-port' | 'no-file'
   packageJsonDetail?: string
-  localClaude: 'registered' | 'no-port' | 'wrong-port' | 'no-file'
-  localClaudePath?: string
-  localClaudeDetail?: string
 }
 
 // 讀取 package.json 並檢查 dev script 的 port
@@ -32,10 +33,6 @@ async function checkPackageJson(projectPath: string, expectedPort: number): Prom
     // 檢查 port：-p <port> 或 --port <port>
     const portMatch = devScript.match(/(?:-p|--port)\s+(\d+)/)
     if (!portMatch) {
-      // Todo-Dashboard port 3000 是預設值，不需要寫 -p
-      if (expectedPort === 3000) {
-        return { packageJson: 'correct', packageJsonDetail: devScript }
-      }
       return { packageJson: 'missing-port', packageJsonDetail: devScript }
     }
 
@@ -48,49 +45,6 @@ async function checkPackageJson(projectPath: string, expectedPort: number): Prom
   } catch {
     return { packageJson: 'no-file', packageJsonDetail: '找不到 package.json' }
   }
-}
-
-// 檢查區域 CLAUDE.md 的 port 登記
-async function checkLocalClaude(projectPath: string, expectedPort: number): Promise<Pick<AuditEntry, 'localClaude' | 'localClaudePath' | 'localClaudeDetail'>> {
-  // 先檢查 .claude/CLAUDE.md，再檢查根目錄 CLAUDE.md
-  const candidates = [
-    path.join(projectPath, '.claude', 'CLAUDE.md'),
-    path.join(projectPath, 'CLAUDE.md'),
-  ]
-
-  for (const filePath of candidates) {
-    try {
-      await access(filePath)
-      const content = await readFile(filePath, 'utf-8')
-      const relativePath = filePath.replace(projectPath + '/', '')
-
-      // 檢查是否包含 port 數字
-      const portPattern = new RegExp(`\\b${expectedPort}\\b`)
-      if (portPattern.test(content)) {
-        return { localClaude: 'registered', localClaudePath: relativePath }
-      }
-
-      // 有檔案但沒有正確的 port
-      const anyPortMatch = content.match(/`(\d{4})`/)
-      if (anyPortMatch) {
-        return {
-          localClaude: 'wrong-port',
-          localClaudePath: relativePath,
-          localClaudeDetail: `登記為 ${anyPortMatch[1]}，應為 ${expectedPort}`,
-        }
-      }
-
-      return {
-        localClaude: 'no-port',
-        localClaudePath: relativePath,
-        localClaudeDetail: '有 CLAUDE.md 但未登記 port',
-      }
-    } catch {
-      // 檔案不存在，繼續檢查下一個候選
-    }
-  }
-
-  return { localClaude: 'no-file', localClaudeDetail: '無 CLAUDE.md' }
 }
 
 export async function GET() {
@@ -109,10 +63,7 @@ export async function GET() {
         const projectPath = project.devPath || project.path
         const port = project.devPort!
 
-        const [pkgResult, claudeResult] = await Promise.all([
-          checkPackageJson(projectPath, port),
-          checkLocalClaude(projectPath, port),
-        ])
+        const pkgResult = await checkPackageJson(projectPath, port)
 
         return {
           name: project.name,
@@ -120,10 +71,20 @@ export async function GET() {
           path: projectPath,
           source: project.source,
           ...pkgResult,
-          ...claudeResult,
         }
       })
     )
+
+    // 添加 VIP Port 3002（開發版）的審計
+    const dashboardPath = '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard'
+    const devPkgResult = await checkPackageJson(dashboardPath, 3002)
+    entries.push({
+      name: 'Todo-Dashboard (Dev)',
+      port: 3002,
+      path: dashboardPath,
+      source: 'brickverse',
+      ...devPkgResult,
+    })
 
     // 按 port 排序
     entries.sort((a, b) => a.port - b.port)
@@ -132,8 +93,10 @@ export async function GET() {
     const stats = {
       total: entries.length,
       packageJsonOk: entries.filter(e => e.packageJson === 'correct').length,
-      localClaudeOk: entries.filter(e => e.localClaude === 'registered').length,
-      fullyRegistered: entries.filter(e => e.packageJson === 'correct' && e.localClaude === 'registered').length,
+      fullyRegistered: entries.filter(e => e.packageJson === 'correct').length,
+      roomsTotal: STATION_ROOM_MAX - STATION_ROOM_MIN + 1,
+      roomsUsed: entries.length,
+      roomsAvailable: (STATION_ROOM_MAX - STATION_ROOM_MIN + 1) - entries.length,
     }
 
     return NextResponse.json({ entries, stats })
@@ -149,9 +112,6 @@ async function fileExists(p: string): Promise<boolean> {
   try { await access(p); return true } catch { return false }
 }
 
-const DEV_SERVER_TABLE = (port: number) =>
-  `\n## Dev Server\n\n| 環境 | Port | 指令 |\n|------|------|------|\n| 開發 | \`${port}\` | \`npm run dev\` |\n`
-
 async function fixPackageJson(projectPath: string, port: number): Promise<string> {
   const pkgPath = path.join(projectPath, 'package.json')
   if (!await fileExists(pkgPath)) return 'no-file'
@@ -166,33 +126,6 @@ async function fixPackageJson(projectPath: string, port: number): Promise<string
   } catch { return 'error' }
 }
 
-async function fixClaudeMd(projectPath: string, port: number): Promise<string> {
-  const dotClaudePath = path.join(projectPath, '.claude', 'CLAUDE.md')
-  const rootClaudePath = path.join(projectPath, 'CLAUDE.md')
-
-  let claudePath: string
-  if (await fileExists(dotClaudePath)) {
-    claudePath = dotClaudePath
-  } else if (await fileExists(rootClaudePath)) {
-    claudePath = rootClaudePath
-  } else {
-    claudePath = rootClaudePath
-    const dirName = projectPath.split('/').pop() || 'Project'
-    await writeFile(claudePath, `# ${dirName}\n${DEV_SERVER_TABLE(port)}`, 'utf-8')
-    return 'created'
-  }
-
-  const content = await readFile(claudePath, 'utf-8')
-  const devServerRegex = /\n## Dev Server\n[\s\S]*?(?=\n## |\n# |$)/
-  if (devServerRegex.test(content)) {
-    const updated = content.replace(devServerRegex, DEV_SERVER_TABLE(port))
-    await writeFile(claudePath, updated, 'utf-8')
-  } else {
-    await writeFile(claudePath, content.trimEnd() + '\n' + DEV_SERVER_TABLE(port), 'utf-8')
-  }
-  return 'fixed'
-}
-
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
@@ -203,38 +136,23 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ result })
     }
 
-    if (action === 'fix-claude-md') {
-      const result = await fixClaudeMd(projectPath, port)
-      return NextResponse.json({ result })
-    }
-
     if (action === 'fix-all') {
-      // 取得所有有問題的項目並修復
       const allProjects = (await loadAllProjects()).filter(p => p.devPort)
 
-      const results: { name: string; pkg: string; claude: string }[] = []
+      const results: { name: string; pkg: string }[] = []
       for (const project of allProjects) {
         const pPath = project.devPath || project.path
         const pPort = project.devPort!
 
-        // 先檢查再修
-        const [pkgCheck, claudeCheck] = await Promise.all([
-          checkPackageJson(pPath, pPort),
-          checkLocalClaude(pPath, pPort),
-        ])
+        const pkgCheck = await checkPackageJson(pPath, pPort)
 
         let pkgResult = 'ok'
-        let claudeResult = 'ok'
-
         if (pkgCheck.packageJson !== 'correct' && pkgCheck.packageJson !== 'no-file') {
           pkgResult = await fixPackageJson(pPath, pPort)
         }
-        if (claudeCheck.localClaude !== 'registered') {
-          claudeResult = await fixClaudeMd(pPath, pPort)
-        }
 
-        if (pkgResult !== 'ok' || claudeResult !== 'ok') {
-          results.push({ name: project.name, pkg: pkgResult, claude: claudeResult })
+        if (pkgResult !== 'ok') {
+          results.push({ name: project.name, pkg: pkgResult })
         }
       }
 
