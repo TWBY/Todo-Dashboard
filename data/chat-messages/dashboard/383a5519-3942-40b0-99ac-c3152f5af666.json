@@ -1,0 +1,28 @@
+[
+  {
+    "id": "8f12c4ff-fe4f-4cea-a466-771e4b374518",
+    "role": "user",
+    "content": "/cdp-test",
+    "timestamp": 1771421570244
+  },
+  {
+    "id": "d810ed99-83e3-4ddb-969d-eeeda652ad64",
+    "role": "assistant",
+    "content": "I'll run the CDP connection diagnostic test for you.",
+    "timestamp": 1771421573403
+  },
+  {
+    "id": "e1857aba-da21-49cf-b5c3-6961bdb10d25",
+    "role": "tool",
+    "content": "{\n  \"action\": \"list\"\n}",
+    "toolName": "mcp__arc_cdp__browser_tabs",
+    "toolDescription": "",
+    "timestamp": 1771421573913
+  },
+  {
+    "id": "b27a12b5-29a0-48df-869d-9541cff67c81",
+    "role": "assistant",
+    "content": "The arc-cdp MCP tool is not currently available. This means:\n\n**❌ CDP 連線失敗**\n\narc-cdp MCP 工具目前無法使用，無法連線至 Arc 瀏覽器的 Debug Protocol。\n\n**可能原因：**\n1. arc-cdp MCP 伺服器未啟動\n2. Arc 瀏覽器未以 `--remote-debugging-port=9222` 啟動\n\n**解決方案：**\n\n請手動執行以下指令重啟 Arc 瀏覽器：\n\n```bash\npkill -a Arc; open -a Arc --args --remote-debugging-port=9222\n```\n\n重啟 Arc 後，再執行 `/cdp-test` 進行連線診斷。",
+    "timestamp": 1771421575565
+  }
+]
