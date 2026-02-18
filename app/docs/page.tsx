@@ -249,6 +249,75 @@ const TABS = [
 
 // ── Sub-components ──────────────────────────────────────────────
 
+// ── Reusable UI Components ──────────────────────────────────────
+
+function ExpandableBox({ label, children }: { label: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs cursor-pointer transition-colors duration-150"
+        style={{
+          backgroundColor: 'var(--background-secondary)',
+          borderBottom: open ? '1px solid var(--border-color)' : 'none',
+          color: 'var(--text-secondary)',
+        }}
+      >
+        <span className="flex items-center gap-2">
+          <i className="fa-solid fa-circle-info" style={{ color: '#3b82f6' }} />
+          {label}
+        </span>
+        <i
+          className="fa-solid fa-chevron-down text-[9px]"
+          style={{
+            color: 'var(--text-tertiary)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 200ms ease',
+          }}
+        />
+      </button>
+      {open && (
+        <div
+          className="px-4 py-3 text-xs animate-fade-in"
+          style={{
+            backgroundColor: 'var(--background-primary)',
+            color: 'var(--text-secondary)',
+            lineHeight: '1.75',
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type CalloutType = 'info' | 'tip' | 'warn'
+
+function CalloutBox({ type, children }: { type: CalloutType; children: React.ReactNode }) {
+  const styles: Record<CalloutType, { bg: string; border: string; icon: string; color: string }> = {
+    info: { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.2)', icon: 'fa-circle-info', color: '#3b82f6' },
+    tip: { bg: 'rgba(74,222,128,0.06)', border: 'rgba(74,222,128,0.2)', icon: 'fa-lightbulb', color: '#4ade80' },
+    warn: { bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.2)', icon: 'fa-triangle-exclamation', color: '#fbbf24' },
+  }
+  const s = styles[type]
+  return (
+    <div
+      className="rounded-xl px-4 py-3 text-xs mb-3 flex gap-3"
+      style={{
+        backgroundColor: s.bg,
+        border: `1px solid ${s.border}`,
+        color: 'var(--text-secondary)',
+        lineHeight: '1.75',
+      }}
+    >
+      <i className={`fa-solid ${s.icon} mt-0.5 shrink-0`} style={{ color: s.color }} />
+      <div>{children}</div>
+    </div>
+  )
+}
+
 function SectionTable({ section }: { section: DocSection }) {
   return (
     <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
@@ -321,10 +390,11 @@ function EnvCompareTab() {
         <h2 className="text-base font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
           Claude Code Extension vs Dashboard SDK
         </h2>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
           兩個環境跑的是同一個 Claude Code 執行檔，但啟動方式不同。
-          Extension 透過 <code className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--background-tertiary)' }}>claude-vscode</code> SDK bridge 幫你注入工具；
-          SDK 直接雇人，工頭的工具他拿不到，要自己帶。
+        </p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          把 Claude Code 想成承包商。工頭（IDE Bridge）是 Cursor extension 配的仲介，工具箱（MCP servers、IDE 感知）是仲介備好的。你透過 SDK 直接雇人時，仲介不在場，工具箱裡的東西你要自己備齊。
         </p>
       </div>
 
@@ -334,7 +404,25 @@ function EnvCompareTab() {
         <div className="px-4 text-xs font-semibold" style={{ color: '#f97316' }}>Dashboard Chat SDK</div>
       </div>
 
+      <div style={{ marginTop: '24px', marginBottom: '12px' }}>
+        <CalloutBox type="info">
+          <strong>什麼是 MCP？</strong> MCP（Model Context Protocol）讓 Claude 能控制外部工具。例如 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>arc-cdp</code> MCP 讓 Claude 能截圖、點擊、導航 Arc 瀏覽器。Extension 的 MCP 由 Cursor 自動配置好；SDK 需要你在程式碼裡明確列出要掛哪些 MCP，否則 Claude 就「沒有手」。
+        </CalloutBox>
+      </div>
+
       {sections.map((s, i) => <SectionTable key={i} section={s} />)}
+
+      <ExpandableBox label="為什麼 SDK 永遠感知不到 IDE？">
+        <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          Extension 在 Cursor 內部運行，Cursor 的 VS Code API 會把「選取的程式碼」、「開啟的 tab」打包成 context 注入 Claude 的 session。
+          <div style={{ marginTop: '8px' }}>
+            SDK 是在 Node.js process 裡跑，根本不在任何 IDE 的執行環境——就像辦公室外打電話的員工，不管怎麼說他都看不到白板上寫了什麼。
+          </div>
+          <div style={{ marginTop: '8px', color: 'var(--text-tertiary)' }}>
+            這是架構性限制，無法補。
+          </div>
+        </div>
+      </ExpandableBox>
 
       <div className="grid grid-cols-2 gap-4 mt-6 mb-4">
         <div className="rounded-xl px-5 py-4" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}>
@@ -397,9 +485,13 @@ function SettingsTab() {
   return (
     <div>
       <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>~/.claude/settings.json</h2>
-      <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
         兩個環境都讀同一份。規則共用，但 <code className="px-1 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>permissionMode</code> 各自獨立設定。
       </p>
+
+      <CalloutBox type="info">
+        想像 settings.json 是大樓的公共規則（不准大聲喧嘩、公共設施使用方式）。Extension 和 SDK 都住在這棟樓，所以 allow/deny 規則共用。但各自的「工作模式」(permissionMode) 就像各房間各自調冷氣——同一個中央系統，但溫度自己設。
+      </CalloutBox>
 
       {/* env */}
       <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
@@ -418,6 +510,35 @@ function SettingsTab() {
           </div>
         ))}
       </div>
+
+      <ExpandableBox label="展開：這兩個環境變數控制什麼？">
+        <div style={{ marginBottom: '12px' }}>
+          <strong style={{ color: 'var(--text-primary)' }}>CLAUDE_CODE_EFFORT_LEVEL</strong>
+          <div style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
+            Claude 完成任務時的「投入程度」。
+            <ul style={{ marginTop: '6px', marginLeft: '20px', listStyleType: 'disc' }}>
+              <li><strong>low</strong> — 較快、較省 token，適合簡單查詢</li>
+              <li><strong>medium</strong> — 平衡（預設）</li>
+              <li><strong>high</strong> — Claude 會多思考、多驗證，適合複雜任務</li>
+            </ul>
+            <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+              注意：SDK 可以用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>opts.effort</code> 覆寫此值（在 buildQueryOptions 中）
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</strong>
+          <div style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
+            打開這個開關後，Claude Code 會啟用 Agent Teams 功能：
+            <ul style={{ marginTop: '6px', marginLeft: '20px', listStyleType: 'disc' }}>
+              <li>允許 Claude 用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>TeamCreate</code> 建立子 Agent 群組</li>
+              <li>允許多個 Claude instance 協同工作（由主 Claude 當隊長）</li>
+              <li>這是實驗性功能（EXPERIMENTAL），API 可能隨版本變動</li>
+            </ul>
+          </div>
+        </div>
+      </ExpandableBox>
 
       {/* permissions.allow */}
       <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
@@ -460,7 +581,7 @@ function SettingsTab() {
       </div>
 
       {/* 其他設定 */}
-      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+      <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
         <div className="px-4 py-2 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
           其他設定
         </div>
@@ -476,6 +597,44 @@ function SettingsTab() {
           </div>
         ))}
       </div>
+
+      <ExpandableBox label="展開：permissionMode 兩邊各是什麼？">
+        <div style={{ marginBottom: '12px' }}>
+          <strong style={{ color: '#3b82f6' }}>Extension（Cursor）</strong>
+          <div style={{ marginTop: '6px', color: 'var(--text-secondary)' }}>
+            直接讀取 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissions.defaultMode: "acceptEdits"</code>
+            <div style={{ marginTop: '4px' }}>Claude 可直接寫入、修改檔案，不需要你確認每一步。</div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
+          <strong style={{ color: '#f97316' }}>Dashboard SDK（lib/claude-session-manager.ts:78）</strong>
+          <pre
+            style={{
+              backgroundColor: 'var(--background-tertiary)',
+              color: 'var(--text-secondary)',
+              padding: '12px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontFamily: 'ui-monospace, monospace',
+              overflow: 'auto',
+              marginTop: '6px',
+              marginBottom: '8px',
+            }}
+          >
+{`const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'`}
+          </pre>
+          <div style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            <div>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "edit"</code> →  <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "acceptEdits"</code>（同 Extension）</div>
+            <div style={{ marginTop: '4px' }}>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "plan"</code>（預設）→  <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "plan"</code>（Claude 先規劃，等點核准才行動）</div>
+          </div>
+        </div>
+
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+          <i className="fa-solid fa-lightbulb" style={{ color: '#fbbf24', marginRight: '6px' }} />
+          這就是 Dashboard Chat 有「ExitPlanMode」互動的原因——Claude 必須先報告計劃，等你按「開始實作」，才能進入 acceptEdits 模式。
+        </div>
+      </ExpandableBox>
     </div>
   )
 }
@@ -489,10 +648,43 @@ function ClaudeMdTab() {
           人寫給 Claude 的指令
         </span>
       </div>
-      <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
         每次對話開始時自動載入為系統提示的一部分。全域 + 專案兩層疊加，專案層可覆蓋全域設定。
       </p>
+
+      <CalloutBox type="info">
+        <strong>疊加機制：</strong> 載入順序：先讀全域 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>~/.claude/CLAUDE.md</code>，再讀專案 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>.claude/CLAUDE.md</code>，兩份都插入系統提示。如果有衝突，專案層的設定在後面（等於在白板上覆寫）；如果只是補充，兩份都生效。
+      </CalloutBox>
+
+      <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
+        <strong>專案級設定的關鍵部分：</strong> Dev Server port 對照表（避免 AI 猜錯 port）、Pack 按鈕說明（避免 AI 與 Ship skill 搞混）。
+      </p>
       <ClaudeMdViewer title="專案級設定" path=".claude/CLAUDE.md" content={projectClaudeMdContent} />
+
+      <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
+        <strong>全域設定的導覽：</strong> 包含 5 個大區塊，最容易被新手忽略的是 MCP 瀏覽器規則第 4 條（必須先新開分頁才能導航）。
+      </p>
+
+      <ExpandableBox label="全域 CLAUDE.md 的 5 個區塊一覽">
+        <ol style={{ marginLeft: '20px', color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <li style={{ marginBottom: '8px' }}>
+            <strong>MCP 瀏覽器規則</strong> — 控制 Arc 瀏覽器的 5 條規則。第 4 條最重要：必須先 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>browser_tabs(action: "new")</code> 建立新分頁，才能導航。
+          </li>
+          <li style={{ marginBottom: '8px' }}>
+            <strong>Bash 安全政策</strong> — allow 清單（開放的命令）和 deny 清單（禁止的命令，如 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>sudo</code>、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>eval</code>、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>rm -rf /</code>）
+          </li>
+          <li style={{ marginBottom: '8px' }}>
+            <strong>部署注意</strong> — 路徑大小寫問題（macOS 不敏感，但 Linux 敏感）。必須使用正確的大小寫和絕對路徑。
+          </li>
+          <li style={{ marginBottom: '8px' }}>
+            <strong>Hydration 注意</strong> — 加 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>suppressHydrationWarning</code> 到 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>&lt;html&gt;</code>、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>&lt;body&gt;</code>、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>&lt;img&gt;</code>，避免暗色模式擴充套件注入樣式導致不一致。
+          </li>
+          <li>
+            <strong>Dev Server Port 制度</strong> — Station 報戶口制度的 Tier 1–4 分級與進出方式。
+          </li>
+        </ol>
+      </ExpandableBox>
+
       <ClaudeMdViewer title="全域設定" path="~/.claude/CLAUDE.md" content={globalClaudeMdContent} />
     </div>
   )
@@ -505,7 +697,11 @@ function MemoryTab() {
       <div className="flex items-center gap-3 mb-1">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Memory vs CLAUDE.md</h2>
       </div>
-      <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>同樣都會載入系統提示，但身份完全不同。</p>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>同樣都會載入系統提示，但身份完全不同。</p>
+
+      <CalloutBox type="tip">
+        <strong>記憶法：</strong> CLAUDE.md 是你寫的「操作手冊」，Memory 是 Claude 寫的「工作日誌」。你看手冊做事，員工自己記日誌——兩個不同角色，互不衝突。
+      </CalloutBox>
 
       <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
         <div className="grid grid-cols-[120px_1fr_1fr] text-xs" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -615,9 +811,19 @@ function McpTab() {
   return (
     <div>
       <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>~/.claude/mcp.json</h2>
-      <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
         Claude Code Extension 讀取的 MCP server 清單。SDK 環境的 settingSources 讀取此檔不可靠，需在 opts.mcpServers 明確傳入。
       </p>
+
+      <ExpandableBox label="為什麼 settingSources 不可靠？">
+        <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>settingSources: ['user', 'project']</code> 告訴 SDK 從哪些地方讀取設定（包含 MCP）。
+          <div style={{ marginTop: '8px' }}>
+            但在 SDK 環境有時序問題或版本差異，MCP 不一定被正確載入。最可靠的做法是用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>opts.mcpServers</code> 直接寫死清單，session 啟動時一定會掛載這些 server。
+          </div>
+        </div>
+      </ExpandableBox>
+
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
         {[
           { name: 'arc-cdp',                command: 'npx @playwright/mcp --cdp-endpoint http://localhost:9222', note: '透過 CDP 9222 控制 Arc 瀏覽器', status: 'SDK 已手動加入', color: '#4ade80' },
@@ -640,6 +846,40 @@ function McpTab() {
           </div>
         ))}
       </div>
+
+      <ExpandableBox label="opts.mcpServers 在哪裡設定？">
+        <div style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
+          在 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>lib/claude-session-manager.ts</code> 的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>buildQueryOptions()</code> 函式中：
+        </div>
+
+        <pre
+          style={{
+            backgroundColor: 'var(--background-tertiary)',
+            color: 'var(--text-secondary)',
+            padding: '12px',
+            borderRadius: '6px',
+            fontSize: '11px',
+            fontFamily: 'ui-monospace, monospace',
+            overflow: 'auto',
+            marginBottom: '12px',
+          }}
+        >
+{`mcpServers: {
+  'arc-cdp': {
+    type: 'stdio',
+    command: 'npx',
+    args: ['@playwright/mcp', '--cdp-endpoint', 'http://localhost:9222'],
+  },
+  // 新增 MCP 在此加入
+}`}
+        </pre>
+
+        <div style={{ color: 'var(--text-secondary)', fontSize: '11px', lineHeight: '1.6' }}>
+          <div>• 這段設定在每個 session 建立時被傳入</div>
+          <div>• 確保 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>arc-cdp</code> 可用</div>
+          <div>• 新增 MCP 需手動在此加入；Extension 不需要這個步驟</div>
+        </div>
+      </ExpandableBox>
     </div>
   )
 }
@@ -696,8 +936,10 @@ export default function DocsPage() {
             top: 0,
             height: '100vh',
             padding: '12px 8px',
+            display: 'flex',
+            flexDirection: 'column',
           }}
-          className="flex flex-col shrink-0"
+          className="shrink-0"
         >
           <ChatContent
             projectId="dashboard"
