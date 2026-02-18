@@ -92,6 +92,13 @@ function buildQueryOptions(
       PATH: process.env.PATH || '',
       TMPDIR: process.env.TMPDIR || '/tmp',
     },
+    mcpServers: {
+      'arc-cdp': {
+        type: 'stdio',
+        command: 'npx',
+        args: ['@playwright/mcp', '--cdp-endpoint', 'http://localhost:9222'],
+      },
+    },
   }
 
   if (model === 'haiku') {
