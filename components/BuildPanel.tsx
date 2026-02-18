@@ -209,6 +209,18 @@ function detectPhase(messages: ChatMessage[]): number {
   return detectProgress(messages).phase;
 }
 
+// --- Utility functions ---
+
+/** Remove Unicode emoji from text */
+function removeEmoji(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Emoji ranges
+    .replace(/[\u{2600}-\u{27BF}]/gu, '') // Miscellaneous Symbols
+    .replace(/[\u{2300}-\u{23FF}]/gu, '') // Miscellaneous Technical
+    .replace(/[\u{2000}-\u{206F}]/gu, '') // General Punctuation
+    .replace(/[\u{20A0}-\u{20CF}]/gu, ''); // Currency Symbols
+}
+
 // --- Sub-components ---
 
 function VArrow({ status }: { status: StepStatus }) {
@@ -488,8 +500,16 @@ export default function BuildPanel() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between py-4 mb-6 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
+      <div className="flex items-center justify-start py-4 mb-6 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={close}
+            className="w-9 h-9 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/20 shrink-0"
+            style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
+            title="關閉"
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
           {buildState === 'idle' && (
             <button
               onClick={handleStartBuild}
@@ -518,14 +538,6 @@ export default function BuildPanel() {
             </button>
           )}
         </div>
-        <button
-          onClick={close}
-          className="w-9 h-9 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/10 shrink-0"
-          style={{ color: 'var(--text-secondary)' }}
-          title="關閉"
-        >
-          <i className="fa-solid fa-xmark" />
-        </button>
       </div>
 
       {/* Content */}

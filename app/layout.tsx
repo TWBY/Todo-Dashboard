@@ -3,6 +3,7 @@ import { Noto_Sans_TC } from 'next/font/google';
 import './globals.css';
 import Providers from '@/components/Providers';
 import EnvironmentIndicator from '@/components/EnvironmentIndicator';
+import ComponentDebugOverlay from '@/components/ComponentDebugOverlay';
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ['latin'],
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={notoSansTC.className} suppressHydrationWarning>
         <EnvironmentIndicator />
+        <ComponentDebugOverlay />
         <main className="min-h-screen">
           <Providers>{children}</Providers>
         </main>

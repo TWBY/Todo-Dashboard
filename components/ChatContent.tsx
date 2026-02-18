@@ -916,16 +916,33 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const { addPanel } = useChatPanels()
 
   // 偵測 Team 事件（TeamCreate / TeamDelete）→ 追蹤 activeTeam state（不自動開啟面板）
+  // 掃描所有訊息推斷最終 team 狀態，確保 component remount 時按鈕不會消失
   useEffect(() => {
-    const lastMsg = messages[messages.length - 1]
-    if (!lastMsg?.teamEvent) return
-    if (lastMsg.teamEvent.type === 'create') {
-      const teamName = lastMsg.teamEvent.teamName
-      setActiveTeam({ name: teamName, description: lastMsg.teamEvent.description })
-      // 不再自動開啟面板，由用戶點擊 banner 手動開啟
-    } else if (lastMsg.teamEvent.type === 'delete') {
-      setActiveTeam(prev => prev ? { ...prev, name: prev.name } : null)
-      setTimeout(() => setActiveTeam(null), 5000)
+    let latestCreate: { name: string; description?: string } | null = null
+    let latestCreateIndex = -1
+    let latestDeleteIndex = -1
+
+    // 掃描所有訊息，找出最後的 create 和 delete 事件
+    messages.forEach((msg, i) => {
+      if (!msg.teamEvent) return
+      if (msg.teamEvent.type === 'create') {
+        latestCreateIndex = i
+        latestCreate = { name: msg.teamEvent.teamName, description: msg.teamEvent.description }
+      } else if (msg.teamEvent.type === 'delete') {
+        latestDeleteIndex = i
+      }
+    })
+
+    // 判斷最終 team 狀態
+    if (latestCreateIndex === -1) {
+      // 沒有任何 create 事件
+      setActiveTeam(null)
+    } else if (latestDeleteIndex > latestCreateIndex) {
+      // delete 在 create 之後 → team 已解散
+      setActiveTeam(null)
+    } else {
+      // create 是最後狀態 → team 仍活躍，按鈕應持續顯示
+      setActiveTeam(latestCreate)
     }
   }, [messages, projectId])
 

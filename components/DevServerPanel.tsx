@@ -465,22 +465,22 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
           >
             Station
           </span>
-          {currentPort === 3000 && versionConfig.development && (
+          {currentPort === 3002 && versionConfig.development && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
               title="Development 版本"
             >
-              D-{versionConfig.development.split('-')[0]}
+              Dev {versionConfig.development}
             </span>
           )}
-          {currentPort === 4000 && versionConfig.production && (
+          {currentPort === 3001 && versionConfig.production && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(16,185,129,0.1)', color: '#10b981' }}
+              style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
               title="Production 版本"
             >
-              P-{versionConfig.production}
+              Prod {versionConfig.production}
             </span>
           )}
           {isCopied('Station') && (
