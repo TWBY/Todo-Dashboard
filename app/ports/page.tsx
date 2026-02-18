@@ -470,7 +470,7 @@ export default function PortsPage() {
                   {loading ? (
                     [...Array(2)].map((_, i) => (
                       <div
-                        key={i}
+                        key={`loading-vip-${i}`}
                         className="rounded-lg p-3 animate-pulse"
                         style={{ backgroundColor: 'var(--background-tertiary)' }}
                       >
@@ -522,7 +522,7 @@ export default function PortsPage() {
                   {loading ? (
                     [...Array(8)].map((_, i) => (
                       <div
-                        key={i}
+                        key={`loading-seat-${i}`}
                         className="rounded-lg p-3 animate-pulse"
                         style={{ backgroundColor: 'var(--background-tertiary)' }}
                       >
@@ -719,11 +719,11 @@ export default function PortsPage() {
               ) : (
                 <div className="space-y-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="space-y-2">
+                    <div key={`loading-city-block-${i}`} className="space-y-2">
                       <div className="h-5 w-24 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
                       <div className="space-y-1.5">
                         {[...Array(3 + i)].map((_, j) => (
-                          <div key={j} className="flex items-center gap-3 py-1.5">
+                          <div key={`loading-city-${j}`} className="flex items-center gap-3 py-1.5">
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)' }} />
                             <div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--background-tertiary)', width: `${100 + j * 20}px` }} />
                           </div>
