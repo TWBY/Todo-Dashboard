@@ -14,7 +14,7 @@ function execAsync(cmd: string, opts?: { timeout?: number }) {
   return execAsyncRaw(cmd, { timeout: opts?.timeout ?? 8000 });
 }
 
-const DASHBOARD_PORT = 3000;
+const DASHBOARD_PORT = 3002;
 
 // In-memory cache to prevent concurrent polling from saturating the event loop
 let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
@@ -334,6 +334,26 @@ export async function POST(request: Request) {
       }
     }
 
+    // pm2 restart（不需要 devPort）
+    if (action === 'pm2-restart') {
+      const appName = body.pm2AppName || 'todo-dashboard';
+      // Whitelist validation: only allow alphanumeric, hyphens, and underscores
+      if (!/^[a-zA-Z0-9\-_]+$/.test(appName)) {
+        return NextResponse.json({ error: 'Invalid pm2 app name' }, { status: 400 });
+      }
+      try {
+        // 使用 nohup + 延時，避免 PM2 自我重啟時殺死當前 process 導致命令失敗
+        await execAsync(`nohup bash -c 'sleep 1 && /opt/homebrew/bin/pm2 restart ${appName}' > /dev/null 2>&1 &`);
+        await logEvent(`pm2 restart ${appName} (delayed)`);
+        return NextResponse.json({ success: true, message: `pm2 restart ${appName} 已排程（1 秒後執行）` });
+      } catch (error) {
+        return NextResponse.json(
+          { error: `pm2 restart 失敗: ${error instanceof Error ? error.message : String(error)}` },
+          { status: 500 }
+        );
+      }
+    }
+
     const projects = await loadAllProjects();
     const project = projects.find(p => p.id === projectId);
 
@@ -514,8 +534,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: `正在重啟 ${project.name} (port ${port})` });
 
     } else if (action === 'start-production') {
-      // 啟動 Production server (next start -p 4000)
-      const PROD_PORT = 4000;
+      // 啟動 Production server (PM2, port 3001)
+      const PROD_PORT = 3001;
       const prodPortInfo = await checkPort(PROD_PORT);
 
       if (prodPortInfo.isRunning) {
@@ -545,8 +565,8 @@ export async function POST(request: Request) {
       });
 
     } else if (action === 'stop-production') {
-      // 停止 Production server (port 4000)
-      const PROD_PORT = 4000;
+      // 停止 Production server (PM2, port 3001)
+      const PROD_PORT = 3001;
       const prodPortInfo = await checkPort(PROD_PORT);
 
       if (!prodPortInfo.isRunning) {
@@ -565,7 +585,7 @@ export async function POST(request: Request) {
 
     } else if (action === 'check-production') {
       // 檢查 Production server 狀態
-      const PROD_PORT = 4000;
+      const PROD_PORT = 3001;
       const prodPortInfo = await checkPort(PROD_PORT);
       let memoryMB: number | undefined;
       let cpuPercent: number | undefined;

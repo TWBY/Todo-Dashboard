@@ -140,10 +140,10 @@ function useComponentDebug() {
   const hoveredElRef = useRef<Element | null>(null);
   const lockedElRef = useRef<Element | null>(null);
 
-  // 偵測是否為 Dev（port 3000）
+  // 偵測是否為 Dev（port 3002）
   useEffect(() => {
     const port = parseInt(window.location.port) || 80;
-    setIsDev(port === 3000);
+    setIsDev(port === 3002);
   }, []);
 
   // 清除 outline

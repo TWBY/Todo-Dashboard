@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 /**
  * Test endpoint — 渲染一個獨立的 HTML 頁面來預覽 TeamMonitorPanel
- * 直接在瀏覽器開啟 http://localhost:3000/api/team-monitor/test
+ * 直接在瀏覽器開啟 http://localhost:3002/api/team-monitor/test
  */
 export async function GET() {
   const html = `<!DOCTYPE html>

@@ -114,7 +114,7 @@ function UsageRow({ label, utilization, resetsAt, totalDays, showPace }: {
 
 /**
  * Session（上）+ Weekly（下）雙層用量指標
- * 顏色邏輯：port 判斷（3000=紅色系，4000=綠色系）
+ * 顏色邏輯：port 判斷（3002=紅色系，3001=綠色系）
  * 內容：實時 Claude 用量
  */
 export function ClaudeUsageBar({ layout = 'both' }: { layout?: 'both' | 'session-only' | 'weekly-only' } = {}) {
@@ -144,8 +144,8 @@ export function ClaudeUsageBar({ layout = 'both' }: { layout?: 'both' | 'session
     return () => { controller.abort(); clearInterval(interval); };
   }, [fetchData]);
 
-  // 根據 port 判斷顏色（3000=紅，其他=綠）
-  const isDevPort = port === 3000;
+  // 根據 port 判斷顏色（3002=紅，3001=綠）
+  const isDevPort = port === 3002;
   const bgColor = isDevPort ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.1)';
   const accentColor = isDevPort ? '#ef4444' : '#10b981';
 

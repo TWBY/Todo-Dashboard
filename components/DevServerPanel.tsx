@@ -141,51 +141,27 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const handleProdReload = useCallback(async () => {
     setProdLoading(true);
     try {
-      // Step 1: Stop
-      const stopCtrl = new AbortController();
-      const stopTimeout = setTimeout(() => stopCtrl.abort(), 10000);
-      const stopRes = await fetch('/api/dev-server', {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 15000);
+      const res = await fetch('/api/dev-server', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: 'dashboard', action: 'stop-production' }),
-        signal: stopCtrl.signal,
+        body: JSON.stringify({ projectId: 'dashboard', action: 'pm2-restart', pm2AppName: 'todo-dashboard' }),
+        signal: ctrl.signal,
       });
-      clearTimeout(stopTimeout);
-      if (!stopRes.ok) {
-        const d = await stopRes.json();
-        showToast(d.error || 'Reload 失敗（stop 階段）', 'error');
-        return;
-      }
-      setProdRunning(false);
-      // Step 2: Start
-      const startCtrl = new AbortController();
-      const startTimeout = setTimeout(() => startCtrl.abort(), 15000);
-      const startRes = await fetch('/api/dev-server', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: 'dashboard', action: 'start-production' }),
-        signal: startCtrl.signal,
-      });
-      clearTimeout(startTimeout);
-      const startData = await startRes.json();
-      if (startRes.ok) {
+      clearTimeout(timeout);
+      const data = await res.json();
+      if (res.ok) {
         setProdRunning(true);
-        showToast(startData.message || 'Production 已重新啟動', 'success');
-        // 等 server 就緒後重整 4000 頁面
-        setTimeout(() => {
-          // Hard reload：加 cache-busting query 繞過快取
-          const url = new URL(window.location.href);
-          url.searchParams.set('_t', Date.now().toString());
-          window.location.replace(url.toString());
-        }, 1500);
+        showToast(data.message || 'Production 已重新啟動', 'success');
       } else {
-        showToast(startData.error || 'Reload 失敗（start 階段）', 'error');
+        showToast(data.error || 'Reload 失敗', 'error');
       }
     } catch (error) {
       showToast(
         error instanceof Error && error.name === 'AbortError'
-          ? 'Reload 逾時（API 無回應）'
-          : 'Production Reload 請求失敗',
+          ? 'Reload 逾時'
+          : 'Reload 請求失敗',
         'error',
       );
     } finally {
@@ -336,8 +312,8 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const pinnedRunning = todoDashboard && getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
   const pinnedStopped = todoDashboard && !getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
 
-  // Production 自我保護：從 4000 訪問時，不能停止 Production server
-  const isProdSelf = currentPort === 4000;
+  // Production 自我保護：從 3001 訪問時，不能停止 Production server
+  const isProdSelf = currentPort === 3001;
 
   // 統一按鈕樣式
   const btnBase = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]';
@@ -494,7 +470,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             disabled={prodLoading}
             className={`${btnBase} disabled:opacity-60 disabled:cursor-not-allowed`}
             style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151', ...btnStyle }}
-            title="重新啟動 Production 4000"
+            title="重新啟動 Production 3001"
           >
             {prodLoading ? <Spinner /> : 'R'}
           </button>

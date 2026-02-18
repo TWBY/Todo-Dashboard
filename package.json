@@ -3,7 +3,7 @@
   "version": "1.18.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
     "dev:watch": "bash dev-with-restart.sh",
     "crash-reports": "ls -lt data/crash-reports/crash-*.json 2>/dev/null | head -20 && echo '---' && cat data/crash-reports/crash-summary.log 2>/dev/null || echo 'No crash reports yet.'",
     "build": "next build",
