@@ -475,9 +475,9 @@
     "sessionId": "9fce295c-a951-43f9-be37-78190713eb16",
     "projectId": "dashboard",
     "title": "--\n1%\n4h44m\n62%\n80%\n3d8h\n+28%\n40%\n-\n狀態的顯示需要下上空格。像是「80 %」「3 d",
-    "messageCount": 47,
+    "messageCount": 48,
     "createdAt": 1771395427147,
-    "lastActiveAt": 1771412827479
+    "lastActiveAt": 1771415134650
   },
   {
     "sessionId": "563a54dd-342c-4575-b38c-79c263da2975",
@@ -510,5 +510,117 @@
     "messageCount": 11,
     "createdAt": 1771412426567,
     "lastActiveAt": 1771413031118
+  },
+  {
+    "sessionId": "458466d0-6737-4221-b637-0e1cfd2e3072",
+    "projectId": "dashboard",
+    "title": "背景\nTodo-Dashboard 有一個 ComponentDebugOverlay.tsx，在 dev 模式下（po",
+    "messageCount": 22,
+    "createdAt": 1771415417963,
+    "lastActiveAt": 1771416402608
+  },
+  {
+    "sessionId": "1875b839-4387-4994-a728-7850572b9a71",
+    "projectId": "dashboard",
+    "title": "現在感覺主頁的記憶很奇怪，就是我只要去子頁面，回到主頁面的時候，主頁面在做的事情就會暫停，但是不該暫停才對啊。這樣導致我",
+    "messageCount": 3,
+    "createdAt": 1771415596501,
+    "lastActiveAt": 1771416087207
+  },
+  {
+    "sessionId": "b480a68b-42b5-42e0-b6ab-df7c58afde7b",
+    "projectId": "dashboard",
+    "title": "測試 cdp 功能是否正常",
+    "messageCount": 1,
+    "createdAt": 1771415681115,
+    "lastActiveAt": 1771415695064
+  },
+  {
+    "sessionId": "c6ad4371-a268-4312-8254-8300a2e4762b",
+    "projectId": "dashboard",
+    "title": "你好",
+    "messageCount": 1,
+    "createdAt": 1771415895543,
+    "lastActiveAt": 1771415903016
+  },
+  {
+    "sessionId": "f6f2d649-bb06-4507-b55e-4f8722f3dfc5",
+    "projectId": "dashboard",
+    "title": "現在 查看 Agent Team 有很大問題，就是如果系統被中斷，重新啟動的時候，可以在對話中繼續 team 的工作，但",
+    "messageCount": 3,
+    "createdAt": 1771416087177,
+    "lastActiveAt": 1771417292064
+  },
+  {
+    "sessionId": "4e7583ad-e5bd-4bc7-8dbd-324764c3c4e8",
+    "projectId": "dashboard",
+    "title": "回覆「好」",
+    "messageCount": 1,
+    "createdAt": 1771416151708,
+    "lastActiveAt": 1771416158443
+  },
+  {
+    "sessionId": "b7d80bba-54d1-49c9-876b-256adb3e07c9",
+    "projectId": "dashboard",
+    "title": "COMPONENT: SubpageShell\nCHAIN: ErrorBoundary > LoadingBounda",
+    "messageCount": 3,
+    "createdAt": 1771416429399,
+    "lastActiveAt": 1771416527497
+  },
+  {
+    "sessionId": "54411fbd-ab0e-4637-809f-a857fedf8c73",
+    "projectId": "dashboard",
+    "title": "現在 COMPONENT: ChatHistory\nCHAIN: ToastProvider > LeftPanelPr",
+    "messageCount": 2,
+    "createdAt": 1771416833719,
+    "lastActiveAt": 1771416999525
+  },
+  {
+    "sessionId": "1106db9f-9e7c-4ddc-b80c-264cee5ea341",
+    "projectId": "dashboard",
+    "title": "在 3002 測試頁面中，中下有一個 debug 按鈕，我現在需要在他的右邊加上一個「Chat 」裡面要去寫各種 Cha",
+    "messageCount": 1,
+    "createdAt": 1771418820754,
+    "lastActiveAt": 1771418974598
+  },
+  {
+    "sessionId": "e1b0f6c0-47ce-42c1-99de-5b962527b7c2",
+    "projectId": "dashboard",
+    "title": "http://localhost:3002/ports 頁面顯示錯誤 issue ，用 cdp 去查",
+    "messageCount": 1,
+    "createdAt": 1771419092812,
+    "lastActiveAt": 1771419423716
+  },
+  {
+    "sessionId": "dfe16e2f-33db-4148-a2ea-b29cbf8f2100",
+    "projectId": "dashboard",
+    "title": "/chat-test",
+    "messageCount": 1,
+    "createdAt": 1771419903365,
+    "lastActiveAt": 1771419923821
+  },
+  {
+    "sessionId": "804e4846-1b45-41c7-ae0d-547e45ba9d0f",
+    "projectId": "dashboard",
+    "title": "/cdp-test",
+    "messageCount": 1,
+    "createdAt": 1771419946046,
+    "lastActiveAt": 1771419955646
+  },
+  {
+    "sessionId": "214b81f0-1e40-4326-baa9-104ffa870413",
+    "projectId": "dashboard",
+    "title": "/cdp-test",
+    "messageCount": 1,
+    "createdAt": 1771419976174,
+    "lastActiveAt": 1771419987485
+  },
+  {
+    "sessionId": "808aabe5-0318-4c4e-a416-76fdbbd72e9e",
+    "projectId": "dashboard",
+    "title": "/cdp-test",
+    "messageCount": 1,
+    "createdAt": 1771420030315,
+    "lastActiveAt": 1771420041082
   }
 ]

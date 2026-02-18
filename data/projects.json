@@ -78,6 +78,8 @@
       "TypeScript",
       "Tailwind CSS"
     ],
+    "devPort": 3002,
+    "devAddedAt": "2026-02-18T10:51:52.111Z",
     "createdAt": "2026-02-04T00:00:00.000Z",
     "updatedAt": "2026-02-18T10:51:52.111Z"
   },
