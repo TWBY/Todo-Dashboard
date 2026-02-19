@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useLeftPanel } from '@/contexts/LeftPanelContext';
-import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
 import { useToast } from '@/contexts/ToastContext';
@@ -22,7 +21,6 @@ export default function DevServerPanel() {
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
   const { toggle: toggleLeftPanel } = useLeftPanel();
-  const { toggle: toggleBuildPanel } = useBuildPanel();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
   const [currentPort, setCurrentPort] = useState<number>(0);
@@ -278,9 +276,10 @@ export default function DevServerPanel() {
       return aTime.localeCompare(bTime);
     });
 
-  // Todo-Dashboard 自身（特殊 VIP，置頂）
-  const selfPort = currentPort === 3001 ? 3001 : 3002;
-  const selfIsRunning = selfPort === 3001 ? prodRunning : true; // dev server 開著才能看到這頁面
+  // Todo-Dashboard 自身（特殊 VIP，置頂）— O 永遠開 3002 dev server
+  const selfPort = 3002;
+  const devStatus = statuses.find(s => s.port === 3002);
+  const selfIsRunning = devStatus?.isRunning ?? (currentPort === 3002);
   const selfStatus: {
     projectId: string; name: string; displayName: string; port: number;
     isRunning: boolean; projectPath: string; devBasePath: undefined; source: 'brickverse'; devAddedAt: string;
@@ -310,7 +309,7 @@ export default function DevServerPanel() {
     const isRemoving = removingIds.has(s.projectId);
     const isSelf = s.port === currentPort;
     const showO = isRunning && !isLoading;
-    const showS = !(isSelf && isRunning);
+    const showS = !isLoading;
     const displayName = s.displayName || s.name;
 
     return (
@@ -428,8 +427,17 @@ export default function DevServerPanel() {
             )}
           </h2>
           <button
+            onClick={handleProdReload}
+            disabled={prodLoading}
+            className="flex-1 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-mono py-1 rounded-lg transition-all duration-200 hover:opacity-80"
+            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151' }}
+            title="重新啟動 Production 3001"
+          >
+            R
+          </button>
+          <button
             onClick={toggleLeftPanel}
-            className="flex-1 py-2 rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center"
+            className="flex-1 py-1 rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center"
             style={{
               backgroundColor: 'var(--background-tertiary)',
               color: 'var(--text-secondary)',
@@ -451,36 +459,7 @@ export default function DevServerPanel() {
           </button>
         </div>
 
-        {/* 第二行：R、P、L 按鈕 */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleProdReload}
-            disabled={prodLoading}
-            className={`flex-1 disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]`}
-            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151' }}
-            title="重新啟動 Production 3001"
-          >
-            R
-          </button>
-          <button
-            onClick={toggleBuildPanel}
-            className="flex-1 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-            style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
-            title="版本升級與打包流程"
-          >
-            P
-          </button>
-          <button
-            onClick={() => router.push('/changelog')}
-            className="flex-1 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-            style={{ backgroundColor: '#1f1533', color: '#a78bfa', border: '1px solid #3b2663' }}
-            title="版本歷史"
-          >
-            L
-          </button>
-        </div>
-
-        {/* 第三行：Ports 按鈕 + 重新整理 */}
+        {/* 第二行：Ports 按鈕 + 重新整理 */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push('/ports')}

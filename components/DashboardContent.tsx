@@ -74,25 +74,6 @@ export default function DashboardContent() {
             <DevServerPanel />
           </div>
 
-          {/* Chat Test Lab 按鈕（僅 dev 環境） */}
-          {process.env.NODE_ENV === 'development' && (
-            <button
-              onClick={() => router.push('/chat-test')}
-              className="flex-shrink-0 mt-3 mx-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono transition-colors"
-              style={{
-                backgroundColor: 'var(--background-secondary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-              }}
-            >
-              <i className="fa-solid fa-flask-vial" style={{ fontSize: '0.75rem' }} />
-              <span>Chat Test Lab</span>
-            </button>
-          )}
-
-          {/* CDP Status */}
-          <CdpStatusBadge />
 
         </div>
       }
