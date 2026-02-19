@@ -853,6 +853,7 @@ export type PanelStatus = 'idle' | 'streaming' | 'waiting' | 'completed'
 
 export interface ChatContentHandle {
   stopStream: () => void
+  triggerMessage: (text: string) => void
 }
 
 interface ChatContentProps {
@@ -922,10 +923,11 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral, systemPromptAppend: systemPrompt })
   const { addPanel, openPanels, updatePanelTeamName } = useChatPanels()
 
-  // 暴露 stopStream 給父元件（用於 Chat Test Lab 中斷串流）
+  // 暴露 stopStream / triggerMessage 給父元件
   useImperativeHandle(ref, () => ({
     stopStream: stopStreaming,
-  }), [stopStreaming])
+    triggerMessage: (text: string) => sendMessage(text, 'edit'),
+  }), [stopStreaming, sendMessage])
 
   // 偵測 Team 事件（TeamCreate / TeamDelete）→ 追蹤 activeTeam state（不自動開啟面板）
   // 掃描所有訊息推斷最終 team 狀態，確保 component remount 時按鈕不會消失

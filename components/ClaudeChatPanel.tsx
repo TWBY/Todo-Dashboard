@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, forwardRef } from 'react'
 import ChatContent, { ContentsRate } from '@/components/ChatContent'
-import type { PanelStatus } from '@/components/ChatContent'
+import type { PanelStatus, ChatContentHandle } from '@/components/ChatContent'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
 
 interface ClaudeChatPanelProps {
@@ -22,7 +22,7 @@ interface ClaudeChatPanelProps {
   onClose?: () => void
 }
 
-export default function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, model, sessionId, initialMessage, initialMode, ephemeral, theme = 'default', systemPrompt, onClose }: ClaudeChatPanelProps) {
+const ClaudeChatPanel = forwardRef<ChatContentHandle, ClaudeChatPanelProps>(function ClaudeChatPanel({ projectId, projectName, panelId, isFixed, planOnly, emailMode, model, sessionId, initialMessage, initialMode, ephemeral, theme = 'default', systemPrompt, onClose }, ref) {
   const { duplicatePanel, updatePanelSession } = useChatPanels()
   const [chatKey, setChatKey] = useState(0)
   const [isClearing, setIsClearing] = useState(false)
@@ -142,8 +142,11 @@ export default function ClaudeChatPanel({ projectId, projectName, panelId, isFix
           onSessionIdChange={handleSessionChange}
           onSessionMetaChange={handleSessionMetaChange}
           onPanelStatusChange={setPanelStatus}
+          ref={ref}
         />
       </div>
     </div>
   )
-}
+})
+
+export default ClaudeChatPanel
