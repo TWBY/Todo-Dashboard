@@ -9,6 +9,7 @@ import { useLeftPanel } from '@/contexts/LeftPanelContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
+import Spinner from '@/components/Spinner';
 import { useToast } from '@/contexts/ToastContext';
 
 interface DevServerPanelProps {
