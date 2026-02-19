@@ -771,9 +771,9 @@
     "sessionId": "ebf57754-45ff-4441-8529-fd3820dbfba0",
     "projectId": "dashboard",
     "title": "現在 COMPONENT: DevServerPanel\nCHAIN: RedirectBoundary > Redir",
-    "messageCount": 6,
+    "messageCount": 14,
     "createdAt": 1771469118262,
-    "lastActiveAt": 1771469510205
+    "lastActiveAt": 1771473186782
   },
   {
     "sessionId": "6f37f756-19e1-42a0-8f56-72e66b3e05f8",
@@ -782,5 +782,45 @@
     "messageCount": 1,
     "createdAt": 1771469526619,
     "lastActiveAt": 1771469548422
+  },
+  {
+    "sessionId": "8d499ef0-83f6-4d27-b1e8-addfa3534b2f",
+    "projectId": "dashboard",
+    "title": "現在我在主畫面使用 chat 實作功能時，ai 正在執行任務，然後這時候去子頁面時，會到主頁面，會發現 ai 是暫停，而",
+    "messageCount": 3,
+    "createdAt": 1771472660253,
+    "lastActiveAt": 1771473241119
+  },
+  {
+    "sessionId": "d1dd6ea2-7ca9-471a-82c5-31f1128e13df",
+    "projectId": "dashboard",
+    "title": "現在 port 管理 (http://localhost:3002/ports) 有問題，照理來說被加入到 statio",
+    "messageCount": 21,
+    "createdAt": 1771472900225,
+    "lastActiveAt": 1771474677615
+  },
+  {
+    "sessionId": "c131cc85-81dc-4ed8-ab33-ea6df69528ed",
+    "projectId": "dashboard",
+    "title": "現在我們 sonnet 模型是串接哪個型號",
+    "messageCount": 3,
+    "createdAt": 1771472935275,
+    "lastActiveAt": 1771473751580
+  },
+  {
+    "sessionId": "020082c0-e91c-41cc-ae6c-bc745ecb45c0",
+    "projectId": "dashboard",
+    "title": "簡介專案",
+    "messageCount": 1,
+    "createdAt": 1771473282814,
+    "lastActiveAt": 1771473282814
+  },
+  {
+    "sessionId": "f729cc76-8dbd-435b-ae3e-2ae97470a7a5",
+    "projectId": "dashboard",
+    "title": "測試",
+    "messageCount": 1,
+    "createdAt": 1771473413581,
+    "lastActiveAt": 1771473427476
   }
 ]

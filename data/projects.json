@@ -35,7 +35,7 @@
     "description": "Blog 後端服務，負責與 Insforge 平台串接，提供文章資料的 API 端點供 BlogFrontend 使用。處理文章的 CRUD、分類管理和資料格式轉換。修改方式：進入 BlogBackend/ 目錄，API 路由在 app/api/ 下，Insforge 串接邏輯在 lib/ 中。",
     "techStack": [],
     "createdAt": "2026-01-30T00:00:00.000Z",
-    "updatedAt": "2026-02-18T06:10:28.605Z"
+    "updatedAt": "2026-02-19T04:11:57.530Z"
   },
   {
     "id": "brickverse-learn",
@@ -96,9 +96,7 @@
       "Google Search Console API"
     ],
     "createdAt": "2026-02-05T00:00:00.000Z",
-    "updatedAt": "2026-02-18T17:00:28.147Z",
-    "devPort": 3003,
-    "devAddedAt": "2026-02-18T17:00:28.147Z"
+    "updatedAt": "2026-02-19T03:45:30.878Z"
   },
   {
     "id": "salekit",

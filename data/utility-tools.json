@@ -22,7 +22,8 @@
     "description": "HTML 下載工具。",
     "techStack": [],
     "createdAt": "2025-11-07T00:00:00.000Z",
-    "updatedAt": "2026-02-15T13:50:39.731Z"
+    "updatedAt": "2026-02-19T03:45:39.020Z",
+    "framework": "html"
   },
   {
     "id": "editer",
@@ -78,7 +79,8 @@
       "TypeScript"
     ],
     "createdAt": "2026-02-06T00:00:00.000Z",
-    "updatedAt": "2026-02-08T15:17:49.643Z"
+    "updatedAt": "2026-02-08T15:17:49.643Z",
+    "framework": "python"
   },
   {
     "id": "social-format",
@@ -123,7 +125,9 @@
     "description": "Excel 資料生成工廠。",
     "techStack": [],
     "createdAt": "2026-02-11T00:00:00.000Z",
-    "updatedAt": "2026-02-17T07:55:18.495Z"
+    "updatedAt": "2026-02-19T04:12:07.805Z",
+    "devPort": 3003,
+    "devAddedAt": "2026-02-19T04:12:07.805Z"
   },
   {
     "id": "cover-maker",
@@ -173,6 +177,7 @@
       "Xcode"
     ],
     "createdAt": "2026-02-17T00:00:00.000Z",
-    "updatedAt": "2026-02-17T15:28:08.269Z"
+    "updatedAt": "2026-02-17T15:28:08.269Z",
+    "framework": "swift"
   }
 ]
