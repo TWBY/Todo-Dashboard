@@ -3,7 +3,6 @@ import { Noto_Sans_TC } from 'next/font/google';
 import './globals.css';
 import Providers from '@/components/Providers';
 import EnvironmentIndicator from '@/components/EnvironmentIndicator';
-import BotModeIndicator from '@/components/BotModeIndicator';
 import ComponentDebugOverlay from '@/components/ComponentDebugOverlay';
 import DashboardHost from '@/components/DashboardHost';
 
@@ -35,7 +34,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={notoSansTC.className} suppressHydrationWarning>
         <EnvironmentIndicator />
-        <BotModeIndicator />
         <ComponentDebugOverlay />
         <main className="min-h-screen">
           <Providers>

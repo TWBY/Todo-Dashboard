@@ -7,13 +7,6 @@ export default function EnvironmentIndicator() {
   const [version, setVersion] = useState<string>('1.18.0');
 
   useEffect(() => {
-    // ?bot=1 時由 BotModeIndicator 負責設定 title，此元件跳過
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('bot') === '1' || params.get('bot') === 'true') {
-      setIsDev(parseInt(window.location.port) === 3002);
-      return;
-    }
-
     const portNum = parseInt(window.location.port) || 80;
     const isDevEnv = portNum === 3002;
     setIsDev(isDevEnv);
@@ -47,12 +40,6 @@ export default function EnvironmentIndicator() {
   }, [isDev]);
 
   if (isDev === null) return null;
-
-  // bot 模式下由 BotModeIndicator 渲染色條，此元件不渲染
-  const isBot = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('bot') === '1'
-    : false;
-  if (isBot) return null;
 
   return (
     <div
