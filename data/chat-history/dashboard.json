@@ -1110,5 +1110,21 @@
     "messageCount": 4,
     "createdAt": 1771511808169,
     "lastActiveAt": 1771512371550
+  },
+  {
+    "sessionId": "6c55c146-3357-44da-9669-c919530c1e7d",
+    "projectId": "dashboard",
+    "title": "測試 bot-browser 是否能用",
+    "messageCount": 7,
+    "createdAt": 1771520167905,
+    "lastActiveAt": 1771520452324
+  },
+  {
+    "sessionId": "433a0e21-2544-4c42-b12e-5adae17aa7dd",
+    "projectId": "dashboard",
+    "title": "現在我有哪些 mcp 工具",
+    "messageCount": 1,
+    "createdAt": 1771520471106,
+    "lastActiveAt": 1771520486228
   }
 ]

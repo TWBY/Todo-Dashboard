@@ -1,0 +1,14 @@
+[
+  {
+    "id": "5b4e8fa5-7c50-494a-9c5e-d62c14c907fc",
+    "role": "user",
+    "content": "現在我有哪些 mcp 工具",
+    "timestamp": 1771520471068
+  },
+  {
+    "id": "2d1c31e8-8c34-4c66-8219-f82db55b63c5",
+    "role": "assistant",
+    "content": "根據目前的工具列表，你有以下 MCP 工具：\n\n## arc-cdp MCP\n- `browser_close` — 關閉頁面\n- `browser_resize` — 調整視窗大小\n- `browser_console_messages` — 讀取 Console 訊息\n- `browser_handle_dialog` — 處理對話框\n- `browser_evaluate` — 執行 JavaScript\n- `browser_file_upload` — 上傳檔案\n- `browser_fill_form` — 填寫表單\n- `browser_install` — 安裝瀏覽器\n- `browser_press_key` — 按鍵\n- `browser_type` — 輸入文字\n- `browser_navigate` — 導航到 URL\n- `browser_navigate_back` — 返回上頁\n- `browser_network_requests` — 查看網路請求\n- `browser_run_code` — 執行 Playwright 程式碼\n- `browser_take_screenshot` — 截圖\n- `browser_snapshot` — 無障礙快照（比截圖更適合操作）\n- `browser_click` — 點擊元素\n- `browser_drag` — 拖放元素\n- `browser_hover` — 懸停元素\n- `browser_select_option` — 下拉選單選項\n- `browser_tabs` — 管理分頁（list/new/close/select）\n- `browser_wait_for` — 等待文字出現/消失\n\n## bot-browser MCP\n- 與 arc-cdp 完全相同的工具集（另一個瀏覽器 session）\n\n## cloudflare-docs MCP\n- `search_cloudflare_documentation` — 搜尋 Cloudflare 文件\n- `migrate_pages_to_workers_guide` — Pages 遷移到 Workers 指南\n\n---\n\n總共三個 MCP：**arc-cdp**（主要用）、**bot-browser**（備用）、**cloudflare-docs**（文件查詢）。",
+    "timestamp": 1771520476127
+  }
+]
