@@ -335,11 +335,12 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
   streamingActivity: StreamingActivity | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom of the outer scrollable container
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, streamingActivity]);
 
@@ -351,7 +352,7 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
   return (
     <div
       ref={containerRef}
-      className="mt-3 rounded-md overflow-y-auto"
+      className="mt-3 rounded-md"
       style={{
         backgroundColor: 'rgba(0,0,0,0.15)',
         border: '1px solid rgba(168,85,247,0.2)',
@@ -380,14 +381,15 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
         </div>
       )}
 
-      {/* AI messages */}
-      {aiMessages.slice(-3).map(msg => (
+      {/* AI messages — show all, no truncation */}
+      {aiMessages.map(msg => (
         <div key={msg.id} className="text-base mb-2 build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {msg.content.length > 500 ? msg.content.slice(-500) : msg.content}
+            {msg.content}
           </ReactMarkdown>
         </div>
       ))}
+      <div ref={bottomRef} />
     </div>
   );
 }
