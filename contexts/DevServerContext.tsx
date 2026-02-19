@@ -12,6 +12,9 @@ interface PortStatus {
   cpuPercent?: number
   source?: 'brickverse' | 'coursefiles' | 'utility'
   devBasePath?: string
+  name: string
+  displayName?: string
+  devAddedAt?: string
 }
 
 interface ExternalProcess {
@@ -75,8 +78,8 @@ export function DevServerProvider({ children }: { children: React.ReactNode }) {
     const controller = new AbortController()
     controllerRef.current = controller
     fetchData(controller.signal)
-    // Poll every 5 seconds for more responsive UI
-    const interval = setInterval(() => fetchData(controller.signal), 5000)
+    // Poll every 15 seconds — dev server state doesn't need sub-10s responsiveness
+    const interval = setInterval(() => fetchData(controller.signal), 15000)
     return () => {
       controller.abort()
       clearInterval(interval)

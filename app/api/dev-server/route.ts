@@ -17,7 +17,7 @@ const DASHBOARD_PORT = 3002;
 
 // In-memory cache to prevent concurrent polling from saturating the event loop
 let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
-const GET_CACHE_TTL = 2000; // 2 seconds — faster UI updates
+const GET_CACHE_TTL = 12000; // 12 seconds — aligns with polling interval
 function logEvent(message: string) {
   console.log(`[dev-server] ${message}`);
 }
@@ -46,6 +46,9 @@ interface PortStatus {
   cpuPercent?: number;
   source?: 'brickverse' | 'coursefiles' | 'utility'
   devBasePath?: string;
+  name: string;
+  displayName?: string;
+  devAddedAt?: string;
 }
 
 interface SystemMemory {
@@ -218,13 +221,7 @@ async function checkPort(port: number): Promise<{ isRunning: boolean; pid?: numb
       } catch {
         pgid = undefined;
       }
-      // Get the working directory of the process
-      try {
-        const { stdout: cwdOutput } = await execAsync(`lsof -p ${pid} | grep cwd | awk '{print $NF}'`);
-        return { isRunning: true, pid, pgid, cwd: cwdOutput.trim() };
-      } catch {
-        return { isRunning: true, pid, pgid };
-      }
+      return { isRunning: true, pid, pgid };
     }
     return { isRunning: false };
   } catch {
@@ -261,6 +258,9 @@ export async function GET() {
           projectPath: project.path,
           source: project.source,
           devBasePath: project.devBasePath,
+          name: project.name,
+          displayName: project.displayName,
+          devAddedAt: project.devAddedAt,
         };
       })
     );
@@ -449,13 +449,13 @@ export async function POST(request: Request) {
 
     } else if (action === 'open-browser') {
       const url = `http://localhost:${project.devPort}${project.devBasePath || ''}`;
-      // 用 AppleScript 呼叫 Dia 瀏覽器開啟（CourseFiles 專案走此路徑）
+      // 用 AppleScript 呼叫 Arc 瀏覽器開啟（CourseFiles 專案走此路徑）
       try {
-        await execAsync(`osascript -e 'tell application "Dia" to open location "${url}"'`);
-        return NextResponse.json({ success: true, message: `Opening ${url} in Dia` });
+        await execAsync(`osascript -e 'tell application "Arc" to open location "${url}"'`);
+        return NextResponse.json({ success: true, message: `Opening ${url} in Arc` });
       } catch (error) {
-        console.error('Failed to open Dia:', error);
-        return NextResponse.json({ error: `無法開啟 Dia：${error instanceof Error ? error.message : '未知錯誤'}` }, { status: 500 });
+        console.error('Failed to open Arc:', error);
+        return NextResponse.json({ error: `無法開啟 Arc：${error instanceof Error ? error.message : '未知錯誤'}` }, { status: 500 });
       }
 
     } else if (action === 'restart') {
