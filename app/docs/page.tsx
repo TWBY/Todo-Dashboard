@@ -207,6 +207,7 @@ const TABS = [
   { id: 'memory',       label: 'Memory' },
   { id: 'mcp',          label: 'MCP 設定' },
   { id: 'env-compare',  label: 'Extension vs SDK' },
+  { id: 'cli-vs-sdk',   label: 'CLI 與 SDK' },
   { id: 'arc-cdp',      label: 'Arc CDP' },
   { id: 'gaps',         label: '文件缺口' },
 ]
@@ -518,6 +519,142 @@ function TechStackTab() {
           </div>
         </div>
       </ExpandableBox>
+    </div>
+  )
+}
+
+function CliVsSdkTab() {
+  return (
+    <div>
+      <div className="rounded-xl px-5 py-4 mb-6" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Claude Code CLI 與 Agent SDK 的關係
+        </h2>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          兩者不是競爭關係——SDK 把 CLI binary 打包在裡面，呼叫 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>query()</code> 時在背景 spawn 一個 CLI subprocess 去執行。
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#3b82f6' }}>
+            <i className="fa-solid fa-terminal mr-1.5" />Claude Code CLI
+          </p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>終端機互動工具（<code style={{ fontSize: '11px' }}>claude</code> 指令）。你親自打字，Claude 即時回應，可中斷、可修改方向。</p>
+        </div>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#f97316' }}>
+            <i className="fa-solid fa-cube mr-1.5" />claude-agent-sdk
+          </p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>程式碼呼叫的函式庫（<code style={{ fontSize: '11px' }}>query()</code>）。自動化、嵌入 app、背景執行，不需要人在場。</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-5 py-3" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <i className="fa-solid fa-diagram-project mr-2" style={{ color: '#a78bfa' }} />執行架構
+          </p>
+        </div>
+        <pre className="px-5 py-4 text-sm" style={{
+          color: 'var(--text-secondary)',
+          backgroundColor: 'var(--background-primary)',
+          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+          whiteSpace: 'pre-wrap',
+          lineHeight: '1.9',
+          margin: 0,
+        }}>
+{`  Todo-Dashboard（Next.js）
+          ↓  呼叫
+     query() from SDK
+          ↓  spawn subprocess（約 12 秒冷啟動）
+  bundled Claude Code CLI binary
+          ↓  HTTP call
+     Anthropic API  →  消耗 Max 訂閱額度`}
+        </pre>
+      </div>
+
+      <CalloutBox type="info">
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>SDK 如何運作</strong>
+          <div style={{ marginTop: '4px' }}>
+            SDK <strong>不是</strong>直接呼叫 Anthropic API。它把 Claude Code CLI binary 打包在套件裡，每次呼叫 <code style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px' }}>query()</code> 都會在背景 <strong>spawn 一個新的 subprocess</strong>，由那個 subprocess 去打 API 並把結果串流回來。
+          </div>
+        </div>
+      </CalloutBox>
+
+      <CalloutBox type="tip">
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>為什麼你不需要 API Key</strong>
+          <div style={{ marginTop: '4px' }}>
+            spawn 出來的 subprocess 就是你本機已登入的 Claude Code CLI，它繼承你的 <strong>Max 訂閱身份</strong>。所以 Todo-Dashboard 的每次 query() 消耗的是你的訂閱額度，而不是另外計費的 API token。
+          </div>
+        </div>
+      </CalloutBox>
+
+      <div style={{ marginTop: '24px', marginBottom: '12px' }}>
+        <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>認證方式對照</h3>
+      </div>
+
+      <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="grid grid-cols-3 text-sm" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="px-4 py-2.5 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>情境</div>
+          <div className="px-4 py-2.5 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>認證方式</div>
+          <div className="px-4 py-2.5 font-semibold" style={{ color: 'var(--text-tertiary)' }}>費用</div>
+        </div>
+        {[
+          { situation: 'Todo-Dashboard', auth: '本機 CLI 登入狀態', cost: 'Max 訂閱額度', costColor: '#4ade80' },
+          { situation: '第三方開發者自建 app', auth: 'ANTHROPIC_API_KEY', cost: '按 token 計費', costColor: 'var(--text-primary)' },
+          { situation: 'AWS Bedrock', auth: 'AWS credentials', cost: 'AWS 計費', costColor: 'var(--text-primary)' },
+          { situation: 'Google Vertex AI', auth: 'GCP credentials', cost: 'GCP 計費', costColor: 'var(--text-primary)' },
+        ].map((row, i, arr) => (
+          <div key={row.situation} className="grid grid-cols-3 text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+            <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{row.situation}</div>
+            <div className="px-4 py-2.5" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)' }}>
+              <code style={{ fontSize: '12px', backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>{row.auth}</code>
+            </div>
+            <div className="px-4 py-2.5" style={{ color: row.costColor }}>{row.cost}</div>
+          </div>
+        ))}
+      </div>
+
+      <ExpandableBox label="展開：query() 詳細執行流程">
+        <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <div className="grid gap-2">
+            {[
+              { step: '1', text: 'query() 被呼叫（來自你的 Next.js API route）' },
+              { step: '2', text: 'SDK 在 Node.js 中 spawn 一個子進程，執行 bundled Claude Code CLI binary' },
+              { step: '3', text: '子進程繼承你本機的 CLI 登入狀態（或讀取 ANTHROPIC_API_KEY 環境變數）' },
+              { step: '4', text: 'CLI 向 Anthropic API 發送 HTTP 請求，開始 agent loop（思考 → 工具 → 思考...）' },
+              { step: '5', text: '執行結果透過 IPC（進程間通訊）串流回 SDK，轉為 async generator messages' },
+              { step: '6', text: '任務完成後子進程退出，資源釋放' },
+            ].map(({ step, text }) => (
+              <div key={step} className="flex gap-3 items-start">
+                <span className="shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)', color: '#0184ff', fontFamily: 'ui-monospace, monospace' }}>{step}</span>
+                <span className="text-sm">{text}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: 'var(--background-tertiary)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+            注意：每次 query() 都要重新 spawn subprocess，冷啟動約需 12 秒。長對話使用 session resume 可降低延遲。
+          </div>
+        </div>
+      </ExpandableBox>
+
+      <div className="rounded-xl px-5 py-4 mt-5" style={{ backgroundColor: 'rgba(1,132,255,0.06)', border: '1px solid rgba(1,132,255,0.2)' }}>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#0184ff' }}>
+              <i className="fa-solid fa-book-open mr-2" />Agent SDK 入門指南
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>從零開始了解 query()、內建工具（Read / Edit / Bash）與常見應用範例</p>
+          </div>
+          <a href="/agent-sdk" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shrink-0" style={{ backgroundColor: '#0184ff', color: '#fff', textDecoration: 'none' }}>
+            查看指南
+            <i className="fa-solid fa-arrow-right text-xs" />
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
@@ -2525,6 +2662,7 @@ export default function DocsPage() {
           {activeTab === 'memory'       && <MemoryTab />}
           {activeTab === 'mcp'          && <McpTab />}
           {activeTab === 'env-compare'  && <EnvCompareTab />}
+          {activeTab === 'cli-vs-sdk'   && <CliVsSdkTab />}
           {activeTab === 'arc-cdp'      && <ArcCdpTab />}
           {activeTab === 'gaps'         && <GapsTab />}
         </div>
