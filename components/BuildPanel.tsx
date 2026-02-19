@@ -328,30 +328,28 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
   );
 }
 
-/** Inline AI output area — shows streaming messages within Phase 2/3 */
+/** Inline AI output area — shows ALL messages (assistant + tool) as a continuous log */
 function AiOutputArea({ messages, isStreaming, streamingActivity }: {
   messages: ChatMessage[];
   isStreaming: boolean;
   streamingActivity: StreamingActivity | null;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of the outer scrollable container
+  // Auto-scroll to bottom
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, streamingActivity]);
 
-  // Filter to only assistant text messages (skip tool messages for cleaner view)
-  const aiMessages = messages.filter(m => m.role === 'assistant' && m.content.trim());
+  // Show all messages except user messages and empty ones
+  const visibleMessages = messages.filter(m => m.role !== 'user' && (m.content.trim() || m.toolName));
 
-  if (aiMessages.length === 0 && !isStreaming) return null;
+  if (visibleMessages.length === 0 && !isStreaming) return null;
 
   return (
     <div
-      ref={containerRef}
       className="mt-3 rounded-md"
       style={{
         backgroundColor: 'rgba(0,0,0,0.15)',
@@ -381,12 +379,38 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
         </div>
       )}
 
-      {/* AI messages — show all, no truncation */}
-      {aiMessages.map(msg => (
-        <div key={msg.id} className="text-base mb-2 build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {msg.content}
-          </ReactMarkdown>
+      {/* All messages — continuous log, no collapse, no truncation */}
+      {visibleMessages.map(msg => (
+        <div key={msg.id} className="mb-2">
+          {msg.role === 'assistant' ? (
+            <div className="text-base build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {msg.content}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            /* Tool message */
+            <div
+              className="px-2.5 py-1.5 rounded text-sm font-mono"
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.2)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: '#999999',
+              }}
+            >
+              <div className="font-medium mb-1 text-xs" style={{ color: '#a855f7' }}>
+                {msg.toolName}
+                {msg.toolDescription && (
+                  <span style={{ color: '#666666' }}> — {msg.toolDescription}</span>
+                )}
+              </div>
+              {msg.content.trim() && (
+                <div className="whitespace-pre-wrap break-all text-xs" style={{ color: '#888888' }}>
+                  {msg.content}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ))}
       <div ref={bottomRef} />
