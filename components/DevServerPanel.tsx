@@ -379,7 +379,16 @@ export default function DevServerPanel() {
                   C
                 </button>
 
-                {!isPinned && (
+                {isPinned ? (
+                  <button
+                    onClick={() => router.push('/ports')}
+                    className={btnBase}
+                    style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
+                    title="Port 管理（國家全貌 + Station 居民表）"
+                  >
+                    <i className="fa-solid fa-network-wired text-xs" />
+                  </button>
+                ) : (
                   <button
                     onClick={() => handleRemoveFromDev(s.projectId, displayName)}
                     disabled={isLoading}
@@ -390,7 +399,6 @@ export default function DevServerPanel() {
                     <i className="fa-solid fa-xmark" />
                   </button>
                 )}
-                {isPinned && <span className="w-8" />}
               </div>
             </div>
           </div>
@@ -402,13 +410,13 @@ export default function DevServerPanel() {
   return (
     <div className="relative">
       <div ref={headerBtnsRef} className="flex flex-col gap-2 mb-3">
-        {/* 第一行：版本標籤（點擊可 reload） */}
+        {/* 版本標籤 + Ports 按鈕（同一行） */}
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-lg flex items-center gap-2 shrink-0">
+          <h2 className="font-semibold text-lg flex items-center gap-2 shrink-0 flex-1">
             {currentPort === 3002 && versionConfig.development && (
               <span
                 onClick={!prodLoading ? handleProdReload : undefined}
-                className="text-xs font-mono px-1.5 py-0.5 rounded transition-all duration-200 cursor-pointer"
+                className="text-xs font-mono px-1.5 h-8 flex items-center rounded transition-all duration-200 cursor-pointer"
                 style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', opacity: prodLoading ? 0.5 : 1 }}
                 title="點擊重新啟動 Production 3001"
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px rgba(239,68,68,0.5)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239,68,68,0.28)'; }}
@@ -420,7 +428,7 @@ export default function DevServerPanel() {
             {currentPort === 3001 && versionConfig.production && (
               <span
                 onClick={!prodLoading ? handleProdReload : undefined}
-                className="text-xs font-mono px-1.5 py-0.5 rounded transition-all duration-200 cursor-pointer"
+                className="text-xs font-mono px-1.5 h-8 flex items-center rounded transition-all duration-200 cursor-pointer"
                 style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6', opacity: prodLoading ? 0.5 : 1 }}
                 title="點擊重新啟動 Production 3001"
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px rgba(59,130,246,0.5)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(59,130,246,0.25)'; }}
@@ -430,18 +438,6 @@ export default function DevServerPanel() {
               </span>
             )}
           </h2>
-        </div>
-
-        {/* 第二行：Ports 按鈕 */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push('/ports')}
-            className={`${btnBase} flex-1`}
-            style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
-            title="Port 管理（國家全貌 + Station 居民表）"
-          >
-            <i className="fa-solid fa-network-wired text-xs" />
-          </button>
         </div>
       </div>
 

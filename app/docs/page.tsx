@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface DocSection {
@@ -199,16 +199,16 @@ const memoryVsClaudeMd = [
 ]
 
 const TABS = [
-  { id: 'tech-stack',   label: '技術架構',          icon: 'fa-layer-group' },
-  { id: 'model-choice', label: '模型選擇（H/S/O）', icon: 'fa-sliders' },
-  { id: 'settings',     label: 'settings.json',    icon: 'fa-gear' },
-  { id: 'permissions',  label: '權限模型',           icon: 'fa-shield-halved' },
-  { id: 'claude-md',    label: 'CLAUDE.md',         icon: 'fa-file-lines' },
-  { id: 'memory',       label: 'Memory',             icon: 'fa-box-archive' },
-  { id: 'mcp',          label: 'MCP 設定',           icon: 'fa-plug' },
-  { id: 'env-compare',  label: 'Extension vs SDK',  icon: 'fa-code-compare' },
-  { id: 'arc-cdp',      label: 'Arc CDP',            icon: 'fa-microchip' },
-  { id: 'gaps',         label: '文件缺口',           icon: 'fa-circle-exclamation' },
+  { id: 'tech-stack',   label: '技術架構' },
+  { id: 'permissions',  label: '權限模型' },
+  { id: 'model-choice', label: '模型選擇（H/S/O）' },
+  { id: 'settings',     label: 'settings.json' },
+  { id: 'claude-md',    label: 'CLAUDE.md' },
+  { id: 'memory',       label: 'Memory' },
+  { id: 'mcp',          label: 'MCP 設定' },
+  { id: 'env-compare',  label: 'Extension vs SDK' },
+  { id: 'arc-cdp',      label: 'Arc CDP' },
+  { id: 'gaps',         label: '文件缺口' },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────
@@ -1033,110 +1033,6 @@ function SettingsTab() {
         ))}
       </div>
 
-      <ExpandableBox label="展開：permissionMode 兩邊各是什麼？">
-        <div style={{ marginBottom: '12px', color: 'var(--text-tertiary)', fontSize: '13px', lineHeight: '1.8' }}>
-          <div style={{ marginBottom: '12px' }}>
-            <i className="fa-solid fa-building mr-1.5" style={{ color: '#3b82f6' }} />
-            <strong style={{ color: 'var(--text-secondary)' }}>用辦公大樓來理解三層架構</strong>
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            你是大樓老闆，Claude 是員工。大樓有三套不同的管制機制，各自管不同的事，搞混了就會不知道為什麼被擋。
-          </div>
-
-          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            <div style={{ color: '#f87171', fontWeight: 600, marginBottom: '6px' }}>
-              <i className="fa-solid fa-id-card mr-2" />Layer 1 — permissionMode：員工的工作證等級（最高層，進門就決定）
-            </div>
-            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
-              員工進大樓時拿到的工作證，決定他能到哪些樓層。<strong style={{ color: 'var(--text-secondary)' }}>這張卡在進門時就決定了，進去之後無法在對話裡更改。</strong>
-              <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '120px 1fr', gap: '4px 12px' }}>
-                <div style={{ color: '#4ade80', fontFamily: 'monospace' }}>acceptEdits</div>
-                <div>萬用卡，所有樓層都能進，不需要找你確認</div>
-                <div style={{ color: '#fbbf24', fontFamily: 'monospace' }}>default</div>
-                <div>一般員工卡，能進大部分樓層，進機密室要你刷卡確認</div>
-                <div style={{ color: '#f87171', fontFamily: 'monospace' }}>plan</div>
-                <div>訪客證，只能在大廳等，什麼都不能動，只能提報告給你看</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
-            <div style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '6px' }}>
-              <i className="fa-solid fa-book mr-2" />Layer 2 — settings.json / CLAUDE.md：保全室的規則手冊（到了那層之後，哪些房間能進）
-            </div>
-            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
-              保全手冊寫著「幾樓不能去、哪些房間要登記」。<strong style={{ color: 'var(--text-secondary)' }}>但這本手冊只有在員工能進電梯的前提下才有用。</strong>
-              <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.2)', fontSize: '12px' }}>
-                如果員工是訪客證（plan mode）根本進不了電梯，保全手冊寫什麼都沒用——他根本到不了要被檢查的地方。這就是「CLAUDE.md 已開放 Bash，但還是被擋」的根本原因。
-              </div>
-              <div style={{ marginTop: '8px' }}>
-                「permissionMode 超寬鬆 + settings.json 超嚴格」不矛盾：前者管能不能到那一層，後者管到了之後哪些房間能進，兩者各管各的、互不衝突。
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)' }}>
-            <div style={{ color: '#4ade80', fontWeight: 600, marginBottom: '6px' }}>
-              <i className="fa-solid fa-note-sticky mr-2" />Layer 3 — Chat P/E/A 按鈕：桌上的便利貼（行為風格，不是權限）
-            </div>
-            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
-              你貼在員工桌上的便利貼，寫著「今天專注規劃」或「今天直接動手」。<strong style={{ color: 'var(--text-secondary)' }}>這只影響員工的工作風格，不影響他的工作證等級。</strong>
-              <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.2)', fontSize: '12px' }}>
-                特別注意：Chat 的「P 按鈕」名字叫 Plan，但它背後是 permissionMode = "default"，跟 SDK 的 plan mode（訪客證）完全不同。名字撞了，但一個是便利貼，一個是工作證。
-              </div>
-            </div>
-          </div>
-
-          <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--background-tertiary)', fontSize: '13px' }}>
-            <strong style={{ color: 'var(--text-secondary)' }}>被擋住時，查的順序：</strong>
-            <div style={{ marginTop: '6px', color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
-              1. 先看 Layer 1（工作證）— 這個 session 的 permissionMode 是什麼？是 plan 嗎？<br />
-              2. 再看 Layer 2（保全手冊）— settings.json 有沒有把這個指令列入黑名單？<br />
-              3. 最後才看 Layer 3（便利貼）— P/E/A 按鈕不會造成「被擋」，只影響風格。
-            </div>
-          </div>
-        </div>
-        <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-          <strong style={{ color: '#3b82f6' }}>Extension（Cursor）</strong>
-          <div style={{ marginTop: '6px', color: 'var(--text-secondary)' }}>
-            直接讀取 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissions.defaultMode: "acceptEdits"</code>
-            <div style={{ marginTop: '4px' }}>Claude 持有全通行卡，可直接寫入、修改檔案，不需要你確認每一步。</div>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '12px' }}>
-          <strong style={{ color: '#f97316' }}>Dashboard SDK（lib/claude-session-manager.ts:78）</strong>
-          <pre
-            style={{
-              backgroundColor: 'var(--background-tertiary)',
-              color: 'var(--text-secondary)',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              fontFamily: 'ui-monospace, monospace',
-              overflow: 'auto',
-              marginTop: '6px',
-              marginBottom: '8px',
-            }}
-          >
-{`const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'default'`}
-          </pre>
-          <div style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <div>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "edit"</code> → <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "acceptEdits"</code>（可直接寫檔）</div>
-            <div style={{ marginTop: '4px' }}>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "plan"</code> 或 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>"ask"</code> → <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "default"</code>（危險操作跳確認框）</div>
-            <div style={{ marginTop: '8px', padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', fontSize: '13px', color: '#fbbf24' }}>
-              <i className="fa-solid fa-triangle-exclamation mr-2" />
-              注意：Chat 的「P 按鈕」不等於 SDK 的 plan mode。P 按鈕背後是 <code style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '1px 4px', borderRadius: '2px' }}>permissionMode = "default"</code>，兩者名稱相同但完全不同層次的東西。
-            </div>
-          </div>
-        </div>
-
-        <div style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>
-          <i className="fa-solid fa-lightbulb" style={{ color: '#fbbf24', marginRight: '6px' }} />
-          這就是 Dashboard Chat 有「ExitPlanMode」互動的原因——Claude 在 default 模式下運作，遇到需要規劃的任務會呼叫 ExitPlanMode，等你批准才繼續執行。
-        </div>
-      </ExpandableBox>
-
       <ExpandableBox label="settings.json 在哪裡？怎麼編輯？">
         <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
           <strong>檔案位置：</strong>
@@ -1195,26 +1091,32 @@ function PermissionsTab() {
           <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 1 — permissionMode：工作證等級</span>
         </div>
         <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
-          <p className="mb-3">員工進大樓時拿到的工作證，決定他能進哪些樓層。這張卡在進門時就決定了，<strong style={{ color: 'var(--text-primary)' }}>進去之後無法改變</strong>。</p>
+          <p className="mb-3">員工進大樓時拿到的工作證，決定他能進哪些樓層。這張卡在進門時就決定了，<strong style={{ color: 'var(--text-primary)' }}>進去之後無法改變</strong>。共五種等級，限制程度由強到弱：</p>
           <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="grid grid-cols-[140px_1fr] text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+            <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '150px 1fr 160px', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
               <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>工作證等級</div>
-              <div className="px-4 py-2">能做什麼</div>
+              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>辦公室比喻</div>
+              <div className="px-4 py-2">實際行為</div>
             </div>
             {[
-              { mode: 'plan', desc: '只能在大廳等，什麼都不能動，只能提報告' },
-              { mode: 'default', desc: '能進一般樓層，但進機密室要你刷卡確認' },
-              { mode: 'acceptEdits', desc: '有萬用卡，所有樓層都能進，不需要找你確認' },
+              { mode: 'plan',               color: '#f87171', metaphor: '訪客證 — 只能在大廳等',                    desc: '只能分析和提報告，完全不能執行任何操作' },
+              { mode: 'default',            color: '#fbbf24', metaphor: '一般員工卡 — 進機密室要刷卡確認',          desc: '讀取隨意，寫檔/執行指令需要你確認' },
+              { mode: 'acceptEdits',        color: '#4ade80', metaphor: '資深員工卡 — 大部分樓層自由進出',          desc: '自動接受檔案修改，危險操作仍需確認' },
+              { mode: 'dontAsk',            color: '#60a5fa', metaphor: '部門主管卡 — 幾乎不需要找你',              desc: '自動化場景用，極少中斷，不主動要求確認' },
+              { mode: 'bypassPermissions',  color: '#c084fc', metaphor: '大樓管理員萬用鑰匙 — 所有門全開',          desc: '跳過所有權限檢查，僅限隔離環境（容器/VM）使用' },
             ].map((r, i, arr) => (
-              <div key={r.mode} className="grid grid-cols-[140px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                <div className="px-4 py-2.5 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.mode}</div>
+              <div key={r.mode} className="grid text-xs" style={{ gridTemplateColumns: '150px 1fr 160px', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-4 py-2.5 font-mono font-semibold" style={{ color: r.color, borderRight: '1px solid var(--border-color)' }}>{r.mode}</div>
+                <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.metaphor}</div>
                 <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            SDK 啟動時透過 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> 參數設定，對應 Chat Panel 右上角的 P / E / A 切換按鈕。
-          </p>
+          <div className="mt-3 rounded-lg px-4 py-3 text-xs" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
+            <div className="mb-1"><strong style={{ color: 'var(--text-secondary)' }}>Dashboard Chat Panel</strong> 右上角的 P / E / A 按鈕對應：</div>
+            <div><span className="font-mono" style={{ color: '#f97316' }}>P</span> → <span className="font-mono">default</span>（注意：ChatMode 是 &apos;plan&apos;，但 permissionMode 是 &apos;default&apos;，不是 plan），<span className="font-mono" style={{ color: '#f97316' }}>E</span> → <span className="font-mono">acceptEdits</span>，<span className="font-mono" style={{ color: '#f97316' }}>A</span> → <span className="font-mono">acceptEdits</span> + ExitPlanMode 自動批准（不暫停等你確認）</div>
+            <div className="mt-1"><span className="font-mono" style={{ color: '#c084fc' }}>bypassPermissions</span> 只能在 SDK 啟動時設定，不對應任何 UI 按鈕，<strong style={{ color: '#f87171' }}>僅限容器或 VM 等隔離環境</strong>。</div>
+          </div>
         </div>
       </div>
 
@@ -1231,12 +1133,150 @@ function PermissionsTab() {
               <strong style={{ color: 'var(--text-primary)' }}>關鍵限制</strong>：保全規則手冊只有在員工能進門的情況下才有用。如果員工是訪客證（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>plan</code> mode），根本進不了電梯，手冊寫什麼都沒用。
             </div>
           </CalloutBox>
-          <p className="mt-3">設定位置：</p>
-          <ul style={{ marginTop: '6px', marginLeft: '20px', listStyleType: 'disc', lineHeight: '2' }}>
-            <li><code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>~/.claude/settings.json</code> — 全域 allow/deny 規則</li>
-            <li><code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>.claude/CLAUDE.md</code> — 專案層級的行為補充指令</li>
-          </ul>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="rounded-lg p-4" style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <i className="fa-solid fa-gear text-xs" style={{ color: '#3b82f6' }} />
+                <span className="text-xs font-semibold font-mono" style={{ color: '#3b82f6' }}>settings.json</span>
+              </div>
+              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>大樓保全條例 — 阻止危險行為</div>
+              <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '14px' }}>
+                <li>白紙黑字貼在牆上：哪些指令<strong style={{ color: 'var(--text-primary)' }}>絕對不能執行</strong></li>
+                <li>保全看到就擋，Claude 無法說理由繞過</li>
+                <li>全域生效，影響所有專案</li>
+              </ul>
+            </div>
+            <div className="rounded-lg p-4" style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <i className="fa-solid fa-file-lines text-xs" style={{ color: '#a78bfa' }} />
+                <span className="text-xs font-semibold font-mono" style={{ color: '#a78bfa' }}>CLAUDE.md</span>
+              </div>
+              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>部門工作手冊 — 引導工作習慣</div>
+              <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '14px' }}>
+                <li>主管給員工的指引：<strong style={{ color: 'var(--text-primary)' }}>這裡習慣怎麼做事</strong></li>
+                <li>員工會照做，但這是習慣，不是物理阻擋</li>
+                <li>全域或專案層級都可以設定</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* 關鍵問題：Bash 要寫在哪裡？ */}
+          <div className="rounded-lg mt-4 overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              Bash 相關設定寫在哪裡？
+            </div>
+            <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
+              {[
+                { need: '這個指令絕對不能執行', where: 'settings.json Deny list', reason: '硬性封鎖，Claude 無法繞過' },
+                { need: '這個指令通常可以，但要小心', where: 'CLAUDE.md', reason: '行為規範，影響 Claude 的判斷方式' },
+                { need: '這個專案有特殊工作流程', where: 'CLAUDE.md（專案層）', reason: '只對這個專案有效，不影響其他專案' },
+                { need: '所有專案都適用的限制', where: 'settings.json', reason: '全域生效，一次設定到位' },
+              ].map((r, i, arr) => (
+                <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 140px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                  <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.need}</div>
+                  <div className="px-4 py-2.5 font-mono font-semibold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.where}</div>
+                  <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.reason}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 命名陷阱：permissionMode vs permissions.defaultMode */}
+          <div className="mt-4 rounded-lg px-4 py-4" style={{ backgroundColor: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <i className="fa-solid fa-triangle-exclamation text-xs" style={{ color: '#fbbf24' }} />
+              <span className="text-xs font-semibold" style={{ color: '#fbbf24' }}>命名陷阱：permissionMode vs permissions.defaultMode</span>
+            </div>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+              settings.json 裡有個 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissions.defaultMode</code> 欄位，名字和 Layer 1 的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissionMode</code> 極度相似，但兩者是完全不同的東西：
+            </p>
+            <div className="rounded-lg overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
+              <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '100px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
+                <div className="px-3 py-2 font-mono" style={{ borderRight: '1px solid var(--border-color)', color: '#60a5fa' }}>permissionMode</div>
+                <div className="px-3 py-2 font-mono" style={{ color: '#a78bfa' }}>permissions.defaultMode</div>
+              </div>
+              {[
+                { aspect: '屬於哪層', pm: 'Layer 1 — 工作證等級', pd: 'Layer 2 — settings.json 欄位' },
+                { aspect: '在哪設定', pm: 'SDK 啟動時動態傳入', pd: 'settings.json 檔案' },
+                { aspect: '誰會讀它', pm: 'SDK query() 直接使用', pd: 'Cursor extension 讀；SDK 不讀' },
+                { aspect: '能被覆蓋嗎', pm: 'SDK 每次啟動都覆蓋', pd: '專案層蓋過全域層' },
+              ].map((r, i, arr) => (
+                <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '100px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                  <div className="px-3 py-2 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
+                  <div className="px-3 py-2" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.pm}</div>
+                  <div className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{r.pd}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* 四層優先級 */}
+            <div className="mb-3">
+              <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>settings.json 的四層優先級（由高到低）</div>
+              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                {[
+                  { file: 'managed-settings.json',        note: '系統管理員層（最高）' },
+                  { file: '.claude/settings.local.json',  note: '本機個人覆蓋（不進版本控制）' },
+                  { file: '.claude/settings.json',        note: '專案層（git 追蹤）← 蓋過全域' },
+                  { file: '~/.claude/settings.json',      note: '全域用戶層（最低）' },
+                ].map((r, i, arr) => (
+                  <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '220px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-3 py-2 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.file}</div>
+                    <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Cursor 常見困惑 */}
+            <ExpandableBox label="常見困惑：Cursor 裡 Bash 明明有 allow，為什麼還是被擋？">
+              <div className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+                <p className="mb-2">情境：全域 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>~/.claude/settings.json</code> 設了 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;acceptEdits&quot;</code>，也有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>Bash(*)</code> allow，但 Cursor 裡大部分 Bash 指令還是跳確認框。</p>
+                <p className="mb-2"><strong style={{ color: '#f87171' }}>根因</strong>：專案的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>.claude/settings.json</code> 有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;plan&quot;</code>，<strong style={{ color: 'var(--text-primary)' }}>專案層優先於全域層</strong>，Cursor extension 讀到的是 plan，所以所有操作都跳確認。</p>
+                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+                  <div className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>解法：把專案層的 defaultMode 改成 acceptEdits</div>
+                  <pre style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: '#4ade80', margin: 0 }}>{`// .claude/settings.json\n"defaultMode": "acceptEdits"`}</pre>
+                </div>
+                <p style={{ color: 'var(--text-tertiary)' }}>注意：CLI、Cursor extension、SDK 子代理三者共用同一套 settings.json，改了對全部生效。</p>
+              </div>
+            </ExpandableBox>
+          </div>
         </div>
+      </div>
+
+      {/* CLAUDE.md vs Memory 比較 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <i className="fa-solid fa-code-compare text-xs" style={{ color: 'var(--text-tertiary)' }} />
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>這三個都是「給 Claude 看的文字」，差在哪？</span>
+        </div>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>settings.json、CLAUDE.md、Memory 都會影響 Claude 的行為，但時機和目的完全不同。</p>
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '110px 1fr 1fr 1fr', backgroundColor: 'var(--background-tertiary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+            <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
+            <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)', color: '#3b82f6' }}>settings.json</div>
+            <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)', color: '#a78bfa' }}>CLAUDE.md</div>
+            <div className="px-3 py-2" style={{ color: '#4ade80' }}>Memory</div>
+          </div>
+          {[
+            { aspect: '誰寫的', settings: '你（人類）', claude: '你（人類）', memory: 'Claude 自己寫' },
+            { aspect: '內容性質', settings: '結構化規則', claude: '自然語言指引', memory: '自然語言筆記' },
+            { aspect: '用途', settings: '阻止危險行為', claude: '引導工作方式', memory: '記住跨對話的資訊' },
+            { aspect: '硬性/軟性', settings: '硬性，無法繞過', claude: '軟性，影響判斷', memory: '軟性，背景參考' },
+            { aspect: '生效時機', settings: '每次工具呼叫時', claude: '對話開始時載入', memory: '對話開始時載入' },
+            { aspect: '適合放什麼', settings: 'Deny 危險指令', claude: '專案慣例、工作流程', memory: '修過的 bug、用戶偏好' },
+          ].map((r, i, arr) => (
+            <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '110px 1fr 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+              <div className="px-3 py-2 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
+              <div className="px-3 py-2" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.settings}</div>
+              <div className="px-3 py-2" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.claude}</div>
+              <div className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{r.memory}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-3" style={{ color: 'var(--text-tertiary)' }}>
+          Memory 的詳細用法見 <span style={{ color: '#4ade80' }}>Ch6 Memory</span>，CLAUDE.md 見 <span style={{ color: '#a78bfa' }}>Ch5 CLAUDE.md</span>。
+        </p>
       </div>
 
       {/* Layer 3 */}
@@ -2212,6 +2252,17 @@ function GapsTab() {
 export default function DocsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('tech-stack')
+  const mainRef = useRef<HTMLElement>(null)
+
+  const TAB_IDS = TABS.map(t => t.id)
+  const currentIndex = TAB_IDS.indexOf(activeTab)
+  const prevTab = currentIndex > 0 ? TABS[currentIndex - 1] : null
+  const nextTab = currentIndex < TABS.length - 1 ? TABS[currentIndex + 1] : null
+
+  const navigate = (id: string) => {
+    setActiveTab(id)
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', height: '100vh', display: 'flex' }}>
@@ -2253,12 +2304,12 @@ export default function DocsPage() {
 
         {/* Tab list */}
         <div style={{ padding: '0 8px 16px', flex: 1 }}>
-          {TABS.map(tab => {
+          {TABS.map((tab, index) => {
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => navigate(tab.id)}
                 className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 mb-0.5"
                 style={{
                   backgroundColor: isActive ? 'var(--background-primary)' : 'transparent',
@@ -2267,7 +2318,19 @@ export default function DocsPage() {
                   fontWeight: isActive ? 500 : 400,
                 }}
               >
-                <i className={`fa-solid ${tab.icon} text-xs w-4 text-center`} style={{ color: isActive ? '#0184ff' : 'var(--text-tertiary)' }} />
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    fontFamily: 'ui-monospace, monospace',
+                    color: isActive ? '#0184ff' : 'var(--text-tertiary)',
+                    width: 28,
+                    flexShrink: 0,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Ch{index + 1}
+                </span>
                 <span>{tab.label}</span>
               </button>
             )
@@ -2276,8 +2339,8 @@ export default function DocsPage() {
       </nav>
 
       {/* Center: scrollable documentation content */}
-      <main className="flex-1 overflow-y-auto" style={{ minWidth: 0 }}>
-        <div style={{ maxWidth: '52rem', padding: '32px 36px 80px' }}>
+      <main ref={mainRef} className="flex-1 overflow-y-auto" style={{ minWidth: 0 }}>
+        <div style={{ maxWidth: '52rem', padding: '32px 36px 0' }}>
           {activeTab === 'tech-stack'   && <TechStackTab />}
           {activeTab === 'model-choice' && <ModelChoiceTab />}
           {activeTab === 'settings'     && <SettingsTab />}
@@ -2288,6 +2351,44 @@ export default function DocsPage() {
           {activeTab === 'env-compare'  && <EnvCompareTab />}
           {activeTab === 'arc-cdp'      && <ArcCdpTab />}
           {activeTab === 'gaps'         && <GapsTab />}
+        </div>
+
+        {/* Prev / Next navigation */}
+        <div
+          className="flex items-center justify-between"
+          style={{ maxWidth: '52rem', padding: '32px 36px 48px', marginTop: 8, borderTop: '1px solid var(--border-color)' }}
+        >
+          {prevTab ? (
+            <button
+              onClick={() => navigate(prevTab.id)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-150 group"
+              style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#0184ff33'; (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-color)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+            >
+              <i className="fa-solid fa-arrow-left text-xs" style={{ color: '#0184ff' }} />
+              <div className="text-left">
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>上一章</div>
+                <div className="text-sm font-medium">{prevTab.label}</div>
+              </div>
+            </button>
+          ) : <div />}
+
+          {nextTab ? (
+            <button
+              onClick={() => navigate(nextTab.id)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-150"
+              style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#0184ff33'; (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-color)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+            >
+              <div className="text-right">
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>下一章</div>
+                <div className="text-sm font-medium">{nextTab.label}</div>
+              </div>
+              <i className="fa-solid fa-arrow-right text-xs" style={{ color: '#0184ff' }} />
+            </button>
+          ) : <div />}
         </div>
       </main>
 
