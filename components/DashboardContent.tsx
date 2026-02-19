@@ -21,8 +21,6 @@ function CdpStatusBadge() {
 
   useEffect(() => {
     checkStatus()
-    const pollId = setInterval(checkStatus, CDP_INTERVAL * 1000)
-    return () => clearInterval(pollId)
   }, [checkStatus])
 
   const handleRestart = useCallback((withCdp: boolean) => {

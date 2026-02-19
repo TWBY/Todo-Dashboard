@@ -462,15 +462,25 @@ export default function DevServerPanel() {
           </button>
         </div>
 
-        {/* 第三行：Ports 按鈕 */}
-        <button
-          onClick={() => router.push('/ports')}
-          className={`${btnBase} w-full`}
-          style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
-          title="Port 管理（國家全貌 + Station 居民表）"
-        >
-          <i className="fa-solid fa-network-wired text-xs" />
-        </button>
+        {/* 第三行：Ports 按鈕 + 重新整理 */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/ports')}
+            className={`${btnBase} flex-1`}
+            style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
+            title="Port 管理（國家全貌 + Station 居民表）"
+          >
+            <i className="fa-solid fa-network-wired text-xs" />
+          </button>
+          <button
+            onClick={() => { refresh(); checkProdStatus(); }}
+            className={`${btnBase} flex-1`}
+            style={{ backgroundColor: '#1a1a2e', color: '#8b8ba3', border: '1px solid #2a2a40', ...btnStyle }}
+            title="重新整理 Station 狀態"
+          >
+            <i className="fa-solid fa-arrows-rotate text-xs" />
+          </button>
+        </div>
       </div>
 
       {isInitialLoad ? (

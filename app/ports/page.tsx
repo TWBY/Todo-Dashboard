@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDevServer } from '@/contexts/DevServerContext'
 import type { Project } from '@/lib/types'
 
 type Source = 'brickverse' | 'coursefiles' | 'utility'
@@ -125,6 +126,7 @@ function statusLabel(status: PkgStatus): string {
 
 export default function PortsPage() {
   const router = useRouter()
+  const { refresh: refreshDevContext } = useDevServer()
   const [entries, setEntries] = useState<PortEntry[]>([])
   const [prodRunning, setProdRunning] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -206,6 +208,8 @@ export default function PortsPage() {
     } finally {
       setStationLoading(prev => ({ ...prev, [projectId]: false }))
     }
+    // Sync homepage DevServerContext
+    refreshDevContext()
   }
 
   // Station 操作：Open Browser
@@ -359,6 +363,8 @@ export default function PortsPage() {
     } finally {
       setLoading(false)
     }
+    // Sync homepage DevServerContext so it picks up station changes
+    refreshDevContext()
   }
 
   return (
@@ -383,6 +389,14 @@ export default function PortsPage() {
             </button>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleRegistered}
+              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
+              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)' }}
+              title="重新整理所有狀態"
+            >
+              <i className="fa-solid fa-arrows-rotate text-xs" />
+            </button>
             <button
               onClick={() => setShowRules(prev => !prev)}
               className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
