@@ -278,8 +278,23 @@ export default function DevServerPanel() {
       return aTime.localeCompare(bTime);
     });
 
-  // Production 自我保護：從 3001 訪問時，不能停止 Production server
-  const isProdSelf = currentPort === 3001;
+  // Todo-Dashboard 自身（特殊 VIP，置頂）
+  const selfPort = currentPort === 3001 ? 3001 : 3002;
+  const selfIsRunning = selfPort === 3001 ? prodRunning : true; // dev server 開著才能看到這頁面
+  const selfStatus: {
+    projectId: string; name: string; displayName: string; port: number;
+    isRunning: boolean; projectPath: string; devBasePath: undefined; source: 'brickverse'; devAddedAt: string;
+  } = {
+    projectId: 'todo-dashboard',
+    name: 'Todo-Dashboard',
+    displayName: 'Todo-Dashboard',
+    port: selfPort,
+    isRunning: selfIsRunning,
+    projectPath: '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard',
+    devBasePath: undefined,
+    source: 'brickverse',
+    devAddedAt: '',
+  };
 
   const btnBase = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]';
   const btnStyle = {
@@ -289,7 +304,7 @@ export default function DevServerPanel() {
     letterSpacing: 'var(--tracking-ui)',
   };
 
-  const renderProjectRow = (s: typeof stationStatuses[number]) => {
+  const renderProjectRow = (s: { projectId: string; name: string; displayName?: string; port: number; isRunning: boolean; projectPath?: string; devBasePath?: string; source?: 'brickverse' | 'coursefiles' | 'utility'; devAddedAt?: string }, isPinned = false) => {
     const isRunning = s.isRunning;
     const isLoading = loading[s.projectId] || false;
     const isRemoving = removingIds.has(s.projectId);
@@ -367,15 +382,18 @@ export default function DevServerPanel() {
                   C
                 </button>
 
-                <button
-                  onClick={() => handleRemoveFromDev(s.projectId, displayName)}
-                  disabled={isLoading}
-                  className={`${btnBase} disabled:opacity-50`}
-                  style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', ...btnStyle }}
-                  title="離開 Station"
-                >
-                  <i className="fa-solid fa-xmark" />
-                </button>
+                {!isPinned && (
+                  <button
+                    onClick={() => handleRemoveFromDev(s.projectId, displayName)}
+                    disabled={isLoading}
+                    className={`${btnBase} disabled:opacity-50`}
+                    style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', ...btnStyle }}
+                    title="離開 Station"
+                  >
+                    <i className="fa-solid fa-xmark" />
+                  </button>
+                )}
+                {isPinned && <span className="w-8" />}
               </div>
             </div>
           </div>
@@ -501,13 +519,15 @@ export default function DevServerPanel() {
         </div>
       ) : (
         <div className="space-y-1">
+          {/* VIP 置頂：Todo-Dashboard 本身 */}
+          {currentPort > 0 && renderProjectRow(selfStatus, true)}
           {stationStatuses.map(s => renderProjectRow(s))}
         </div>
       )}
 
       {stationStatuses.length === 0 && !isInitialLoad && (
         <p className="text-xs text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
-          Station 目前沒有進駐的專案
+          Station 目前沒有其他進駐的專案
         </p>
       )}
     </div>
