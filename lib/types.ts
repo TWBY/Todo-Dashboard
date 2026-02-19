@@ -68,7 +68,10 @@ export interface Todo {
 
 export interface ScratchItem {
   id: string;
+  title?: string;
   content: string;
+  category?: 'bug' | 'task' | 'note' | 'decision';
+  source?: 'ai' | 'user';
   done: boolean;
   createdAt: string;
   chatSessionId?: string;
