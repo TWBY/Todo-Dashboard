@@ -1304,6 +1304,55 @@ function PermissionsTab() {
             ))}
           </div>
 
+          {/* 適用情境 */}
+          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              什麼情境用哪個模式？
+            </div>
+            <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
+              {[
+                {
+                  btn: 'P',
+                  when: '不確定怎麼做的大任務',
+                  desc: '讓 Claude 先提計劃，你審查方向對了再批准執行。',
+                  examples: ['重構 component', '設計 API 結構', '新增複雜功能'],
+                  participation: '高（審計計劃）',
+                  color: '#f97316',
+                },
+                {
+                  btn: 'E',
+                  when: '明確的小任務',
+                  desc: '任務清楚、範圍小，直接讓 Claude 動手，有疑慮的步驟它會暫停問你。',
+                  examples: ['修 bug', '改成 TypeScript', '加一個欄位'],
+                  participation: '中（偶爾確認）',
+                  color: '#fbbf24',
+                },
+                {
+                  btn: 'A',
+                  when: '放手跑的長任務',
+                  desc: 'Claude 自己規劃自己執行，全程不暫停，你不想被中途打斷。',
+                  examples: ['/audit', '/ship', '批量更新多個檔案', '執行 skill'],
+                  participation: '低（放手）',
+                  color: '#4ade80',
+                },
+              ].map((r, i, arr) => (
+                <div key={r.btn} className="px-4 py-3 text-xs" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold text-sm w-5" style={{ color: r.color }}>{r.btn}</span>
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.when}</span>
+                    <span className="ml-auto" style={{ color: 'var(--text-tertiary)' }}>參與度：{r.participation}</span>
+                  </div>
+                  <div className="mb-1.5 ml-7" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
+                  <div className="flex gap-1.5 ml-7 flex-wrap">
+                    {r.examples.map(ex => (
+                      <span key={ex} className="font-mono px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}>{ex}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* 命名撞車說明 */}
           <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
             <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
@@ -1323,7 +1372,7 @@ function PermissionsTab() {
                   <div className="px-3 py-2">permissionMode（後台）</div>
                 </div>
                 {[
-                  { btn: 'P', chat: 'plan → 暫停等批准', perm: 'default' },
+                  { btn: 'P', chat: 'plan → 暫停等批准', perm: 'acceptEdits' },
                   { btn: 'E', chat: 'edit → 直接執行', perm: 'acceptEdits' },
                   { btn: 'A', chat: 'auto → 自動批准計劃', perm: 'acceptEdits' },
                 ].map((r, i, arr) => (
@@ -1338,13 +1387,95 @@ function PermissionsTab() {
                 <strong style={{ color: '#fbbf24' }}>命名撞車陷阱</strong>：<span className="font-mono">plan</span> 這個詞在系統裡出現兩次，但指不同東西。<br />
                 <span className="font-mono" style={{ color: '#f97316' }}>ChatMode 的 plan</span> = 你自己定義的 UI 概念（按鈕 P）。<br />
                 <span className="font-mono" style={{ color: '#c084fc' }}>permissionMode 的 plan</span> = Claude SDK 原生的門禁等級（比 default 更嚴，幾乎什麼都不能做）。<br />
-                按下 P 按鈕，後台傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>default</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>。
+                按下 P 按鈕，後台傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>acceptEdits</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>。
               </div>
               <div>
                 <strong style={{ color: 'var(--text-primary)' }}>這個對應是你自己寫的</strong>，不是 SDK 規定的。<br />
                 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 6px', borderRadius: '3px', color: 'var(--text-secondary)' }}>lib/claude-session-manager.ts</code> 裡的一行轉換代碼決定了誰對應誰：
                 <pre style={{ backgroundColor: 'var(--background-tertiary)', padding: '8px 10px', borderRadius: '6px', marginTop: '6px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-secondary)', fontSize: '11px' }}>{`const permissionMode = (mode === 'edit' || mode === 'auto') ? 'acceptEdits' : 'default'`}</pre>
                 SDK 那端只收到一個 permissionMode 字串，不知道前面有 P / E / A 的存在。理論上 P 也可以傳 <span className="font-mono">acceptEdits</span>，完全取決於你怎麼寫這行。
+              </div>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>permissionMode 是倒數第二道關卡，不是第一道</strong><br />
+                SDK 官方文檔定義的完整判斷順序（先到先得，匹配即停止）：
+                <div className="rounded overflow-hidden mt-2" style={{ border: '1px solid var(--border-color)' }}>
+                  {[
+                    { step: '1', name: 'Hooks', desc: '自訂 hook 可強制 allow / deny，優先於一切' },
+                    { step: '2', name: 'deny rules', desc: 'settings.json deny 清單，命中即擋死，不看後面' },
+                    { step: '3', name: 'allow rules', desc: 'settings.json allow 清單，命中即放行，不看後面' },
+                    { step: '4', name: 'ask rules', desc: 'settings.json ask 清單，命中則彈視窗' },
+                    { step: '5', name: 'permissionMode', desc: '前面都沒命中，才輪到這裡決定預設行為' },
+                    { step: '6', name: 'canUseTool callback', desc: '代碼層的最後攔截，可做任意自訂邏輯' },
+                  ].map((r, i, arr) => (
+                    <div key={r.step} className="grid text-xs" style={{ gridTemplateColumns: '28px 110px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                      <div className="px-2 py-2 font-mono text-center" style={{ color: '#555', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>{r.step}</div>
+                      <div className="px-3 py-2 font-mono font-semibold" style={{ color: i < 2 ? '#f87171' : i < 4 ? '#4ade80' : i === 4 ? '#3b82f6' : '#a78bfa', borderRight: '1px solid var(--border-color)' }}>{r.name}</div>
+                      <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.desc}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                  <div className="px-3 py-2 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>情境對照：各指令停在第幾關</div>
+                  <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '1fr 80px 60px 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>指令 / mode</div>
+                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>停在第幾關</div>
+                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>結果</div>
+                    <div className="px-3 py-2">原因</div>
+                  </div>
+                  {[
+                    { cmd: 'git commit，P mode', gate: '② allow', result: '放行', resultColor: '#4ade80', reason: 'Bash(git *) 在 allow 清單命中，permissionMode 沒被問到' },
+                    { cmd: 'rm -rf /*，任何 mode', gate: '② deny', result: '擋死', resultColor: '#f87171', reason: 'deny 清單命中，後面三關全跳過' },
+                    { cmd: 'sed ...，E mode', gate: '③ permissionMode', result: '彈視窗', resultColor: '#fbbf24', reason: 'sed 不在清單，acceptEdits 不含 Bash，交給 permissionMode' },
+                    { cmd: 'sed ...，P mode', gate: '③ permissionMode', result: '彈視窗', resultColor: '#fbbf24', reason: 'sed 不在清單，default 遇到未預批准工具一律彈視窗' },
+                    { cmd: 'Write（寫檔案），任何 mode', gate: '② allow', result: '放行', resultColor: '#4ade80', reason: '"Write" 在 allow 清單，P / E 按鈕對寫檔沒有差異' },
+                  ].map((r, i, arr) => (
+                    <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 80px 60px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                      <div className="px-3 py-2 font-mono" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.cmd}</div>
+                      <div className="px-3 py-2 font-mono font-semibold" style={{ color: '#3b82f6', borderRight: '1px solid var(--border-color)' }}>{r.gate}</div>
+                      <div className="px-3 py-2 font-semibold" style={{ color: r.resultColor, borderRight: '1px solid var(--border-color)' }}>{r.result}</div>
+                      <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.reason}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  <strong style={{ color: 'var(--text-secondary)' }}>結論</strong>：P / E 按鈕的差異，只對「不在 allow / deny 清單裡的指令」才有意義。清單裡的東西，按哪個按鈕都一樣。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 與 Claude Code Extension 對照 */}
+          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              與 Claude Code 官方 Extension 對照
+            </div>
+            <div className="px-4 py-3 text-xs space-y-3" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
+              <div>
+                Claude Code 官方 VS Code / Cursor Extension 也有三個 UI 模式，和你的 P / E / A 概念相似，但底層各自獨立實作。
+              </div>
+              <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '1fr 1fr 100px', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>Extension UI</div>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>Dashboard P/E/A</div>
+                  <div className="px-3 py-2">permissionMode</div>
+                </div>
+                {[
+                  { ext: 'Plan mode', dashboard: 'P（Plan）', perm: 'plan', extColor: '#f87171', dashColor: '#f97316' },
+                  { ext: 'Ask before edits', dashboard: 'E（Edit）', perm: 'default', extColor: '#fbbf24', dashColor: '#fbbf24' },
+                  { ext: 'Edit automatically', dashboard: 'A（Auto）', perm: 'acceptEdits', extColor: '#4ade80', dashColor: '#4ade80' },
+                ].map((r, i, arr) => (
+                  <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 1fr 100px', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-3 py-2 font-semibold" style={{ color: r.extColor, borderRight: '1px solid var(--border-color)' }}>{r.ext}</div>
+                    <div className="px-3 py-2 font-semibold" style={{ color: r.dashColor, borderRight: '1px solid var(--border-color)' }}>{r.dashboard}</div>
+                    <div className="px-3 py-2 font-mono" style={{ color: '#3b82f6' }}>{r.perm}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <strong style={{ color: '#fbbf24' }}>關鍵差異</strong>：Extension 的 Plan mode 使用 SDK 原生的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span> permissionMode（Claude 完全不能動任何東西）。Dashboard 的 P 按鈕底層傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>acceptEdits</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>——「等批准」是 ChatMode 層的 UI 行為，不是 SDK 層的硬性封鎖。
+              </div>
+              <div>
+                兩者都用同一個 Claude Agent SDK，只是各自在上面包了自己的 UI 和轉換邏輯，互不影響。
               </div>
             </div>
           </div>
