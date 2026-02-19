@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
+import type { ChatContentHandle } from '@/components/ChatContent'
 
 interface DocSection {
   title: string
@@ -1408,15 +1409,15 @@ function McpTab() {
   )
 }
 
-function ArcCdpTab() {
-  const [cdpStatus, setCdpStatus] = useState<{ portOpen: boolean; cdpResponding: boolean } | null>(null)
+function ArcCdpTab({ onSendMessage }: { onSendMessage?: (text: string) => void }) {
+  const [cdpStatus, setCdpStatus] = useState<{ portOpen: boolean; cdpResponding: boolean; wsConnectable: boolean | null } | null>(null)
   const [restarting, setRestarting] = useState(false)
 
   const checkStatus = useCallback(() => {
     fetch('/api/cdp-status')
       .then(r => r.json())
-      .then(d => setCdpStatus({ portOpen: d.portOpen, cdpResponding: d.cdpResponding }))
-      .catch(() => setCdpStatus({ portOpen: false, cdpResponding: false }))
+      .then(d => setCdpStatus({ portOpen: d.portOpen, cdpResponding: d.cdpResponding, wsConnectable: d.wsConnectable ?? null }))
+      .catch(() => setCdpStatus({ portOpen: false, cdpResponding: false, wsConnectable: null }))
   }, [])
 
   useEffect(() => {
@@ -1439,7 +1440,7 @@ function ArcCdpTab() {
     })
   }, [checkStatus])
 
-  const isConnected = cdpStatus?.portOpen && cdpStatus?.cdpResponding
+  const isConnected = cdpStatus?.portOpen && cdpStatus?.cdpResponding && cdpStatus?.wsConnectable !== false
   const statusColor = restarting ? '#6b7280' : isConnected ? '#10b981' : '#ef4444'
   const statusText = restarting ? '重新啟動中...' : isConnected ? '已連線' : '未連線'
 
@@ -1471,21 +1472,45 @@ function ArcCdpTab() {
               {cdpStatus?.cdpResponding ? '✓ 正常' : '✗ 無回應'}
             </span>
           </div>
+          <div className="flex items-center justify-between py-2 px-3 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+            <span>WebSocket 連線</span>
+            <span style={{
+              color: cdpStatus?.wsConnectable === true ? '#10b981' : cdpStatus?.wsConnectable === false ? '#ef4444' : '#6b7280',
+              fontWeight: 'bold'
+            }}>
+              {cdpStatus?.wsConnectable === true ? '✓ 可連線' : cdpStatus?.wsConnectable === false ? '✗ 失敗' : '— 未測試'}
+            </span>
+          </div>
         </div>
 
-        <button
-          onClick={() => handleRestart(!isConnected)}
-          disabled={restarting}
-          className="w-full text-xs py-2 px-3 rounded-lg cursor-pointer transition-all font-medium"
-          style={{
-            backgroundColor: restarting ? 'var(--background-tertiary)' : isConnected ? 'transparent' : 'var(--accent-color, #0184ff)',
-            color: restarting ? 'var(--text-tertiary)' : isConnected ? 'var(--text-secondary)' : '#fff',
-            opacity: restarting ? 0.6 : 1,
-            border: isConnected ? '1px solid var(--border-color)' : 'none',
-          }}
-        >
-          {restarting ? '重新啟動中...' : isConnected ? '關閉 CDP' : '開啟 CDP'}
-        </button>
+        <div className="flex gap-2">
+          {onSendMessage && (
+            <button
+              onClick={() => onSendMessage('測試 cdp 連線是否正常')}
+              className="flex-1 text-xs py-2 px-3 rounded-lg cursor-pointer transition-all font-medium"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              測試 CDP
+            </button>
+          )}
+          <button
+            onClick={() => handleRestart(!isConnected)}
+            disabled={restarting}
+            className="flex-1 text-xs py-2 px-3 rounded-lg cursor-pointer transition-all font-medium"
+            style={{
+              backgroundColor: restarting ? 'var(--background-tertiary)' : isConnected ? 'transparent' : 'var(--accent-color, #0184ff)',
+              color: restarting ? 'var(--text-tertiary)' : isConnected ? 'var(--text-secondary)' : '#fff',
+              opacity: restarting ? 0.6 : 1,
+              border: isConnected ? '1px solid var(--border-color)' : 'none',
+            }}
+          >
+            {restarting ? '重新啟動中...' : isConnected ? '關閉 CDP' : '開啟 CDP'}
+          </button>
+        </div>
       </div>
 
       <CalloutBox type="info">
@@ -1550,14 +1575,15 @@ function ArcCdpTab() {
             <strong>1. CDP 已連線</strong>
           </div>
           <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-            <div><strong>條件：</strong> Port 9222 監聽中 + CDP 端點回應正常</div>
+            <div><strong>條件：</strong> Port 9222 監聽中 + CDP 端點回應正常 + WebSocket 握手成功</div>
             <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 透明背景、灰色文字、邊框</div>
             <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「關閉 CDP」</div>
-            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器正在監聽 port 9222，Claude Code 可以透過 Playwright MCP 控制瀏覽器</div>
-            <div style={{ marginTop: '4px' }}><strong>技術檢查項：</strong></div>
+            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器正在監聽 port 9222，Playwright MCP WebSocket 可以建立連線，Claude Code 可以控制瀏覽器</div>
+            <div style={{ marginTop: '4px' }}><strong>技術檢查項（三層）：</strong></div>
             <div style={{ marginTop: '2px', marginLeft: '12px' }}>
               • Port 9222 正在被 Arc 進程監聽（可用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>lsof -i :9222</code> 檢查）<br />
-              • /api/cdp-status 返回 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>{"{portOpen: true, cdpResponding: true}"}</code>
+              • /json/version HTTP 端點回應正常<br />
+              • WebSocket 握手（HTTP Upgrade）成功 — 代表真正能建立 session
             </div>
           </div>
         </div>
@@ -1611,6 +1637,24 @@ function ArcCdpTab() {
               2. 檢查 port 9222 是否監聽 — 用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>lsof -i :9222</code><br />
               3. 執行啟動指令重啟 Arc — <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>pkill -a Arc; open -a Arc --args --remote-debugging-port=9222</code><br />
               4. 等待 10 秒讓儀表板重新檢測狀態
+            </div>
+          </div>
+        </ExpandableBox>
+
+        <ExpandableBox label="症狀：狀態顯示「WebSocket 連線 ✗ 失敗」">
+          <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+            <strong>含義：</strong> HTTP 層正常（port 開著、/json/version 有回應），但 WebSocket 握手失敗——這就是 Playwright MCP timeout 的根本原因。
+            <div style={{ marginTop: '8px' }}><strong>可能原因：</strong></div>
+            <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+              • Arc 剛重啟，browser context 尚未就緒（HTTP 先開，WS 慢幾秒）<br />
+              • 有舊的 Playwright MCP 進程仍掛著佔用 WebSocket 連線<br />
+              • Arc 內部狀態異常，需要完整重啟
+            </div>
+            <div style={{ marginTop: '8px' }}><strong>解決方案（依順序嘗試）：</strong></div>
+            <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+              1. 等待 10 秒讓儀表板重新檢測（Arc 剛重啟時 context 需要時間）<br />
+              2. 清理舊的 MCP 進程：<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>pkill -f &quot;playwright/mcp&quot;</code><br />
+              3. 若仍失敗，重啟 Arc：點擊「開啟 CDP」按鈕，或手動執行 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>pkill -a Arc; sleep 2; open -a Arc --args --remote-debugging-port=9222</code>
             </div>
           </div>
         </ExpandableBox>
@@ -1788,6 +1832,10 @@ const DOCS_SYSTEM_PROMPT = `你是 Todo-Dashboard 技術文件的書僮助手。
 export default function DocsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('tech-stack')
+  const chatRef = useRef<ChatContentHandle>(null)
+  const handleSendMessage = useCallback((text: string) => {
+    chatRef.current?.triggerMessage(text)
+  }, [])
 
   return (
     <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1849,7 +1897,7 @@ export default function DocsPage() {
             {activeTab === 'claude-md'   && <ClaudeMdTab />}
             {activeTab === 'memory'      && <MemoryTab />}
             {activeTab === 'mcp'         && <McpTab />}
-            {activeTab === 'arc-cdp'     && <ArcCdpTab />}
+            {activeTab === 'arc-cdp'     && <ArcCdpTab onSendMessage={handleSendMessage} />}
             {activeTab === 'gaps'        && <GapsTab />}
           </div>
         </main>
@@ -1864,6 +1912,7 @@ export default function DocsPage() {
           }}
         >
           <ClaudeChatPanel
+            ref={chatRef}
             projectId="dashboard"
             projectName="Docs 書僮"
             isFixed
