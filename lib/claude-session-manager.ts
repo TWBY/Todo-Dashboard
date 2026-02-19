@@ -93,7 +93,11 @@ function buildQueryOptions(
       void CLAUDECODE // suppress unused variable warning
       return { ...rest, TMPDIR: process.env.TMPDIR || '/tmp' }
     })(),
-    mcpServers: {
+  }
+
+  // MCP servers 只在非 edit mode 時載入（Pack 不需要瀏覽器）
+  if (mode !== 'edit') {
+    opts.mcpServers = {
       'arc-cdp': {
         type: 'stdio',
         command: 'npx',
@@ -104,7 +108,7 @@ function buildQueryOptions(
         command: 'npx',
         args: ['@playwright/mcp'],
       },
-    },
+    }
   }
 
   if (model === 'haiku') {
