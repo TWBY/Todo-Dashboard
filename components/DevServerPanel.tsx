@@ -285,7 +285,7 @@ export default function DevServerPanel() {
     projectId: string; name: string; displayName: string; port: number;
     isRunning: boolean; projectPath: string; devBasePath: undefined; source: 'brickverse'; devAddedAt: string;
   } = {
-    projectId: 'todo-dashboard',
+    projectId: 'dashboard',
     name: 'Todo-Dashboard',
     displayName: 'Todo-Dashboard',
     port: selfPort,
