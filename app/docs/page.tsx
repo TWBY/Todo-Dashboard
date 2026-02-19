@@ -1303,6 +1303,51 @@ function PermissionsTab() {
               </div>
             ))}
           </div>
+
+          {/* 命名撞車說明 */}
+          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              深入：P / E / A 與 permissionMode 的關係
+            </div>
+            <div className="px-4 py-3 text-xs space-y-3" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>兩個完全獨立的維度</strong><br />
+                P / E / A 是前台的 <span className="font-mono" style={{ color: '#f97316' }}>ChatMode</span>，控制 UI 行為（要不要暫停等批准）。<br />
+                <span className="font-mono" style={{ color: '#3b82f6' }}>permissionMode</span> 是後台的 SDK 參數，控制 Claude 實際能做什麼。<br />
+                兩者是兩條獨立的線，中間的轉換邏輯由你的代碼決定。
+              </div>
+              <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '60px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>按鈕</div>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>ChatMode（前台）</div>
+                  <div className="px-3 py-2">permissionMode（後台）</div>
+                </div>
+                {[
+                  { btn: 'P', chat: 'plan → 暫停等批准', perm: 'default' },
+                  { btn: 'E', chat: 'edit → 直接執行', perm: 'acceptEdits' },
+                  { btn: 'A', chat: 'auto → 自動批准計劃', perm: 'acceptEdits' },
+                ].map((r, i, arr) => (
+                  <div key={r.btn} className="grid text-xs" style={{ gridTemplateColumns: '60px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-3 py-2 font-mono font-bold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.btn}</div>
+                    <div className="px-3 py-2 font-mono" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.chat}</div>
+                    <div className="px-3 py-2 font-mono" style={{ color: '#3b82f6' }}>{r.perm}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <strong style={{ color: '#fbbf24' }}>命名撞車陷阱</strong>：<span className="font-mono">plan</span> 這個詞在系統裡出現兩次，但指不同東西。<br />
+                <span className="font-mono" style={{ color: '#f97316' }}>ChatMode 的 plan</span> = 你自己定義的 UI 概念（按鈕 P）。<br />
+                <span className="font-mono" style={{ color: '#c084fc' }}>permissionMode 的 plan</span> = Claude SDK 原生的門禁等級（比 default 更嚴，幾乎什麼都不能做）。<br />
+                按下 P 按鈕，後台傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>default</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>。
+              </div>
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>這個對應是你自己寫的</strong>，不是 SDK 規定的。<br />
+                <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 6px', borderRadius: '3px', color: 'var(--text-secondary)' }}>lib/claude-session-manager.ts</code> 裡的一行轉換代碼決定了誰對應誰：
+                <pre style={{ backgroundColor: 'var(--background-tertiary)', padding: '8px 10px', borderRadius: '6px', marginTop: '6px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-secondary)', fontSize: '11px' }}>{`const permissionMode = (mode === 'edit' || mode === 'auto') ? 'acceptEdits' : 'default'`}</pre>
+                SDK 那端只收到一個 permissionMode 字串，不知道前面有 P / E / A 的存在。理論上 P 也可以傳 <span className="font-mono">acceptEdits</span>，完全取決於你怎麼寫這行。
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
