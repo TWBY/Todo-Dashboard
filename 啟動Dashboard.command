@@ -27,8 +27,8 @@ echo ""
 # 改用 PM2 啟動（背景執行，支援自動重啟）
 npm run prod:start
 
-# 2 秒後自動開啟瀏覽器（使用 Dia）
-(sleep 2 && open -a "Dia" http://localhost:3001) &
+# 2 秒後自動開啟瀏覽器（使用 Arc）
+(sleep 2 && open -a "Arc" http://localhost:3001) &
 
 echo ""
 echo "【查看狀態】npm run prod:status"
