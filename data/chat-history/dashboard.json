@@ -827,9 +827,9 @@
     "sessionId": "bd133827-ad9e-4862-9673-e0ba4f049b45",
     "projectId": "dashboard",
     "title": "現在有一個技術上的問題需要討論，就是關於我們使用 CDP（DevServerPanel）的部分：\n\n1. 情境一：我在實",
-    "messageCount": 24,
+    "messageCount": 37,
     "createdAt": 1771478980749,
-    "lastActiveAt": 1771486725274
+    "lastActiveAt": 1771488401397
   },
   {
     "sessionId": "710ba85f-8056-4ff1-9a8d-685a85694f5f",
@@ -902,5 +902,37 @@
     "messageCount": 6,
     "createdAt": 1771484535857,
     "lastActiveAt": 1771485123253
+  },
+  {
+    "sessionId": "ab7d4d8b-cee0-4bed-9736-2c27b0dc3074",
+    "projectId": "dashboard",
+    "title": "嗨",
+    "messageCount": 1,
+    "createdAt": 1771486966069,
+    "lastActiveAt": 1771486975992
+  },
+  {
+    "sessionId": "dddf7c4a-a7c6-4504-a635-e44fa68e6637",
+    "projectId": "dashboard",
+    "title": "把「COMPONENT: CdpStatusBadge\nCHAIN: PathnameContext > SearchP",
+    "messageCount": 1,
+    "createdAt": 1771487214278,
+    "lastActiveAt": 1771487228892
+  },
+  {
+    "sessionId": "7850f90c-eb01-46b2-9a44-890b7269faff",
+    "projectId": "dashboard",
+    "title": "把「COMPONENT: ResizableLayout\nCHAIN: PathParamsContext > Path",
+    "messageCount": 4,
+    "createdAt": 1771488004358,
+    "lastActiveAt": 1771488324360
+  },
+  {
+    "sessionId": "8ec5d3f5-bbc5-4d2f-8308-947370cfc1ed",
+    "projectId": "dashboard",
+    "title": "把 「COMPONENT: DevServerPanel\nCHAIN: PathnameContext > Search",
+    "messageCount": 4,
+    "createdAt": 1771488159758,
+    "lastActiveAt": 1771488369409
   }
 ]

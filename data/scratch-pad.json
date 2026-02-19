@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "mcp-001",
+    "title": "bot-browser MCP 尚未驗證",
+    "content": "已在 claude-session-manager.ts 加入 bot-browser MCP（npx @playwright/mcp，無 --cdp-endpoint），用於 AI 自動化測試的 headless Chromium。\n\n待確認：\n- bot-browser 實際能否正常啟動 Chromium\n- AI 在 Chat 裡呼叫 bot-browser 工具的行為是否符合預期\n- 與 arc-cdp 的職責分離是否有效（AI 測試不誤觸 Arc）",
+    "category": "task",
+    "source": "ai",
+    "done": false,
+    "createdAt": "2026-02-19T00:00:00.000Z"
+  },
+  {
+    "id": "mcp-002",
+    "title": "chat-test skill 與 BotModeIndicator 待清理",
+    "content": "決策：chat-test skill 刪除、BotModeIndicator 移除（改用 bot-browser headless 取代 ?bot=1 分頁識別機制）。\n\n目前狀態：\n- chat-test/SKILL.md 仍存在（因 Plan Mode 限制無法用 Bash 刪除）\n- BotModeIndicator.tsx 仍存在\n- 下次在 default 模式下手動或請 AI 刪除",
+    "category": "task",
+    "source": "ai",
+    "done": false,
+    "createdAt": "2026-02-19T00:00:00.000Z"
+  },
+  {
+    "id": "mcp-003",
+    "title": "arc-cdp CDP 連線不穩定問題",
+    "content": "今日發生數次 CDP 連線 timeout（WebSocket 連上 9222 但 Playwright MCP 建立 session 卡住）。\n\n已知原因：\n- Arc 重啟後舊的 Playwright MCP 進程殘留，佔用連線\n- 解法：pkill -f 'playwright/mcp' 清掉舊進程後再重啟 Arc\n\n根本改善方向：\n- AI 自動化測試改用 bot-browser（不依賴 Arc CDP），減少 arc-cdp 的使用頻率\n- arc-cdp 只留給人機協作場景",
+    "category": "bug",
+    "source": "ai",
+    "done": false,
+    "createdAt": "2026-02-19T00:00:00.000Z"
+  }
+]

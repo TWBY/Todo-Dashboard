@@ -66,7 +66,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
   const router = useRouter()
   const { openPanels, removePanel, addPanel } = useChatPanels()
   const { collapsed: leftCollapsed, toggle: toggleLeft } = useLeftPanel()
-  const { open: buildPanelOpen } = useBuildPanel()
+  const { open: buildPanelOpen, toggle: toggleBuildPanel } = useBuildPanel()
   const [todoModalOpen, setTodoModalOpen] = useState(false)
 
   const DASHBOARD_PROJECT_ID = 'dashboard'
@@ -494,7 +494,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           {left}
         </div>
         {/* 底部導覽按鈕 */}
-        <div className="flex flex-col gap-2 p-3 border-t border-[var(--border-secondary)]">
+        <div className="flex flex-col gap-2 p-3">
           {/* 第一排：動作類 */}
           <div className="flex gap-2">
             <button
@@ -566,6 +566,40 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
               Skills
             </button>
           </div>
+
+          {/* 第三排：Pack / Log */}
+          <div className="flex gap-2">
+            <button
+              onClick={toggleBuildPanel}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
+              title="版本升級與打包流程"
+            >
+              P
+            </button>
+            <button
+              onClick={() => router.push('/changelog')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{ backgroundColor: '#1f1533', color: '#a78bfa', border: '1px solid #3b2663' }}
+              title="版本歷史"
+            >
+              L
+            </button>
+          </div>
+
+          {/* 第四排：Dev 工具（僅開發環境） */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={() => router.push('/chat-test')}
+              className="w-full py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+            >
+              Chat Test Lab
+            </button>
+          )}
         </div>
       </div>
 
