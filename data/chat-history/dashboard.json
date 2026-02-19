@@ -974,5 +974,77 @@
     "messageCount": 1,
     "createdAt": 1771495134791,
     "lastActiveAt": 1771495177634
+  },
+  {
+    "sessionId": "ff3819ed-9143-4e58-9b04-1c4c5639434f",
+    "projectId": "dashboard",
+    "title": "chatbot 下面的  P E A  切換是在切換什麼，分別代表什麼意思",
+    "messageCount": 42,
+    "createdAt": 1771497367530,
+    "lastActiveAt": 1771501592819
+  },
+  {
+    "sessionId": "f31481e0-0a6d-4032-9d3f-54d0f0f194b9",
+    "projectId": "dashboard",
+    "title": "幫我用 sed 把 /tmp/test.txt 裡所有的 hello 換成 world",
+    "messageCount": 1,
+    "createdAt": 1771499038910,
+    "lastActiveAt": 1771499050935
+  },
+  {
+    "sessionId": "9e8473cd-9c8c-466e-a840-0089a6215ddb",
+    "projectId": "dashboard",
+    "title": "幫我用 sed 把 /tmp/test.txt 裡所有的 hello 換成 world",
+    "messageCount": 3,
+    "createdAt": 1771499062444,
+    "lastActiveAt": 1771499322641
+  },
+  {
+    "sessionId": "70dd9bdb-6be5-435b-93ae-879fcc7417bc",
+    "projectId": "dashboard",
+    "title": "幫我用 sed 把 /tmp/test.txt 裡所有的 hello 換成 world",
+    "messageCount": 2,
+    "createdAt": 1771499337172,
+    "lastActiveAt": 1771499380079
+  },
+  {
+    "sessionId": "5e01bf40-b6f1-4809-8280-006a44c57b41",
+    "projectId": "dashboard",
+    "title": "幫我執行 sudo ls /etc",
+    "messageCount": 3,
+    "createdAt": 1771499496106,
+    "lastActiveAt": 1771499985076
+  },
+  {
+    "sessionId": "7e1ea1c7-a640-4e28-95fa-3dca04d23268",
+    "projectId": "dashboard",
+    "title": "幫我執行 rm -rf /tmp/test-cleanup",
+    "messageCount": 2,
+    "createdAt": 1771500063678,
+    "lastActiveAt": 1771500120186
+  },
+  {
+    "sessionId": "f61b5f65-6c1d-4ca8-84ad-eb3aae6228f4",
+    "projectId": "dashboard",
+    "title": "幫我執行 rm -rf /tmp/test-cleanup",
+    "messageCount": 1,
+    "createdAt": 1771500215757,
+    "lastActiveAt": 1771500233568
+  },
+  {
+    "sessionId": "14001a99-d40a-469f-9b44-4894ecb4e565",
+    "projectId": "dashboard",
+    "title": "為何我這個專案還是導致 cpu 很燒，而且電腦很燙",
+    "messageCount": 13,
+    "createdAt": 1771501611596,
+    "lastActiveAt": 1771502467186
+  },
+  {
+    "sessionId": "4719ce2c-43ec-46b9-9aa1-5747cb380348",
+    "projectId": "dashboard",
+    "title": "現在在 Patch 過程中，會產生 Git 的 AI 功能。我希望在產出過程中，資訊能一直往下長（不斷地向下增長），並且",
+    "messageCount": 1,
+    "createdAt": 1771506352675,
+    "lastActiveAt": 1771506486448
   }
 ]
