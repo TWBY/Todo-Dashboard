@@ -10,6 +10,7 @@ import { useClaudeChat } from '@/hooks/useClaudeChat'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
 import { useThrottledValue } from '@/hooks/useThrottledValue'
+import { rehypeAnimate } from '@/lib/rehype-animate'
 
 
 const MODE_CONFIG: Record<ChatMode, { label: string; prefix: string; placeholder: string }> = {
@@ -328,13 +329,17 @@ function StreamingAssistantMessage({
 }) {
   const throttledContent = useThrottledValue(msg.content, 100)
 
+  // 參考 Vercel Streamdown / FlowToken / reworkd Perplexity 的業界做法：
+  // rehypeAnimate 在 Markdown→HTML AST 階段把文字拆成 per-word <span data-animate>，
+  // 每個 span 透過 CSS @keyframes 做 opacity 0→1 + blur 的淡入動畫。
+  // React reconciliation 保持已存在的 span 穩定，只有新 mount 的 span 才觸發動畫。
   return (
     <div className="group/msg relative">
       <div
         className={`text-base leading-[1.75] tracking-[0em] ${MARKDOWN_PROSE}`}
         style={{ color: '#ffffff' }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeAnimate]} components={markdownComponents}>
           {throttledContent}
         </ReactMarkdown>
       </div>
@@ -1137,10 +1142,16 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   const isProgrammaticScrollRef = useRef(false)
 
   // 判斷使用者是否在訊息區底部附近（100px 以內）
+  const programmaticScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handleScroll = useCallback(() => {
-    // 程式性捲動觸發的 scroll event — 忽略，不更新 isNearBottomRef
+    // 程式性捲動（smooth scroll 會持續觸發多次 scroll event）— 忽略
     if (isProgrammaticScrollRef.current) {
-      isProgrammaticScrollRef.current = false
+      // 延遲重置，等 smooth scroll 完成
+      if (programmaticScrollTimer.current) clearTimeout(programmaticScrollTimer.current)
+      programmaticScrollTimer.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+        programmaticScrollTimer.current = null
+      }, 200)
       return
     }
     const el = messagesContainerRef.current
@@ -1150,12 +1161,12 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
     setShowScrollBottom(!nearBottom)
   }, [])
 
-  // 只在使用者已經在底部時才自動捲動
+  // 只在使用者已經在底部時才自動捲動（smooth 過渡）
   useEffect(() => {
     const el = messagesContainerRef.current
     if (el && isNearBottomRef.current) {
       isProgrammaticScrollRef.current = true
-      el.scrollTop = el.scrollHeight
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     }
   }, [messages])
 

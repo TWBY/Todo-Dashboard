@@ -88,11 +88,11 @@ function buildQueryOptions(
       append: 'IMPORTANT: When your ExitPlanMode tool call is approved, the user has already confirmed they want you to proceed. Start implementing immediately without summarizing the plan again or asking for confirmation. Do NOT say things like "準備開始實作嗎？" or "Ready to start?" — just begin working.' + (systemPromptAppend ? '\n\n' + systemPromptAppend : ''),
     },
     includePartialMessages: true,
-    env: {
-      HOME: process.env.HOME || '',
-      PATH: process.env.PATH || '',
-      TMPDIR: process.env.TMPDIR || '/tmp',
-    },
+    env: (() => {
+      const { CLAUDECODE, ...rest } = process.env as Record<string, string>
+      void CLAUDECODE // suppress unused variable warning
+      return { ...rest, TMPDIR: process.env.TMPDIR || '/tmp' }
+    })(),
     mcpServers: {
       'arc-cdp': {
         type: 'stdio',
@@ -154,7 +154,7 @@ export function createSDKQuery(
     toolStats[toolName].count++
 
     if (toolName !== 'AskUserQuestion' && toolName !== 'ExitPlanMode') {
-      return { behavior: 'allow' as const }
+      return { behavior: 'allow' as const, updatedInput: input ?? {} }
     }
 
     const key = `${sessionId}:${options.toolUseID}`
