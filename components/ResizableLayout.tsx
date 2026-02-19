@@ -590,14 +590,14 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           {/* 第四排：Dev 工具（僅開發環境） */}
           {process.env.NODE_ENV === 'development' && (
             <button
-              onClick={() => router.push('/chat-test')}
+              onClick={() => router.push('/chat-demo')}
               className="w-full py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
               style={{
                 backgroundColor: 'var(--background-tertiary)',
                 color: 'var(--text-tertiary)',
               }}
             >
-              Chat Test Lab
+              Chat Demo
             </button>
           )}
         </div>
