@@ -57,11 +57,13 @@
       },
       {
         "name": "OfflineWorkshop",
-        "description": "線下工作坊"
+        "description": "線下工作坊",
+        "devPort": 3005,
+        "devAddedAt": "2026-02-19T06:38:50.246Z"
       }
     ],
     "createdAt": "2026-02-09T00:00:00.000Z",
-    "updatedAt": "2026-02-18T06:13:38.503Z"
+    "updatedAt": "2026-02-19T06:39:05.599Z"
   },
   {
     "id": "course-template",
@@ -88,6 +90,8 @@
     "techStack": [],
     "children": [],
     "createdAt": "2026-02-14T00:00:00.000Z",
-    "updatedAt": "2026-02-19T06:10:53.838Z"
+    "updatedAt": "2026-02-19T06:38:36.762Z",
+    "devPort": 3003,
+    "devAddedAt": "2026-02-19T06:38:36.762Z"
   }
 ]

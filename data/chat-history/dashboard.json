@@ -867,9 +867,9 @@
     "sessionId": "50143fe4-30b2-4ee2-9113-142a012f6de3",
     "projectId": "dashboard",
     "title": "為何我已經清理現在這個專案了，但我現在電腦還是動不動 cpu 使用飆高，系統溫度很高",
-    "messageCount": 9,
+    "messageCount": 34,
     "createdAt": 1771480455356,
-    "lastActiveAt": 1771481427651
+    "lastActiveAt": 1771483552403
   },
   {
     "sessionId": "31779e8a-8fe8-4718-a5e1-7d2b0b70c21c",
@@ -878,5 +878,13 @@
     "messageCount": 1,
     "createdAt": 1771480722966,
     "lastActiveAt": 1771480763814
+  },
+  {
+    "sessionId": "984ec17d-bc7e-48da-8c53-2f61abb4270a",
+    "projectId": "dashboard",
+    "title": "為何我在 pack 過程中，使用 bash git 都沒問題，但是在 chat 視窗中呼叫 bash 就會被擋",
+    "messageCount": 1,
+    "createdAt": 1771483633679,
+    "lastActiveAt": 1771483724268
   }
 ]

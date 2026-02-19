@@ -11,7 +11,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-04T00:00:00.000Z",
-    "updatedAt": "2026-02-15T13:51:10.902Z"
+    "updatedAt": "2026-02-19T06:43:51.096Z"
   },
   {
     "id": "blogfront",
@@ -25,7 +25,9 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-01-29T00:00:00.000Z",
-    "updatedAt": "2026-02-18T05:54:54.935Z"
+    "updatedAt": "2026-02-19T06:43:38.190Z",
+    "devPort": 3009,
+    "devAddedAt": "2026-02-19T06:43:38.190Z"
   },
   {
     "id": "blogbackend",
@@ -35,7 +37,9 @@
     "description": "Blog 後端服務，負責與 Insforge 平台串接，提供文章資料的 API 端點供 BlogFrontend 使用。處理文章的 CRUD、分類管理和資料格式轉換。修改方式：進入 BlogBackend/ 目錄，API 路由在 app/api/ 下，Insforge 串接邏輯在 lib/ 中。",
     "techStack": [],
     "createdAt": "2026-01-30T00:00:00.000Z",
-    "updatedAt": "2026-02-19T05:36:39.823Z"
+    "updatedAt": "2026-02-19T06:43:39.412Z",
+    "devPort": 3010,
+    "devAddedAt": "2026-02-19T06:43:39.412Z"
   },
   {
     "id": "brickverse-learn",
@@ -96,7 +100,7 @@
       "Google Search Console API"
     ],
     "createdAt": "2026-02-05T00:00:00.000Z",
-    "updatedAt": "2026-02-19T03:45:30.878Z"
+    "updatedAt": "2026-02-19T06:43:50.155Z"
   },
   {
     "id": "salekit",
@@ -109,6 +113,6 @@
       "TypeScript"
     ],
     "createdAt": "2026-02-05T00:00:00.000Z",
-    "updatedAt": "2026-02-18T06:10:36.034Z"
+    "updatedAt": "2026-02-19T06:43:50.647Z"
   }
 ]

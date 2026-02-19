@@ -115,7 +115,7 @@
       "Tailwind CSS"
     ],
     "createdAt": "2026-02-10T00:00:00.000Z",
-    "updatedAt": "2026-02-19T06:10:45.802Z"
+    "updatedAt": "2026-02-19T06:43:27.530Z"
   },
   {
     "id": "excel-factory",
@@ -125,9 +125,7 @@
     "description": "Excel 資料生成工廠。",
     "techStack": [],
     "createdAt": "2026-02-11T00:00:00.000Z",
-    "updatedAt": "2026-02-19T06:10:58.935Z",
-    "devPort": 3003,
-    "devAddedAt": "2026-02-19T06:10:58.935Z"
+    "updatedAt": "2026-02-19T06:38:08.117Z"
   },
   {
     "id": "cover-maker",
@@ -162,7 +160,7 @@
     "description": "Real-time threat detection and monitoring system",
     "techStack": [],
     "createdAt": "2026-02-17T00:00:00.000Z",
-    "updatedAt": "2026-02-19T05:52:34.483Z"
+    "updatedAt": "2026-02-19T06:43:49.747Z"
   },
   {
     "id": "claude-terminal",
