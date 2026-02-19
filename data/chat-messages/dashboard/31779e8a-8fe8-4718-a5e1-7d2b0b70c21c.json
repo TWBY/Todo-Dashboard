@@ -1,0 +1,22 @@
+[
+  {
+    "id": "59c9be34-fafa-4ce1-b14b-514681f780ec",
+    "role": "user",
+    "content": "測試 cdp 連線是否正常",
+    "timestamp": 1771480722877
+  },
+  {
+    "id": "a198eb58-2c98-4c1d-9bf1-30fbf8cb1bd8",
+    "role": "tool",
+    "content": "{}",
+    "toolName": "mcp__arc-cdp__browser_snapshot",
+    "toolDescription": "",
+    "timestamp": 1771480728409
+  },
+  {
+    "id": "fc35f121-6120-4c09-b99e-8c6f8ce94a2e",
+    "role": "assistant",
+    "content": "CDP 連線失敗。Arc 目前沒有正常回應 CDP 請求（port 9222 有開但無法建立 WebSocket 連線）。\n\n請執行以下指令重啟 Arc（含 CDP 參數）：\n\n```bash\npkill -a Arc; open -a Arc --args --remote-debugging-port=9222\n```",
+    "timestamp": 1771480760116
+  }
+]

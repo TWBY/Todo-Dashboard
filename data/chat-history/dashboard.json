@@ -795,9 +795,9 @@
     "sessionId": "d1dd6ea2-7ca9-471a-82c5-31f1128e13df",
     "projectId": "dashboard",
     "title": "現在 port 管理 (http://localhost:3002/ports) 有問題，照理來說被加入到 statio",
-    "messageCount": 21,
+    "messageCount": 31,
     "createdAt": 1771472900225,
-    "lastActiveAt": 1771474677615
+    "lastActiveAt": 1771480202730
   },
   {
     "sessionId": "c131cc85-81dc-4ed8-ab33-ea6df69528ed",
@@ -822,5 +822,61 @@
     "messageCount": 1,
     "createdAt": 1771473413581,
     "lastActiveAt": 1771473427476
+  },
+  {
+    "sessionId": "bd133827-ad9e-4862-9673-e0ba4f049b45",
+    "projectId": "dashboard",
+    "title": "現在有一個技術上的問題需要討論，就是關於我們使用 CDP（DevServerPanel）的部分：\n\n1. 情境一：我在實",
+    "messageCount": 8,
+    "createdAt": 1771478980749,
+    "lastActiveAt": 1771480041867
+  },
+  {
+    "sessionId": "710ba85f-8056-4ff1-9a8d-685a85694f5f",
+    "projectId": "dashboard",
+    "title": "為什麼現在有時候 title（標題名稱）前面會有前綴？\n\n例如：\n1. DEV\n2. PROD\n\n明明我們開頭有時候可以",
+    "messageCount": 9,
+    "createdAt": 1771479159182,
+    "lastActiveAt": 1771479933656
+  },
+  {
+    "sessionId": "b97fe700-d406-4d44-a682-80db7d7dff4d",
+    "projectId": "dashboard",
+    "title": "為何 cdp 會有以下問題，我在畫面上按下重新啟動了，還是一樣跟我說沒有連上，等等先找問題，不要隨意重新啟動瀏覽器\n\n-",
+    "messageCount": 5,
+    "createdAt": 1771480149275,
+    "lastActiveAt": 1771480974769
+  },
+  {
+    "sessionId": "b9cfd757-d7d7-46a2-b258-653b01b71558",
+    "projectId": "dashboard",
+    "title": "為何我已經清理5k4ek7專案了，我現在電腦還是動不動 cpu",
+    "messageCount": 1,
+    "createdAt": 1771480413465,
+    "lastActiveAt": 1771480414877
+  },
+  {
+    "sessionId": "eab27511-ae79-4ffc-ab0b-6e1fb901762d",
+    "projectId": "dashboard",
+    "title": "Untitled",
+    "messageCount": 2,
+    "createdAt": 1771480433077,
+    "lastActiveAt": 1771480433077
+  },
+  {
+    "sessionId": "50143fe4-30b2-4ee2-9113-142a012f6de3",
+    "projectId": "dashboard",
+    "title": "為何我已經清理現在這個專案了，但我現在電腦還是動不動 cpu 使用飆高，系統溫度很高",
+    "messageCount": 9,
+    "createdAt": 1771480455356,
+    "lastActiveAt": 1771481427651
+  },
+  {
+    "sessionId": "31779e8a-8fe8-4718-a5e1-7d2b0b70c21c",
+    "projectId": "dashboard",
+    "title": "測試 cdp 連線是否正常",
+    "messageCount": 1,
+    "createdAt": 1771480722966,
+    "lastActiveAt": 1771480763814
   }
 ]

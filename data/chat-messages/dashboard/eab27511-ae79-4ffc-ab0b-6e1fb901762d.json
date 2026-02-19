@@ -1,0 +1,21 @@
+[
+  {
+    "id": "63600f85-4458-4357-b4d8-794a1d34b183",
+    "role": "user",
+    "content": "為何我已經清理5k4ek7專案了，我現在電腦還是動不動 cpu",
+    "timestamp": 1771480413453
+  },
+  {
+    "id": "baba23e7-5d80-4db9-a8bb-85336f80bdaf",
+    "role": "user",
+    "content": "為何我已經清理5k4ek7專案了，我現在電腦還是動不動 cpu 使用飆高，系統溫度很高",
+    "timestamp": 1771480428469
+  },
+  {
+    "id": "2958cc34-79c7-41db-81ac-c4f3189952b6",
+    "role": "assistant",
+    "content": "Claude Code process exited with code 1",
+    "timestamp": 1771480432706,
+    "isError": true
+  }
+]
