@@ -15,9 +15,10 @@ import { useThrottledValue } from '@/hooks/useThrottledValue'
 const MODE_CONFIG: Record<ChatMode, { label: string; prefix: string; placeholder: string }> = {
   plan: { label: 'Plan mode', prefix: 'P', placeholder: '規劃任務...（Claude 不會編輯檔案）' },
   edit: { label: 'Edit', prefix: 'E', placeholder: '描述需要 Claude 做的變更...' },
+  auto: { label: 'Auto — 自動批准計劃', prefix: 'A', placeholder: '描述任務...（計劃將自動批准執行）' },
 }
 
-const MODE_CYCLE: ChatMode[] = ['plan', 'edit']
+const MODE_CYCLE: ChatMode[] = ['plan', 'edit', 'auto']
 
 // ContentsRate 進度條元件
 function ContentsRate({ inputTokens, outputTokens, lastDurationMs }: { inputTokens: number; outputTokens: number; lastDurationMs?: number }) {
@@ -1092,7 +1093,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         return
       }
       await approvePlan(approved, feedback)
-      if (approved) {
+      if (approved && mode !== 'auto') {
         setMode('edit')
       }
     } finally {
@@ -1100,7 +1101,14 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       setIsApproving(false)
       requestAnimationFrame(() => textareaRef.current?.focus())
     }
-  }, [approvePlan, planOnly, messages, sessionId])
+  }, [approvePlan, planOnly, messages, sessionId, mode])
+
+  // Auto 模式：pendingPlanApproval 出現時自動批准
+  useEffect(() => {
+    if (mode === 'auto' && pendingPlanApproval) {
+      handleApprovePlan(true)
+    }
+  }, [mode, pendingPlanApproval, handleApprovePlan])
 
   // 非致命錯誤（無重試按鈕）5 秒後自動消失
   useEffect(() => {

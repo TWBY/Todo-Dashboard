@@ -56,7 +56,7 @@ export interface UserQuestion {
 }
 
 // Chat mode 型別
-export type ChatMode = 'plan' | 'edit'
+export type ChatMode = 'plan' | 'edit' | 'auto'
 
 // Chat UI 訊息型別
 
