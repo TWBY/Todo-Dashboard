@@ -75,7 +75,8 @@ export function DevServerProvider({ children }: { children: React.ReactNode }) {
     const controller = new AbortController()
     controllerRef.current = controller
     fetchData(controller.signal)
-    const interval = setInterval(() => fetchData(controller.signal), 15000)
+    // Poll every 5 seconds for more responsive UI
+    const interval = setInterval(() => fetchData(controller.signal), 5000)
     return () => {
       controller.abort()
       clearInterval(interval)

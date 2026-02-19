@@ -9,7 +9,6 @@ import { useLeftPanel } from '@/contexts/LeftPanelContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
-import Spinner from '@/components/Spinner';
 import { useToast } from '@/contexts/ToastContext';
 
 interface DevServerPanelProps {
@@ -208,10 +207,16 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
       // Refresh statuses after action
       await fetchStatuses();
 
-      // If server not yet detected after start, schedule extra refreshes as safety net
-      if (action === 'start' && !data.isRunning) {
+      // Schedule aggressive refreshes to quickly show state changes
+      if (action === 'start') {
+        // Extra refreshes at 1s, 2s, 3s intervals to catch the startup
+        setTimeout(() => fetchStatuses(), 1000);
+        setTimeout(() => fetchStatuses(), 2000);
         setTimeout(() => fetchStatuses(), 3000);
-        setTimeout(() => fetchStatuses(), 6000);
+      } else if (action === 'stop') {
+        // For stop action, refresh at 500ms and 1s
+        setTimeout(() => fetchStatuses(), 500);
+        setTimeout(() => fetchStatuses(), 1000);
       }
 
       // 標記為最近啟動，觸發動畫效果
@@ -363,12 +368,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
               {isCopied(project.path) && (
                 <span className="text-xs text-green-500 flex-shrink-0">Copied</span>
               )}
-              {isLoading && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full animate-pulse flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(250, 204, 21, 0.2)', color: '#facc15' }}>
-                  {isRunning ? '...' : '...'}
-                </span>
-              )}
 
               {/* 右：固定 4 欄（O + S + C + X），每欄 w-8 */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -393,9 +392,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                     disabled={isLoading}
                     className={`${btnBase} disabled:cursor-not-allowed disabled:opacity-60`}
                     style={{
-                      backgroundColor: isLoading ? '#333333' : isRunning ? '#3d1515' : '#15332a',
-                      color: isLoading ? '#999999' : isRunning ? '#ef4444' : '#10b981',
-                      border: isLoading ? '1px solid #444444' : isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
+                      backgroundColor: isRunning ? '#3d1515' : '#15332a',
+                      color: isRunning ? '#ef4444' : '#10b981',
+                      border: isRunning ? '1px solid #5c2020' : '1px solid #1a4a3a',
                       ...btnStyle,
                     }}
                     title={isRunning ? '停止' : '啟動'}
@@ -492,7 +491,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151' }}
             title="重新啟動 Production 3001"
           >
-            {prodLoading ? <Spinner /> : 'R'}
+            R
           </button>
           <button
             onClick={toggleBuildPanel}

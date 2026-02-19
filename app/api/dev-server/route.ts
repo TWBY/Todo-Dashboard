@@ -17,7 +17,7 @@ const DASHBOARD_PORT = 3002;
 
 // In-memory cache to prevent concurrent polling from saturating the event loop
 let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
-const GET_CACHE_TTL = 5000; // 5 seconds
+const GET_CACHE_TTL = 2000; // 2 seconds — faster UI updates
 function logEvent(message: string) {
   console.log(`[dev-server] ${message}`);
 }
@@ -248,50 +248,26 @@ export async function GET() {
     const utilityFlat = flattenProjectsWithChildren(utilityTools).map(p => ({ ...p, source: 'utility' as const }));
     const projects = [...brickverseFlat, ...courseFlat, ...utilityFlat];
 
-    // Check all ports in parallel instead of serial
+    // Check all ports in parallel — fast query for main panel (no CPU/Memory)
     const projectsWithPort = projects.filter(p => p.devPort);
     const statuses: PortStatus[] = await Promise.all(
       projectsWithPort.map(async (project) => {
         const portInfo = await checkPort(project.devPort!);
-        let memoryMB: number | undefined;
-        let cpuPercent: number | undefined;
-        if (portInfo.isRunning && portInfo.pid) {
-          [memoryMB, cpuPercent] = await Promise.all([
-            getProcessMemory(portInfo.pid),
-            getProcessCpu(portInfo.pid),
-          ]);
-        }
         return {
           projectId: project.id,
           port: project.devPort!,
           isRunning: portInfo.isRunning,
           pid: portInfo.pid,
           projectPath: project.path,
-          memoryMB,
-          cpuPercent,
           source: project.source,
           devBasePath: project.devBasePath,
         };
       })
     );
 
-    // 取得系統記憶體 + CPU + 外部軟體記憶體（並行）
-    const [systemMemory, systemCpu, topProcesses] = await Promise.all([
-      getSystemMemory(),
-      getSystemCpu(),
-      getTopProcesses(),
-    ]);
-    if (systemMemory) {
-      systemMemory.topProcesses = topProcesses;
-      // warning/critical 時額外建議關閉 dev server
-      if (systemMemory.pressureLevel !== 'normal') {
-        const runningServers = statuses
-          .filter(s => s.isRunning && s.memoryMB && s.port !== DASHBOARD_PORT)
-          .sort((a, b) => (b.memoryMB || 0) - (a.memoryMB || 0));
-        const count = systemMemory.pressureLevel === 'critical' ? 3 : 2;
-        systemMemory.suggestedStops = runningServers.slice(0, count).map(s => s.projectId);
-      }
-    }
+    // Don't fetch system info in fast query — only when needed by detail pages
+    const systemMemory = null;
+    const systemCpu = null;
 
     const responseData = { data: statuses, systemMemory, systemCpu };
     cachedGetResponse = { data: responseData, timestamp: Date.now() };
