@@ -334,26 +334,18 @@ option {
   animation: shimmer-breathe 3s ease-in-out infinite;
 }
 
-/* Streaming 文字漸進揭露 — 純 opacity + blur，不影響佈局 */
-@keyframes streaming-fade-in {
-  from { opacity: 0; filter: blur(2px); }
+/* Streaming per-word 漸入動畫
+ * 參考：Vercel Streamdown (150ms fadeIn)、FlowToken (0.5s fadeIn)、reworkd Perplexity (0.75s)
+ * rehype-animate plugin 把文字拆成 per-word <span data-animate>，
+ * React reconciliation 保持已存在的 span 不變，只有新 mount 的 span 觸發動畫。
+ */
+@keyframes sd-fadeIn {
+  from { opacity: 0; filter: blur(4px); }
   to   { opacity: 1; filter: blur(0); }
 }
 
-.streaming-token {
-  display: inline;
-  animation: streaming-fade-in 0.4s ease-out both;
-}
-
-/* Streaming chunk 揭露動畫（FlowToken 風格：blur + fade + 微上浮） */
-@keyframes word-reveal {
-  from { opacity: 0; filter: blur(2px); transform: translateY(2px); }
-  to   { opacity: 1; filter: blur(0); transform: translateY(0); }
-}
-
-.streaming-word-reveal {
-  display: inline;
-  animation: word-reveal 0.4s ease-out both;
+[data-animate] {
+  animation: sd-fadeIn 0.6s ease both;
 }
 
 /* 清除對話淡出動畫 */
