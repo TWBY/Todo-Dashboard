@@ -576,17 +576,37 @@ export default function BuildPanel() {
                 </span>
                 <span className="text-base" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>系統啟動</span>
               </div>
-              <div className="pl-7 flex items-center gap-3 py-2.5">
+              <div className="pl-7">
                 {currentPhase === 0 ? (
-                  <>
-                    <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
-                    <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>系統準備中</span>
-                  </>
+                  <div className="flex flex-col gap-1.5">
+                    {/* 根據 streamingActivity 顯示細分進度 */}
+                    <div className="flex items-center gap-3 py-1">
+                      {(!streamingActivity || streamingActivity.status === 'connecting') ? (
+                        <>
+                          <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
+                          <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>正在連線 Claude SDK</span>
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-check text-base" style={{ color: '#22c55e' }} />
+                          <span className="text-base font-mono" style={{ color: '#22c55e', lineHeight: '1.7' }}>SDK 連線成功</span>
+                        </>
+                      )}
+                    </div>
+                    {streamingActivity && streamingActivity.status !== 'connecting' && (
+                      <div className="flex items-center gap-3 py-1">
+                        <i className="fa-solid fa-spinner fa-spin text-base build-spinner-glow" style={{ color: '#f59e0b' }} />
+                        <span className="text-base font-mono" style={{ color: '#f59e0b', lineHeight: '1.7' }}>
+                          {streamingActivity.status === 'thinking' ? 'Claude 正在分析指令' : '準備開始偵察'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex items-center gap-3 py-2.5">
                     <i className="fa-solid fa-check text-base" style={{ color: '#22c55e' }} />
                     <span className="text-base font-mono" style={{ color: '#22c55e', lineHeight: '1.7' }}>系統準備完成</span>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
