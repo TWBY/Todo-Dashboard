@@ -755,8 +755,32 @@
     "sessionId": "4af5e081-13ac-4d09-b35d-8050b08986f4",
     "projectId": "dashboard",
     "title": "COMPONENT: CdpStatusBadge\nCHAIN: RedirectBoundary > Redirect",
-    "messageCount": 3,
+    "messageCount": 5,
     "createdAt": 1771468254648,
-    "lastActiveAt": 1771468515224
+    "lastActiveAt": 1771468932209
+  },
+  {
+    "sessionId": "115af157-b914-49c6-95fa-e3b7a799da0e",
+    "projectId": "dashboard",
+    "title": "把 COMPONENT: ScratchPad\nCHAIN: RedirectBoundary > RedirectEr",
+    "messageCount": 15,
+    "createdAt": 1771468683143,
+    "lastActiveAt": 1771469763098
+  },
+  {
+    "sessionId": "ebf57754-45ff-4441-8529-fd3820dbfba0",
+    "projectId": "dashboard",
+    "title": "現在 COMPONENT: DevServerPanel\nCHAIN: RedirectBoundary > Redir",
+    "messageCount": 6,
+    "createdAt": 1771469118262,
+    "lastActiveAt": 1771469510205
+  },
+  {
+    "sessionId": "6f37f756-19e1-42a0-8f56-72e66b3e05f8",
+    "projectId": "dashboard",
+    "title": "現在執行任何操作（例如開啟檔案或進行修正）時，右下角不是會跳出 Toast 嗎？\n\n那個 Toast 需要設計成可以點擊",
+    "messageCount": 1,
+    "createdAt": 1771469526619,
+    "lastActiveAt": 1771469548422
   }
 ]
