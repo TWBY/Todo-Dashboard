@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
-import { useLeftPanel } from '@/contexts/LeftPanelContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
 import { useToast } from '@/contexts/ToastContext';
@@ -20,7 +19,6 @@ export default function DevServerPanel() {
   const [prodLoading, setProdLoading] = useState(false);
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
-  const { toggle: toggleLeftPanel } = useLeftPanel();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
   const [currentPort, setCurrentPort] = useState<number>(0);
@@ -404,62 +402,37 @@ export default function DevServerPanel() {
   return (
     <div className="relative">
       <div ref={headerBtnsRef} className="flex flex-col gap-2 mb-3">
-        {/* 第一行：版本標籤 + 收合按鈕 */}
+        {/* 第一行：版本標籤（點擊可 reload） */}
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-lg flex items-center gap-2 shrink-0">
             {currentPort === 3002 && versionConfig.development && (
               <span
-                className="text-xs font-mono px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
-                title="Development 版本"
+                onClick={!prodLoading ? handleProdReload : undefined}
+                className="text-xs font-mono px-1.5 py-0.5 rounded transition-all duration-200 cursor-pointer"
+                style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', opacity: prodLoading ? 0.5 : 1 }}
+                title="點擊重新啟動 Production 3001"
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px rgba(239,68,68,0.5)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239,68,68,0.28)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ''; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239,68,68,0.15)'; }}
               >
                 Dev {versionConfig.development}
               </span>
             )}
             {currentPort === 3001 && versionConfig.production && (
               <span
-                className="text-xs font-mono px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
-                title="Production 版本"
+                onClick={!prodLoading ? handleProdReload : undefined}
+                className="text-xs font-mono px-1.5 py-0.5 rounded transition-all duration-200 cursor-pointer"
+                style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6', opacity: prodLoading ? 0.5 : 1 }}
+                title="點擊重新啟動 Production 3001"
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px rgba(59,130,246,0.5)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(59,130,246,0.25)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ''; (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(59,130,246,0.1)'; }}
               >
                 Prod {versionConfig.production}
               </span>
             )}
           </h2>
-          <button
-            onClick={handleProdReload}
-            disabled={prodLoading}
-            className="flex-1 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-mono py-1 rounded-lg transition-all duration-200 hover:opacity-80"
-            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151' }}
-            title="重新啟動 Production 3001"
-          >
-            R
-          </button>
-          <button
-            onClick={toggleLeftPanel}
-            className="flex-1 py-1 rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center"
-            style={{
-              backgroundColor: 'var(--background-tertiary)',
-              color: 'var(--text-secondary)',
-            }}
-            title="收合專案列表"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="10 3 5 8 10 13" />
-            </svg>
-          </button>
         </div>
 
-        {/* 第二行：Ports 按鈕 + 重新整理 */}
+        {/* 第二行：Ports 按鈕 */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push('/ports')}
@@ -468,14 +441,6 @@ export default function DevServerPanel() {
             title="Port 管理（國家全貌 + Station 居民表）"
           >
             <i className="fa-solid fa-network-wired text-xs" />
-          </button>
-          <button
-            onClick={() => { refresh(); checkProdStatus(); }}
-            className={`${btnBase} flex-1`}
-            style={{ backgroundColor: '#1a1a2e', color: '#8b8ba3', border: '1px solid #2a2a40', ...btnStyle }}
-            title="重新整理 Station 狀態"
-          >
-            <i className="fa-solid fa-arrows-rotate text-xs" />
           </button>
         </div>
       </div>

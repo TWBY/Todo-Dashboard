@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import ClaudeChatPanel from '@/components/ClaudeChatPanel'
-import type { ChatContentHandle } from '@/components/ChatContent'
 
 interface DocSection {
   title: string
@@ -201,15 +199,16 @@ const memoryVsClaudeMd = [
 ]
 
 const TABS = [
-  { id: 'tech-stack',  label: '技術架構',          icon: 'fa-layer-group' },
-  { id: 'env-compare', label: 'Claude 環境比較', icon: 'fa-code-compare' },
-  { id: 'model-choice', label: '模型選擇（H/S/O）', icon: 'fa-brain' },
-  { id: 'settings',    label: 'settings.json',   icon: 'fa-gear' },
-  { id: 'claude-md',   label: 'CLAUDE.md',        icon: 'fa-file-lines' },
-  { id: 'memory',      label: 'Memory',            icon: 'fa-brain' },
-  { id: 'mcp',         label: 'MCP 設定',          icon: 'fa-plug' },
-  { id: 'arc-cdp',     label: 'Arc CDP',           icon: 'fa-microchip' },
-  { id: 'gaps',        label: '文件缺口',          icon: 'fa-circle-exclamation' },
+  { id: 'tech-stack',   label: '技術架構',          icon: 'fa-layer-group' },
+  { id: 'model-choice', label: '模型選擇（H/S/O）', icon: 'fa-sliders' },
+  { id: 'settings',     label: 'settings.json',    icon: 'fa-gear' },
+  { id: 'permissions',  label: '權限模型',           icon: 'fa-shield-halved' },
+  { id: 'claude-md',    label: 'CLAUDE.md',         icon: 'fa-file-lines' },
+  { id: 'memory',       label: 'Memory',             icon: 'fa-box-archive' },
+  { id: 'mcp',          label: 'MCP 設定',           icon: 'fa-plug' },
+  { id: 'env-compare',  label: 'Extension vs SDK',  icon: 'fa-code-compare' },
+  { id: 'arc-cdp',      label: 'Arc CDP',            icon: 'fa-microchip' },
+  { id: 'gaps',         label: '文件缺口',           icon: 'fa-circle-exclamation' },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────
@@ -358,9 +357,27 @@ function TechStackTab() {
         本專案的前端、後端、AI 整合、部署等技術選型一覽。了解整體架構有助於快速定位問題和擴充功能。
       </p>
 
-      <CalloutBox type="info">
-        <strong>把 Todo-Dashboard 想成一棟公司大樓。</strong> 前端（Next.js + React）是大廳和各樓層的裝潢——訪客看到的一切。AI 整合（Claude SDK）是駐樓的顧問公司，從大樓後門（Node.js process）進出，用對講機（MCP）操控設備。後端（API Routes + JSON）是地下室的檔案室和機房。部署系統是大樓的兩個出入口：開發環境是員工通道（port 3002），生產環境是正門（port 3001）。
-      </CalloutBox>
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11 }}>大樓比喻</p>
+        <div className="text-sm grid gap-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+          <div className="flex gap-3">
+            <i className="fa-solid fa-display mt-0.5 shrink-0 text-xs" style={{ color: '#3b82f6', width: 14 }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>前端（Next.js + React）</strong> — 大廳和各樓層的裝潢，訪客看到的一切</span>
+          </div>
+          <div className="flex gap-3">
+            <i className="fa-solid fa-robot mt-0.5 shrink-0 text-xs" style={{ color: '#a78bfa', width: 14 }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>AI 整合（Claude SDK）</strong> — 駐樓顧問公司，從後門（Node.js process）進出，用對講機（MCP）操控設備</span>
+          </div>
+          <div className="flex gap-3">
+            <i className="fa-solid fa-database mt-0.5 shrink-0 text-xs" style={{ color: '#f97316', width: 14 }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>後端（API Routes + JSON）</strong> — 地下室的檔案室和機房</span>
+          </div>
+          <div className="flex gap-3">
+            <i className="fa-solid fa-door-open mt-0.5 shrink-0 text-xs" style={{ color: '#4ade80', width: 14 }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>部署系統</strong> — 兩個出入口：員工通道（port 3002 dev）、正門（port 3001 prod）</span>
+          </div>
+        </div>
+      </div>
 
       {/* Frontend */}
       <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
@@ -452,9 +469,30 @@ function TechStackTab() {
       </div>
 
       {/* Architecture Diagram */}
-      <CalloutBox type="info">
-        <strong>大樓動線圖：</strong> 訪客（使用者）從正門進入大廳（瀏覽器） → 搭電梯到辦公樓層（Next.js 前端） → 按下求助鈴（API Routes） → 後門的顧問公司（Claude SDK）派人進場 → 顧問拿起對講機（MCP）操控各種設備（Arc 瀏覽器、Zeabur 部署台、Insforge 資料庫）。所有顧問的工作證（permissions、MCP、system prompt）統一在人事部（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>lib/claude-session-manager.ts</code>）核發。
-      </CalloutBox>
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11 }}>大樓動線圖</p>
+        <div className="flex flex-wrap items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+          {[
+            { label: '使用者', sub: '訪客' },
+            { label: '瀏覽器', sub: '正門大廳' },
+            { label: 'Next.js 前端', sub: '辦公樓層' },
+            { label: 'API Routes', sub: '求助鈴' },
+            { label: 'Claude SDK', sub: '後門顧問公司' },
+            { label: 'MCP 設備', sub: 'Arc / Zeabur / Insforge' },
+          ].map((item, i, arr) => (
+            <span key={i} className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: 'var(--background-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                {item.label}
+                <span className="ml-1" style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>（{item.sub}）</span>
+              </span>
+              {i < arr.length - 1 && <i className="fa-solid fa-arrow-right text-xs" style={{ color: 'var(--text-tertiary)' }} />}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs mt-3" style={{ color: 'var(--text-tertiary)' }}>
+          所有顧問工作證（permissions、MCP、system prompt）統一在人事部 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>lib/claude-session-manager.ts</code> 核發
+        </p>
+      </div>
 
       <ExpandableBox label="Dev Server Port 管理（Station 報戶口制度）">
         <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
@@ -499,20 +537,32 @@ function EnvCompareTab() {
         </p>
       </div>
 
-      <CalloutBox type="tip">
-        <strong>大樓比喻：</strong> Extension 就像住在辦公室裡的駐點員工——公司配好了電腦、門禁卡、印表機（MCP 工具），他坐下來就能工作。SDK 則像外派的遠端員工，公司只給了電話號碼（Claude binary），桌椅要自己搬、門禁卡要自己申請、印表機要自己接線。兩個人能力一樣，差在「到職時公司準備了什麼」。
-      </CalloutBox>
-
-      <div className="grid grid-cols-[140px_1fr_1fr] mb-2">
-        <div className="px-4 text-sm font-semibold" style={{ color: 'var(--text-tertiary)' }} />
-        <div className="px-4 text-sm font-semibold" style={{ color: '#3b82f6' }}>Claude Code Extension（Cursor）</div>
-        <div className="px-4 text-sm font-semibold" style={{ color: '#f97316' }}>Dashboard Chat SDK</div>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#3b82f6' }}>Extension（駐點員工）</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>公司配好了電腦、門禁卡、印表機（MCP 工具）。坐下來就能工作。</p>
+        </div>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#f97316' }}>SDK（遠端外派員工）</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>只拿到電話號碼（Claude binary）。桌椅、門禁卡、印表機都要自己備齊。</p>
+        </div>
       </div>
 
-      <div style={{ marginTop: '24px', marginBottom: '12px' }}>
-        <CalloutBox type="info">
-          <strong>什麼是 MCP？</strong> MCP（Model Context Protocol）是大樓裡的「設備控制系統」。有了 MCP，Claude 才能操控外部工具——就像有了門禁卡才能進機房。例如 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>arc-cdp</code> MCP 讓 Claude 能截圖、點擊、導航 Arc 瀏覽器。Extension 的 MCP 由 Cursor 在入職時自動配好；SDK 需要你在程式碼裡明確列出要掛哪些 MCP，否則 Claude 就「沒有手」。
-        </CalloutBox>
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>什麼是 MCP？</p>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+          MCP（Model Context Protocol）是 Claude 的「設備控制系統」——有了 MCP，Claude 才能操控外部工具，就像有了門禁卡才能進機房。
+        </p>
+        <div className="text-sm grid gap-2" style={{ color: 'var(--text-secondary)' }}>
+          <div className="flex gap-2">
+            <i className="fa-solid fa-circle-check text-xs mt-0.5 shrink-0" style={{ color: '#4ade80' }} />
+            <span><code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>arc-cdp</code> MCP — 讓 Claude 截圖、點擊、導航 Arc 瀏覽器</span>
+          </div>
+          <div className="flex gap-2">
+            <i className="fa-solid fa-circle-check text-xs mt-0.5 shrink-0" style={{ color: '#4ade80' }} />
+            <span>Extension 自動配好；SDK 需在程式碼中明確列出，否則 Claude「沒有手」</span>
+          </div>
+        </div>
       </div>
 
       {sections.map((s, i) => <SectionTable key={i} section={s} />)}
@@ -766,9 +816,16 @@ function SettingsTab() {
         兩個環境都讀同一份。規則共用，但 <code className="px-1 py-0.5 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>permissionMode</code> 各自獨立設定。
       </p>
 
-      <CalloutBox type="info">
-        想像 settings.json 是大樓的公共規則（不准大聲喧嘩、公共設施使用方式）。Extension 和 SDK 都住在這棟樓，所以 allow/deny 規則共用。但各自的「工作模式」(permissionMode) 就像各房間各自調冷氣——同一個中央系統，但溫度自己設。
-      </CalloutBox>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)' }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: '#4ade80' }}>allow / deny 規則</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>大樓公共規則，Extension 和 SDK 共用同一份</p>
+        </div>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: '#3b82f6' }}>permissionMode</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>各自獨立設定，就像同棟大樓的各房間各調各的冷氣</p>
+        </div>
+      </div>
 
       {/* env */}
       <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
@@ -780,10 +837,10 @@ function SettingsTab() {
           { key: 'CLAUDE_CODE_EFFORT_LEVEL', val: '"medium"', note: '預設努力程度' },
           { key: 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS', val: '"1"', note: '啟用 Agent Teams 功能' },
         ].map((r, i, arr) => (
-          <div key={r.key} className="grid grid-cols-[200px_80px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-            <div className="px-4 py-2.5 font-mono" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)' }}>{r.key}</div>
-            <div className="px-4 py-2.5 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.val}</div>
-            <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
+          <div key={r.key} className="grid text-sm" style={{ gridTemplateColumns: '1fr 80px 140px', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+            <div className="px-4 py-3 font-mono" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)' }}>{r.key}</div>
+            <div className="px-4 py-3 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.val}</div>
+            <div className="px-4 py-3" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
           </div>
         ))}
       </div>
@@ -968,10 +1025,10 @@ function SettingsTab() {
           { key: 'effortLevel',             val: '"medium"',      note: '兩邊都吃，SDK 可透過 opts.effort 覆寫' },
           { key: 'model',                   val: '"haiku"',       note: '預設模型；SDK 可透過 opts.model 覆寫，Dashboard Chat 預設走此值' },
         ].map((r, i, arr) => (
-          <div key={r.key} className="grid grid-cols-[200px_80px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-            <div className="px-4 py-2.5 font-mono" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)' }}>{r.key}</div>
-            <div className="px-4 py-2.5 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.val}</div>
-            <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
+          <div key={r.key} className="grid text-sm" style={{ gridTemplateColumns: '200px 110px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+            <div className="px-4 py-3 font-mono" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)' }}>{r.key}</div>
+            <div className="px-4 py-3 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.val}</div>
+            <div className="px-4 py-3" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>{r.note}</div>
           </div>
         ))}
       </div>
@@ -1113,6 +1170,128 @@ function SettingsTab() {
   )
 }
 
+function PermissionsTab() {
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Claude Code 權限模型</h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+        Claude Code 有三層獨立的權限控制，各管不同的事。理解這三層是設定 Claude 行為的關鍵。
+      </p>
+
+      {/* 辦公大樓比喻 */}
+      <CalloutBox type="info">
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>比喻：一棟辦公大樓</strong>
+          <div style={{ marginTop: '8px' }}>
+            你是大樓老闆，Claude 是裡面的員工。整棟大樓有三套管理系統，各自獨立運作，缺一不可。
+          </div>
+        </div>
+      </CalloutBox>
+
+      {/* Layer 1 */}
+      <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-id-card text-sm" style={{ color: '#3b82f6' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 1 — permissionMode：工作證等級</span>
+        </div>
+        <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <p className="mb-3">員工進大樓時拿到的工作證，決定他能進哪些樓層。這張卡在進門時就決定了，<strong style={{ color: 'var(--text-primary)' }}>進去之後無法改變</strong>。</p>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="grid grid-cols-[140px_1fr] text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>工作證等級</div>
+              <div className="px-4 py-2">能做什麼</div>
+            </div>
+            {[
+              { mode: 'plan', desc: '只能在大廳等，什麼都不能動，只能提報告' },
+              { mode: 'default', desc: '能進一般樓層，但進機密室要你刷卡確認' },
+              { mode: 'acceptEdits', desc: '有萬用卡，所有樓層都能進，不需要找你確認' },
+            ].map((r, i, arr) => (
+              <div key={r.mode} className="grid grid-cols-[140px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-4 py-2.5 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.mode}</div>
+                <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            SDK 啟動時透過 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> 參數設定，對應 Chat Panel 右上角的 P / E / A 切換按鈕。
+          </p>
+        </div>
+      </div>
+
+      {/* Layer 2 */}
+      <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(74,222,128,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-book text-sm" style={{ color: '#4ade80' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 2 — settings.json / CLAUDE.md：保全規則手冊</span>
+        </div>
+        <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <p className="mb-3">保全室裡的規則手冊，上面寫著「幾樓不能去、哪些房間要登記」。這決定的是<strong style={{ color: 'var(--text-primary)' }}>到達某層後，哪些房間可以進</strong>。</p>
+          <CalloutBox type="warn">
+            <div>
+              <strong style={{ color: 'var(--text-primary)' }}>關鍵限制</strong>：保全規則手冊只有在員工能進門的情況下才有用。如果員工是訪客證（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>plan</code> mode），根本進不了電梯，手冊寫什麼都沒用。
+            </div>
+          </CalloutBox>
+          <p className="mt-3">設定位置：</p>
+          <ul style={{ marginTop: '6px', marginLeft: '20px', listStyleType: 'disc', lineHeight: '2' }}>
+            <li><code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>~/.claude/settings.json</code> — 全域 allow/deny 規則</li>
+            <li><code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>.claude/CLAUDE.md</code> — 專案層級的行為補充指令</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Layer 3 */}
+      <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(251,191,36,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-note-sticky text-sm" style={{ color: '#fbbf24' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 3 — P / E / A 按鈕：今天的工作清單</span>
+        </div>
+        <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <p className="mb-3">貼在員工桌上的便利貼，上面寫「今天專注在規劃」或「今天可以直接動手」。這<strong style={{ color: 'var(--text-primary)' }}>只影響工作風格，不影響工作證等級</strong>。</p>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="grid grid-cols-[60px_1fr] text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>按鈕</div>
+              <div className="px-4 py-2">工作風格</div>
+            </div>
+            {[
+              { btn: 'P', desc: 'Plan — 先規劃、等你批准才動手' },
+              { btn: 'E', desc: 'Execute — 可以執行，但有疑慮會暫停確認' },
+              { btn: 'A', desc: 'Auto — 全自動、不中途打擾你' },
+            ].map((r, i, arr) => (
+              <div key={r.btn} className="grid grid-cols-[60px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-4 py-2.5 font-mono font-bold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.btn}</div>
+                <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 三層關係圖 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>三層關係：各管各的，互不衝突</h3>
+        <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <div className="mb-2">
+            <span style={{ color: '#3b82f6' }}>● Layer 1（工作證）</span> — 管「能不能進電梯、到達那一層」
+          </div>
+          <div className="mb-2">
+            <span style={{ color: '#4ade80' }}>● Layer 2（保全手冊）</span> — 管「到了那層之後，哪些房間可以進」
+          </div>
+          <div className="mb-3">
+            <span style={{ color: '#fbbf24' }}>● Layer 3（便利貼）</span> — 管「進去之後，員工怎麼工作」
+          </div>
+          <CalloutBox type="tip">
+            <div>
+              <strong style={{ color: 'var(--text-primary)' }}>所以 permissionMode 寬鬆 + settings.json 嚴格並不矛盾</strong>：
+              Layer 1 決定員工能到每一層，Layer 2 決定到了之後很多房間還是鎖著。
+              兩個都存在，各管各的。
+            </div>
+          </CalloutBox>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ClaudeMdTab() {
   return (
     <div>
@@ -1126,9 +1305,16 @@ function ClaudeMdTab() {
         每次對話開始時自動載入為系統提示的一部分。全域 + 專案兩層疊加，專案層可覆蓋全域設定。
       </p>
 
-      <CalloutBox type="info">
-        <strong>疊加機制（大樓公告欄比喻）：</strong> 全域 CLAUDE.md 是貼在大樓大廳的公告——所有住戶都看得到（安全政策、公共設施規則）。專案 CLAUDE.md 是貼在你辦公室門口的備忘——只有進這間辦公室的人看得到（dev port、框架版本）。兩張公告同時生效，但如果內容衝突，辦公室門口的備忘（專案層）蓋過大廳公告（全域層），因為它貼得更近。
-      </CalloutBox>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}>全域 CLAUDE.md</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>貼在大樓大廳的公告——所有住戶都看得到。安全政策、公共規則。</p>
+        </div>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}>專案 CLAUDE.md</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>貼在辦公室門口的備忘——只有進這間辦公室的人看到。<strong style={{ color: 'var(--text-primary)' }}>衝突時蓋過全域層</strong>。</p>
+        </div>
+      </div>
 
       <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
         <strong>專案級設定的關鍵部分：</strong> Dev Server port 對照表（避免 AI 猜錯 port）、Pack 按鈕說明（避免 AI 與 Ship skill 搞混）。
@@ -1223,9 +1409,16 @@ function MemoryTab() {
       </div>
       <p className="text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>同樣都會載入系統提示，但身份完全不同。</p>
 
-      <CalloutBox type="tip">
-        <strong>大樓比喻：</strong> CLAUDE.md 是你（大樓管理員）貼在公告欄的「操作手冊」——禁止事項、設備使用規範、緊急聯絡方式。Memory 是員工（Claude）自己放在抽屜裡的「工作日誌」——上次修水管的心得、某樓層的燈容易故障。手冊是你下的命令，日誌是他自己的經驗。兩者互不衝突，同時生效。
-      </CalloutBox>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#a78bfa' }}>CLAUDE.md（你的命令）</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>你貼在公告欄的操作手冊——禁止事項、設備規範、緊急聯絡方式。你下的命令。</p>
+        </div>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.15)' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: '#38bdf8' }}>Memory（Claude 的筆記）</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>員工自己放在抽屜裡的工作日誌——修水管的心得、某樓燈容易壞。他自己的經驗。</p>
+        </div>
+      </div>
 
       <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
         <div className="grid grid-cols-[120px_1fr_1fr] text-sm" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -1348,9 +1541,26 @@ function McpTab() {
         Claude Code Extension 讀取的 MCP server 清單。SDK 環境的 settingSources 讀取此檔不可靠，需在 opts.mcpServers 明確傳入。
       </p>
 
-      <CalloutBox type="info">
-        <strong>MCP 就是大樓的設備間。</strong> 每台設備（MCP server）是一個獨立的控制器——<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>arc-cdp</code> 是瀏覽器遙控器、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>zeabur</code> 是部署發射台、<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>insforge</code> 是資料庫查詢機。Extension 員工入職時，設備間已經配好了所有設備；SDK 遠端員工則需要你親手把設備搬進他的工作站（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>opts.mcpServers</code>），否則他什麼都操作不了。
-      </CalloutBox>
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11 }}>MCP 設備清單比喻</p>
+        <div className="grid gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {[
+            { code: 'arc-cdp',    icon: 'fa-globe',    label: '瀏覽器遙控器' },
+            { code: 'zeabur',     icon: 'fa-rocket',   label: '部署發射台' },
+            { code: 'insforge',   icon: 'fa-database', label: '資料庫查詢機' },
+          ].map(item => (
+            <div key={item.code} className="flex items-center gap-3">
+              <i className={`fa-solid ${item.icon} text-xs`} style={{ color: '#a78bfa', width: 14, textAlign: 'center' }} />
+              <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 6px', borderRadius: '3px', color: '#a78bfa' }}>{item.code}</code>
+              <span style={{ color: 'var(--text-tertiary)' }}>—</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm mt-3" style={{ color: 'var(--text-tertiary)', lineHeight: 1.65 }}>
+          Extension 員工入職時設備間已配好；SDK 遠端員工需要你親手把設備搬進工作站（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>opts.mcpServers</code>）。
+        </p>
+      </div>
 
       <ExpandableBox label="為什麼 settingSources 不可靠？">
         <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
@@ -1538,7 +1748,7 @@ function McpTab() {
   )
 }
 
-function ArcCdpTab({ onSendMessage }: { onSendMessage?: (text: string) => void }) {
+function ArcCdpTab() {
   const [cdpStatus, setCdpStatus] = useState<{ portOpen: boolean; cdpResponding: boolean; wsConnectable: boolean | null } | null>(null)
   const [restarting, setRestarting] = useState(false)
 
@@ -1613,19 +1823,6 @@ function ArcCdpTab({ onSendMessage }: { onSendMessage?: (text: string) => void }
         </div>
 
         <div className="flex gap-2">
-          {onSendMessage && (
-            <button
-              onClick={() => onSendMessage('測試 cdp 連線是否正常')}
-              className="flex-1 text-xs py-2 px-3 rounded-lg cursor-pointer transition-all font-medium"
-              style={{
-                backgroundColor: 'var(--background-tertiary)',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              測試 CDP
-            </button>
-          )}
           <button
             onClick={() => handleRestart(!isConnected)}
             disabled={restarting}
@@ -2012,107 +2209,88 @@ function GapsTab() {
 
 // ── Page ────────────────────────────────────────────────────────
 
-const DOCS_SYSTEM_PROMPT = `你是 Todo-Dashboard 技術文件的書僮助手。使用者正在閱讀 /docs 技術文件頁面，可能會問你關於：
-- Claude Code Extension vs Dashboard SDK 的差異
-- settings.json / CLAUDE.md / Memory 的設定方式
-- MCP 工具配置（arc-cdp、zeabur、insforge）
-- Chat 系統架構和功能
-- Station 報戶口制度（Dev Server Port 管理）
-- 技術架構（Next.js、React、TypeScript、Tailwind CSS）
-
-請用簡潔的中文回答，必要時引用具體檔案路徑和程式碼片段。禁止使用 Unicode emoji。`
-
 export default function DocsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('tech-stack')
-  const chatRef = useRef<ChatContentHandle>(null)
-  const handleSendMessage = useCallback((text: string) => {
-    chatRef.current?.triggerMessage(text)
-  }, [])
 
   return (
-    <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Sticky header — top: 8px to clear EnvironmentIndicator (h-2) */}
-      <div
-        className="sticky z-40 flex items-center gap-4"
+    <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', height: '100vh', display: 'flex' }}>
+
+      {/* Left: fixed nav sidebar */}
+      <nav
         style={{
-          top: 8,
-          backgroundColor: 'var(--background-secondary)',
-          borderBottom: '1px solid var(--border-color)',
-          padding: '10px 24px',
+          width: 220,
           flexShrink: 0,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'var(--background-secondary)',
+          borderRight: '1px solid var(--border-color)',
+          overflowY: 'auto',
         }}
       >
-        <button
-          onClick={() => router.push('/')}
-          className="shrink-0 px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-          style={{
-            backgroundColor: 'var(--background-tertiary)',
-            color: 'var(--text-tertiary)',
-            border: '1px solid var(--border-color)',
-          }}
-        >
-          <i className="fa-solid fa-arrow-left text-sm" />
-          <span>儀表板</span>
-        </button>
+        {/* Back button */}
+        <div style={{ padding: '16px 12px 8px', flexShrink: 0 }}>
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 w-full"
+            style={{
+              color: 'var(--text-tertiary)',
+              backgroundColor: 'transparent',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-tertiary)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)' }}
+          >
+            <i className="fa-solid fa-arrow-left text-xs" />
+            <span>返回儀表板</span>
+          </button>
+        </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto">
+        {/* Divider + label */}
+        <div style={{ padding: '4px 16px 8px', borderTop: '1px solid var(--border-color)', marginTop: 4 }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginTop: 10, marginBottom: 4, fontWeight: 600 }}>技術文件</p>
+        </div>
+
+        {/* Tab list */}
+        <div style={{ padding: '0 8px 16px', flex: 1 }}>
           {TABS.map(tab => {
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="shrink-0 flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg cursor-pointer transition-colors duration-150"
+                className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 mb-0.5"
                 style={{
                   backgroundColor: isActive ? 'var(--background-primary)' : 'transparent',
                   color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
                   border: isActive ? '1px solid var(--border-color)' : '1px solid transparent',
+                  fontWeight: isActive ? 500 : 400,
                 }}
               >
-                <i className={`fa-solid ${tab.icon} text-sm`} style={{ color: isActive ? '#0184ff' : undefined }} />
-                {tab.label}
+                <i className={`fa-solid ${tab.icon} text-xs w-4 text-center`} style={{ color: isActive ? '#0184ff' : 'var(--text-tertiary)' }} />
+                <span>{tab.label}</span>
               </button>
             )
           })}
         </div>
-      </div>
+      </nav>
 
-      {/* Body: left content + right chat panel */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left: scrollable documentation content */}
-        <main className="flex-1 overflow-y-auto" style={{ padding: '32px 32px 80px' }}>
-          <div style={{ maxWidth: '56rem' }}>
-            {activeTab === 'tech-stack'  && <TechStackTab />}
-            {activeTab === 'env-compare' && <EnvCompareTab />}
-            {activeTab === 'model-choice' && <ModelChoiceTab />}
-            {activeTab === 'settings'    && <SettingsTab />}
-            {activeTab === 'claude-md'   && <ClaudeMdTab />}
-            {activeTab === 'memory'      && <MemoryTab />}
-            {activeTab === 'mcp'         && <McpTab />}
-            {activeTab === 'arc-cdp'     && <ArcCdpTab onSendMessage={handleSendMessage} />}
-            {activeTab === 'gaps'        && <GapsTab />}
-          </div>
-        </main>
+      {/* Center: scrollable documentation content */}
+      <main className="flex-1 overflow-y-auto" style={{ minWidth: 0 }}>
+        <div style={{ maxWidth: '52rem', padding: '32px 36px 80px' }}>
+          {activeTab === 'tech-stack'   && <TechStackTab />}
+          {activeTab === 'model-choice' && <ModelChoiceTab />}
+          {activeTab === 'settings'     && <SettingsTab />}
+          {activeTab === 'permissions'  && <PermissionsTab />}
+          {activeTab === 'claude-md'    && <ClaudeMdTab />}
+          {activeTab === 'memory'       && <MemoryTab />}
+          {activeTab === 'mcp'          && <McpTab />}
+          {activeTab === 'env-compare'  && <EnvCompareTab />}
+          {activeTab === 'arc-cdp'      && <ArcCdpTab />}
+          {activeTab === 'gaps'         && <GapsTab />}
+        </div>
+      </main>
 
-        {/* Right: sticky Chat panel */}
-        <aside
-          className="shrink-0 flex flex-col"
-          style={{
-            width: 380,
-            borderLeft: '1px solid var(--border-color)',
-            height: '100%',
-          }}
-        >
-          <ClaudeChatPanel
-            ref={chatRef}
-            projectId="dashboard"
-            projectName="Docs 書僮"
-            isFixed
-            systemPrompt={DOCS_SYSTEM_PROMPT}
-          />
-        </aside>
-      </div>
     </div>
   )
 }
