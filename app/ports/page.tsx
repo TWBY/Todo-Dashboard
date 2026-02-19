@@ -352,8 +352,8 @@ export default function PortsPage() {
       if (citiesRes.ok) {
         const citiesJson = await citiesRes.json()
         setCityProjects(citiesJson.projects ?? [])
-        setCityCourseFiles(citiesJson.coursefiles ?? [])
-        setCityUtilityTools(citiesJson.utility ?? [])
+        setCityCourseFiles(citiesJson.courseFiles ?? [])
+        setCityUtilityTools(citiesJson.utilityTools ?? [])
         setCitiesLoaded(true)
       }
     } finally {

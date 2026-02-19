@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import type { Project } from '@/lib/types';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
 import ResizableLayout from './ResizableLayout';
@@ -17,7 +15,7 @@ function CdpStatusBadge() {
   const checkStatus = useCallback(() => {
     fetch('/api/cdp-status')
       .then(r => r.json())
-      .then(d => setCdpActive(d.portOpen && d.cdpResponding))
+      .then(d => setCdpActive(d.portOpen && d.cdpResponding && d.wsConnectable !== false))
       .catch(() => setCdpActive(false))
   }, [])
 
@@ -60,74 +58,8 @@ function CdpStatusBadge() {
   )
 }
 
-// Client-safe version of flattenProjectsWithChildren
-function flattenProjects(projects: Project[]): Project[] {
-  const result: Project[] = [];
-  for (const p of projects) {
-    result.push(p);
-    if (p.children) {
-      for (const child of p.children) {
-        if (child.devPort) {
-          result.push({
-            ...p,
-            id: `${p.id}::${child.name}`,
-            name: child.name,
-            displayName: child.name,
-            path: `${p.path}/${child.name}`,
-            devPort: child.devPort,
-            devAddedAt: child.devAddedAt,
-          });
-        }
-      }
-    }
-  }
-  return result;
-}
-
-
 export default function DashboardContent() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [courseFiles, setCourseFiles] = useState<Project[]>([]);
-  const [utilityTools, setUtilityTools] = useState<Project[]>([]);
-
-  useEffect(() => {
-    fetch('/api/cities')
-      .then(res => res.json())
-      .then(json => {
-        setProjects(json.projects ?? []);
-        setCourseFiles(json.courseFiles ?? []);
-        setUtilityTools(json.utilityTools ?? []);
-      })
-      .catch(console.error);
-  }, []);
-
-  const allProjects = useMemo(
-    () => flattenProjects([...projects, ...courseFiles, ...utilityTools]),
-    [projects, courseFiles, utilityTools]
-  );
-
-  const updateProject = useCallback((updatedProject: Project, category: 'projects' | 'courseFiles' | 'utilityTools') => {
-    const setState = category === 'projects' ? setProjects : category === 'courseFiles' ? setCourseFiles : setUtilityTools;
-
-    setState(prev => prev.map(p => {
-      if (p.id === updatedProject.id) {
-        return updatedProject;
-      }
-      if (p.children) {
-        const updatedChildren = p.children.map(child => {
-          if (child.name === updatedProject.name) {
-            return { ...child, devPort: updatedProject.devPort };
-          }
-          return child;
-        });
-        if (JSON.stringify(updatedChildren) !== JSON.stringify(p.children)) {
-          return { ...p, children: updatedChildren };
-        }
-      }
-      return p;
-    }));
-  }, []);
 
   return (
     <>
@@ -141,7 +73,7 @@ export default function DashboardContent() {
 
           {/* Main: Dev Server panel (fills remaining space) */}
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <DevServerPanel projects={allProjects} onUpdate={updateProject} />
+            <DevServerPanel />
           </div>
 
           {/* Chat Test Lab 按鈕（僅 dev 環境） */}

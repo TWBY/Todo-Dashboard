@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Project } from '@/lib/types';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useLeftPanel } from '@/contexts/LeftPanelContext';
@@ -11,17 +10,11 @@ import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
 import { useToast } from '@/contexts/ToastContext';
 
-interface DevServerPanelProps {
-  projects: Project[];
-  onUpdate?: (project: Project, category: 'projects' | 'courseFiles' | 'utilityTools') => void;
-}
-
-export default function DevServerPanel({ projects, onUpdate }: DevServerPanelProps) {
+export default function DevServerPanel() {
   const { statuses, isInitialLoad, refresh } = useDevServer();
   const { showToast } = useToast();
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [recentlyStarted, setRecentlyStarted] = useState<Record<string, boolean>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const { copy, isCopied } = useCopyToClipboard();
   const router = useRouter();
@@ -69,7 +62,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   }, []);
 
-  // fetchStatuses is now handled by DevServerContext — use refresh() for on-demand updates
   const fetchStatuses = refresh;
 
   const handleProdStart = useCallback(async () => {
@@ -155,7 +147,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
       if (res.ok) {
         setProdRunning(true);
         showToast('重啟中，即將重新整理…', 'success');
-        // 3秒後淡出，4秒後 hard reload
         setTimeout(() => {
           document.body.classList.add('page-exit');
         }, 3000);
@@ -177,15 +168,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   }, [showToast]);
 
-  // Auto-refresh when projects list changes (e.g., new project added to dev server)
-  const prevProjectsLenRef = useRef(projects.length);
-  useEffect(() => {
-    if (!isInitialLoad && projects.length !== prevProjectsLenRef.current) {
-      prevProjectsLenRef.current = projects.length;
-      refresh();
-    }
-  }, [projects.length, isInitialLoad, refresh]);
-
   const handleAction = async (projectId: string, action: 'start' | 'stop') => {
     setLoading(prev => ({ ...prev, [projectId]: true }));
     try {
@@ -204,25 +186,19 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
       } else {
         showToast(data.message || `${action} 成功`, 'success');
       }
-      // Refresh statuses after action
       await fetchStatuses();
 
-      // Schedule aggressive refreshes to quickly show state changes
       if (action === 'start') {
-        // Extra refreshes at 1s, 2s, 3s intervals to catch the startup
         setTimeout(() => fetchStatuses(), 1000);
         setTimeout(() => fetchStatuses(), 2000);
         setTimeout(() => fetchStatuses(), 3000);
       } else if (action === 'stop') {
-        // For stop action, refresh at 500ms and 1s
         setTimeout(() => fetchStatuses(), 500);
         setTimeout(() => fetchStatuses(), 1000);
       }
 
-      // 標記為最近啟動，觸發動畫效果
       if (action === 'start') {
         setRecentlyStarted(prev => ({ ...prev, [projectId]: true }));
-        // 3 秒後移除標記
         setTimeout(() => {
           setRecentlyStarted(prev => ({ ...prev, [projectId]: false }));
         }, 3000);
@@ -239,92 +215,72 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     }
   };
 
-  const handleOpenBrowser = async (project: Project) => {
-    const url = `http://localhost:${project.devPort}${project.devBasePath || ''}`;
-    const isCourseFiles = project.path?.startsWith('/Users/ruanbaiye/Documents/Brickverse/CourseFiles');
+  const handleOpenBrowser = async (projectId: string, port: number, devBasePath?: string, source?: string, projectPath?: string) => {
+    const url = `http://localhost:${port}${devBasePath || ''}`;
+    const isCourseFiles = source === 'coursefiles';
     if (isCourseFiles) {
       try {
         const res = await fetch('/api/dev-server', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: project.id, action: 'open-browser' }),
+          body: JSON.stringify({ projectId, action: 'open-browser' }),
         });
         const data = await res.json();
         if (!res.ok) {
-          showToast(data.error || '開啟 Dia 失敗', 'error');
+          showToast(data.error || '開啟 Arc 失敗', 'error');
         }
-      } catch (error) {
-        showToast('開啟 Dia 請求失敗', 'error');
+      } catch {
+        showToast('開啟 Arc 請求失敗', 'error');
       }
     } else {
       window.open(url, '_blank');
     }
   };
 
-  const handleRemoveFromDev = async (project: Project) => {
-    const status = getStatus(project.id);
+  const handleRemoveFromDev = async (projectId: string, displayName: string) => {
+    const status = statuses.find(s => s.projectId === projectId);
     // If running, stop first
     if (status?.isRunning) {
-      await handleAction(project.id, 'stop');
+      await handleAction(projectId, 'stop');
     }
     // Trigger fade-out animation first
-    setRemovingIds(prev => new Set(prev).add(project.id));
+    setRemovingIds(prev => new Set(prev).add(projectId));
     // Wait for animation to complete, then call API
     await new Promise(resolve => setTimeout(resolve, 500));
     try {
-      // Parse composite id for child projects (format: "parentId::childName")
-      const isChild = project.id.includes('::');
-      const [actualProjectId, childName] = isChild ? project.id.split('::') : [project.id, undefined];
+      const isChild = projectId.includes('::');
+      const [actualProjectId, childName] = isChild ? projectId.split('::') : [projectId, undefined];
       const res = await fetch('/api/projects', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: actualProjectId, childName, action: 'remove-from-dev' }),
       });
       if (res.ok) {
-        showToast(`已移除 ${project.displayName || project.name}`, 'success');
-
-        // Optimistic update: notify parent to remove devPort from state
-        if (onUpdate) {
-          // Determine category from project path
-          const category = project.path.includes('/CourseFiles/')
-            ? 'courseFiles'
-            : project.path.includes('/UtilityTools/')
-              ? 'utilityTools'
-              : 'projects';
-
-          // Create updated project with devPort removed
-          const updatedProject = { ...project, devPort: undefined };
-          onUpdate(updatedProject, category);
-        }
+        showToast(`已移除 ${displayName}`, 'success');
+        // 觸發即時 refresh（1~2 秒內 UI 更新）
+        refresh();
       } else {
         showToast('移除失敗', 'error');
-        setRemovingIds(prev => { const next = new Set(prev); next.delete(project.id); return next; });
+        setRemovingIds(prev => { const next = new Set(prev); next.delete(projectId); return next; });
       }
     } catch {
       showToast('移除請求失敗', 'error');
-      setRemovingIds(prev => { const next = new Set(prev); next.delete(project.id); return next; });
+      setRemovingIds(prev => { const next = new Set(prev); next.delete(projectId); return next; });
     }
   };
 
-  const projectsWithPort = projects
-    .filter(p => p.devPort)
+  // Station 居民：3003-3010 的 statuses，按 devAddedAt 排序
+  const stationStatuses = statuses
+    .filter(s => s.port >= 3003 && s.port <= 3010)
     .sort((a, b) => {
-      const aTime = a.devAddedAt || a.updatedAt || '';
-      const bTime = b.devAddedAt || b.updatedAt || '';
+      const aTime = a.devAddedAt || '';
+      const bTime = b.devAddedAt || '';
       return aTime.localeCompare(bTime);
     });
-
-  const getStatus = (projectId: string) => {
-    return statuses.find(s => s.projectId === projectId);
-  };
-
-  // Use original order from projectsWithPort
-  const sortedProjects = projectsWithPort;
 
   // Production 自我保護：從 3001 訪問時，不能停止 Production server
   const isProdSelf = currentPort === 3001;
 
-  // 統一按鈕樣式
   const btnBase = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]';
   const btnStyle = {
     fontSize: 'var(--text-sm)',
@@ -333,18 +289,18 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     letterSpacing: 'var(--tracking-ui)',
   };
 
-  const renderProjectRow = (project: Project) => {
-    const status = getStatus(project.id);
-    const isRunning = status?.isRunning || false;
-    const isLoading = loading[project.id] || false;
-    const isRemoving = removingIds.has(project.id);
-    const isSelf = project.devPort === currentPort;
+  const renderProjectRow = (s: typeof stationStatuses[number]) => {
+    const isRunning = s.isRunning;
+    const isLoading = loading[s.projectId] || false;
+    const isRemoving = removingIds.has(s.projectId);
+    const isSelf = s.port === currentPort;
     const showO = isRunning && !isLoading;
     const showS = !(isSelf && isRunning);
+    const displayName = s.displayName || s.name;
 
     return (
       <div
-        key={project.id}
+        key={s.projectId}
         className="grid transition-[grid-template-rows] duration-500"
         style={{ gridTemplateRows: isRemoving ? '0fr' : '1fr' }}
       >
@@ -355,26 +311,24 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             }`}
             style={{ backgroundColor: 'var(--background-secondary)' }}
           >
-            {/* Grid: [名稱 1fr] [port] [O] [S] [C] [X] — 固定 4 欄按鈕 */}
             <div className="flex items-center gap-2">
               {/* 左：名稱（truncate） */}
               <span
                 className="font-medium text-sm truncate cursor-pointer hover:opacity-70 transition-opacity min-w-0 flex-1"
-                onClick={() => copy(project.path)}
-                title={project.path}
+                onClick={() => copy(s.projectPath || '')}
+                title={s.projectPath}
               >
-                {project.displayName || project.name}
+                {displayName}
               </span>
-              {isCopied(project.path) && (
+              {isCopied(s.projectPath || '') && (
                 <span className="text-xs text-green-500 flex-shrink-0">Copied</span>
               )}
 
-              {/* 右：固定 4 欄（O + S + C + X），每欄 w-8 */}
+              {/* 右：固定 4 欄（O + S + C + X） */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                {/* O: Open browser — 佔位或按鈕 */}
                 {showO ? (
                   <button
-                    onClick={() => handleOpenBrowser(project)}
+                    onClick={() => handleOpenBrowser(s.projectId, s.port, s.devBasePath, s.source, s.projectPath)}
                     className={btnBase}
                     style={{ backgroundColor: '#222222', color: '#cccccc', border: '1px solid #333333', ...btnStyle }}
                     title="在瀏覽器中開啟"
@@ -385,10 +339,9 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                   <span className="w-8" />
                 )}
 
-                {/* S: Start/Stop — 佔位或按鈕 */}
                 {showS ? (
                   <button
-                    onClick={() => handleAction(project.id, isRunning ? 'stop' : 'start')}
+                    onClick={() => handleAction(s.projectId, isRunning ? 'stop' : 'start')}
                     disabled={isLoading}
                     className={`${btnBase} disabled:cursor-not-allowed disabled:opacity-60`}
                     style={{
@@ -405,9 +358,8 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                   <span className="w-8" />
                 )}
 
-                {/* C: Claude chat */}
                 <button
-                  onClick={() => addPanel(project.id, project.displayName || project.name)}
+                  onClick={() => addPanel(s.projectId, displayName)}
                   className={btnBase}
                   style={{ backgroundColor: '#111a22', color: '#999999', border: '1px solid #333333', ...btnStyle }}
                   title="開啟 Claude 對話視窗"
@@ -415,9 +367,8 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                   C
                 </button>
 
-                {/* X: Remove */}
                 <button
-                  onClick={() => handleRemoveFromDev(project)}
+                  onClick={() => handleRemoveFromDev(s.projectId, displayName)}
                   disabled={isLoading}
                   className={`${btnBase} disabled:opacity-50`}
                   style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', ...btnStyle }}
@@ -540,11 +491,11 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         </div>
       ) : (
         <div className="space-y-1">
-          {sortedProjects.map(p => renderProjectRow(p))}
+          {stationStatuses.map(s => renderProjectRow(s))}
         </div>
       )}
 
-      {projectsWithPort.length === 0 && !isInitialLoad && (
+      {stationStatuses.length === 0 && !isInitialLoad && (
         <p className="text-xs text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
           Station 目前沒有進駐的專案
         </p>
