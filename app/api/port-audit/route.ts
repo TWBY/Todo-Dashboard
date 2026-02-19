@@ -75,17 +75,6 @@ export async function GET() {
       })
     )
 
-    // 添加 VIP Port 3002（開發版）的審計
-    const dashboardPath = '/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard'
-    const devPkgResult = await checkPackageJson(dashboardPath, 3002)
-    entries.push({
-      name: 'Todo-Dashboard (Dev)',
-      port: 3002,
-      path: dashboardPath,
-      source: 'brickverse',
-      ...devPkgResult,
-    })
-
     // 按 port 排序
     entries.sort((a, b) => a.port - b.port)
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import SubpageShell from '@/components/SubpageShell'
+import { useRouter } from 'next/navigation'
 import type { Project } from '@/lib/types'
 
 type Source = 'brickverse' | 'coursefiles' | 'utility'
@@ -124,6 +124,7 @@ function statusLabel(status: PkgStatus): string {
 }
 
 export default function PortsPage() {
+  const router = useRouter()
   const [entries, setEntries] = useState<PortEntry[]>([])
   const [prodRunning, setProdRunning] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -351,23 +352,46 @@ export default function PortsPage() {
   }
 
   return (
-    <SubpageShell
-      title="Port 管理"
-      headerRight={
-        <button
-          onClick={() => setShowRules(prev => !prev)}
-          className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-          style={{
-            backgroundColor: showRules ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
-            color: showRules ? '#0184ff' : 'var(--text-tertiary)',
-            border: showRules ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
-          }}
-        >
-          <i className="fa-solid fa-book text-xs" />
-          查看說明
-        </button>
-      }
+    <div
+      style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', minHeight: '100vh' }}
+      className="flex flex-col"
     >
+      {/* Sticky header */}
+      <div
+        style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}
+        className="sticky top-0 z-40"
+      >
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/')}
+              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
+              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)' }}
+            >
+              <i className="fa-solid fa-arrow-left text-xs" />
+              <span>儀表板</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowRules(prev => !prev)}
+              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
+              style={{
+                backgroundColor: showRules ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
+                color: showRules ? '#0184ff' : 'var(--text-tertiary)',
+                border: showRules ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
+              }}
+            >
+              <i className="fa-solid fa-book text-xs" />
+              查看說明
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
       <div className="px-4 py-6 pb-16">
 
         {/* 主內容：如果顯示說明，只顯示說明；否則顯示城市 + Station + 審計 */}
@@ -456,9 +480,6 @@ export default function PortsPage() {
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Station（工作園區）</h2>
-                <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)' }}>
-                  {entries.some(e => e.isRunning) ? 'Dev v1.18.0' : 'Prod v1.18.0'}
-                </span>
               </div>
 
               {/* VIP 座位 */}
@@ -480,20 +501,20 @@ export default function PortsPage() {
                     ))
                   ) : (
                     [
-                      { port: 3002, name: 'Todo-Dashboard (Dev)', isRunning: true, isProd: false },
                       { port: 3001, name: 'Todo-Dashboard (Prod)', isRunning: prodRunning, isProd: true },
+                      { port: 3002, name: 'Todo-Dashboard (Dev)', isRunning: true, isProd: false },
                     ].map(({ port, name, isRunning, isProd }) => (
                       <div
                         key={port}
                         className="rounded-lg p-3 text-sm transition-all flex items-center justify-between"
                         style={{
-                          backgroundColor: isProd ? 'rgba(59,130,246,0.08)' : 'rgba(239,68,68,0.08)',
-                          border: isProd ? '1px solid rgba(59,130,246,0.2)' : '2px dashed rgba(239,68,68,0.5)',
-                          color: isProd ? '#3b82f6' : '#ef4444',
+                          backgroundColor: 'rgba(59,130,246,0.08)',
+                          border: '1px solid rgba(59,130,246,0.2)',
+                          color: '#3b82f6',
                         }}
                       >
                         <div className="min-w-0 flex-1">
-                          <div className="font-mono font-semibold text-xs mb-1" style={{ color: isProd ? '#3b82f6' : '#ef4444' }}>
+                          <div className="font-mono font-semibold text-xs mb-1" style={{ color: '#3b82f6' }}>
                             {port}
                           </div>
                           <div className="text-xs truncate" style={{ color: 'var(--text-primary)' }}>
@@ -738,7 +759,9 @@ export default function PortsPage() {
         )}
 
       </div>
-    </SubpageShell>
+        </div>
+      </div>
+    </div>
   )
 }
 

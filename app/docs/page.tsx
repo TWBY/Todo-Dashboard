@@ -1304,16 +1304,75 @@ function ArcCdpTab() {
         </div>
       </div>
 
-      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>CDPStatusBadge 元件</h3>
-      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>首頁左側邊欄的「開啟 CDP」/「關閉 CDP」按鈕負責控制 CDP 連線狀態。</p>
-      <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>CDPStatusBadge 元件與連線狀態</h3>
+      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>首頁左側邊欄的「開啟 CDP」/「關閉 CDP」按鈕負責控制 CDP 連線狀態。按鈕的文案反映了當前的連線狀態。</p>
+
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
         <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           <div><strong>位置：</strong> <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>components/DashboardContent.tsx</code> 中的 CdpStatusBadge 元件</div>
-          <div style={{ marginTop: '8px' }}><strong>功能：</strong></div>
+          <div style={{ marginTop: '8px' }}><strong>核心功能：</strong></div>
           <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-            • 每 10 秒檢查一次 CDP 連線狀態（/api/cdp-status）<br />
+            • 每 10 秒檢查一次 CDP 連線狀態（呼叫 /api/cdp-status）<br />
             • 點擊按鈕時呼叫 /api/cdp-restart 重啟 Arc（帶或不帶 CDP）<br />
-            • 簡化的 UI — 只顯示「開啟 CDP」或「關閉 CDP」，技術細節移至本文件
+            • 按鈕文案隨連線狀態動態更新
+          </div>
+        </div>
+      </div>
+
+      <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: 'var(--text-primary)' }}>三種連線狀態</h4>
+      <div className="space-y-2 mb-4">
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+            <strong>1. CDP 已連線</strong>
+          </div>
+          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+            <div><strong>條件：</strong> Port 9222 監聽中 + CDP 端點回應正常</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 透明背景、灰色文字、邊框</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「關閉 CDP」</div>
+            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器正在監聽 port 9222，Claude Code 可以透過 Playwright MCP 控制瀏覽器</div>
+            <div style={{ marginTop: '4px' }}><strong>技術檢查項：</strong></div>
+            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
+              • Port 9222 正在被 Arc 進程監聽（可用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>lsof -i :9222</code> 檢查）<br />
+              • /api/cdp-status 返回 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>{"{portOpen: true, cdpResponding: true}"}</code>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+            <strong>2. CDP 未連線</strong>
+          </div>
+          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+            <div><strong>條件：</strong> Port 9222 未監聽 或 CDP 端點無回應</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 藍色背景（accent color）、白色文字</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「開啟 CDP」</div>
+            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器未正確啟動 CDP，或進程已終止</div>
+            <div style={{ marginTop: '4px' }}><strong>可能原因：</strong></div>
+            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
+              • Arc 進程未執行<br />
+              • Arc 啟動時未帶 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>--remote-debugging-port=9222</code> 參數<br />
+              • Arc 崩潰或被手動終止
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+            <strong>3. 重新啟動中</strong>
+          </div>
+          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+            <div><strong>觸發條件：</strong> 點擊按鈕後，等待 Arc 重啟完成</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 灰色背景、灰色文字、透明度降低</div>
+            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「重新啟動中...」</div>
+            <div style={{ marginTop: '4px' }}><strong>含義：</strong> 已發送 /api/cdp-restart 指令，等待 Arc 進程重啟（通常 3-4 秒）</div>
+            <div style={{ marginTop: '4px' }}><strong>狀態流轉：</strong></div>
+            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
+              • 點擊按鈕 → cdpActive 變為 true，呼叫 /api/cdp-restart<br />
+              • restarting flag 設為 true，按鈕禁用<br />
+              • 等待 4000ms（給 Arc 重啟時間）<br />
+              • 重新檢查 /api/cdp-status 獲取新狀態<br />
+              • 按鈕重新啟用，顯示新的連線狀態
+            </div>
           </div>
         </div>
       </div>

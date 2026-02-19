@@ -8,7 +8,6 @@ import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
 import { ClaudeUsageBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
-import { ProcessKillButtons } from './MemoryWarningBanner';
 
 const CDP_INTERVAL = 10
 
@@ -178,10 +177,6 @@ export default function DashboardContent() {
             </div>
           </div>
 
-          {/* Process Kill Buttons */}
-          <div className="flex-shrink-0 mt-3">
-            <ProcessKillButtons />
-          </div>
         </div>
       }
     />

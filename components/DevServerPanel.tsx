@@ -441,13 +441,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     <div className="relative">
       <div ref={headerBtnsRef} className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-lg flex items-center gap-2">
-          <span
-            className="cursor-pointer hover:opacity-70 transition-opacity"
-            onClick={() => copy('Station')}
-            title="點擊複製名稱"
-          >
-            Station
-          </span>
           {currentPort === 3002 && versionConfig.development && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
@@ -465,9 +458,6 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
             >
               Prod {versionConfig.production}
             </span>
-          )}
-          {isCopied('Station') && (
-            <span className="text-sm text-green-500">Copied</span>
           )}
         </h2>
         <div className="flex items-center gap-1.5">

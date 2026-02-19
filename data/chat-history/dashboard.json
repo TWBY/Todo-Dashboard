@@ -723,16 +723,40 @@
     "sessionId": "66b51ab5-c78e-4eb7-8142-a30ed8aba4dc",
     "projectId": "dashboard",
     "title": "剛剛有個任務做到一半，需要繼續接手做，以下是歷史文件\n\n/docs 頁面側邊 Tab 改版計畫\nContext\n目前 /",
-    "messageCount": 1,
+    "messageCount": 20,
     "createdAt": 1771428794297,
-    "lastActiveAt": 1771429011450
+    "lastActiveAt": 1771431377427
   },
   {
     "sessionId": "d87e1bcb-ad48-4250-8390-b6271e51ceb6",
     "projectId": "dashboard",
     "title": "我覺得在技術文件上有很多地方寫得不夠詳細，我需要更詳細，像是說\n「~/.claude/settings.json\n兩個環",
-    "messageCount": 1,
+    "messageCount": 18,
     "createdAt": 1771429371402,
-    "lastActiveAt": 1771429371402
+    "lastActiveAt": 1771434107062
+  },
+  {
+    "sessionId": "2ca13dc1-cf37-47d9-bf78-51e2343bb3ac",
+    "projectId": "dashboard",
+    "title": "把 COMPONENT: PortsPage\nCHAIN: InnerScrollAndFocusHandler > E",
+    "messageCount": 7,
+    "createdAt": 1771433731046,
+    "lastActiveAt": 1771434034617
+  },
+  {
+    "sessionId": "5f081fed-b5c3-4e2f-92c7-e70a24260c0c",
+    "projectId": "dashboard",
+    "title": "拿掉 \n\nCOMPONENT: ProcessKillButtons\nCHAIN: RedirectBoundary >",
+    "messageCount": 7,
+    "createdAt": 1771468164249,
+    "lastActiveAt": 1771468491635
+  },
+  {
+    "sessionId": "4af5e081-13ac-4d09-b35d-8050b08986f4",
+    "projectId": "dashboard",
+    "title": "COMPONENT: CdpStatusBadge\nCHAIN: RedirectBoundary > Redirect",
+    "messageCount": 3,
+    "createdAt": 1771468254648,
+    "lastActiveAt": 1771468515224
   }
 ]

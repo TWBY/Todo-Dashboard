@@ -1,0 +1,32 @@
+[
+  {
+    "id": "fixture-5-1-01",
+    "role": "user",
+    "content": "啟動 security-monitor-upgrade Agent Team，需要升級安全監測模組",
+    "timestamp": 1700001000000
+  },
+  {
+    "id": "fixture-5-1-02",
+    "role": "assistant",
+    "content": "我來組建一個 Agent Team 專門負責安全監測功能的升級工作。",
+    "timestamp": 1700001001000
+  },
+  {
+    "id": "fixture-5-1-03",
+    "role": "tool",
+    "toolName": "TeamCreate",
+    "content": "{\"team_name\":\"security-monitor-upgrade\",\"description\":\"SecurityMonitor 安全儀表板功能強化\"}",
+    "teamEvent": {
+      "type": "create",
+      "teamName": "security-monitor-upgrade",
+      "description": "SecurityMonitor 安全儀表板功能強化"
+    },
+    "timestamp": 1700001002000
+  },
+  {
+    "id": "fixture-5-1-04",
+    "role": "assistant",
+    "content": "Team **security-monitor-upgrade** 已成功組建！三位成員正在初始化他們的工作環境。完整的 60 秒生命週期將展示：團隊建立 → 任務分派 → 成員並行執行 → 進度回報 → 全員完成 → 團隊解散。",
+    "timestamp": 1700001003000
+  }
+]

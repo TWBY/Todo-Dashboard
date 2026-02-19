@@ -52,6 +52,30 @@ export async function writeChatHistory(projectId: string, records: ChatSessionRe
   await fs.writeFile(filePath, JSON.stringify(records, null, 2), 'utf-8')
 }
 
+/**
+ * 清理過期的 chat-messages 檔案（超過 cutoffMs 的自動刪除）
+ */
+export async function cleanExpiredChatMessages(projectId: string, cutoffMs: number): Promise<number> {
+  const dir = getChatMessagesDir(projectId)
+  let deleted = 0
+  try {
+    const files = await fs.readdir(dir)
+    const now = Date.now()
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue
+      const filePath = path.join(dir, file)
+      const fileStat = await fs.stat(filePath)
+      if (now - fileStat.mtimeMs > cutoffMs) {
+        await fs.unlink(filePath)
+        deleted++
+      }
+    }
+  } catch {
+    // directory doesn't exist or read error — ignore
+  }
+  return deleted
+}
+
 export async function readJsonFile<T>(filename: string): Promise<T[]> {
   try {
     const filePath = getDataPath(filename);

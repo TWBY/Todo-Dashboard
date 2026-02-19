@@ -1,0 +1,32 @@
+[
+  {
+    "id": "fixture-5-2-01",
+    "role": "user",
+    "content": "組建 refactor-team 來進行代碼重構",
+    "timestamp": 1700002000000
+  },
+  {
+    "id": "fixture-5-2-02",
+    "role": "assistant",
+    "content": "我正在組建一個重構團隊，專門負責清理和優化現有程式碼。",
+    "timestamp": 1700002001000
+  },
+  {
+    "id": "fixture-5-2-03",
+    "role": "tool",
+    "toolName": "TeamCreate",
+    "content": "{\"team_name\":\"refactor-team\",\"description\":\"程式碼重構與最佳化\"}",
+    "teamEvent": {
+      "type": "create",
+      "teamName": "refactor-team",
+      "description": "程式碼重構與最佳化"
+    },
+    "timestamp": 1700002002000
+  },
+  {
+    "id": "fixture-5-2-04",
+    "role": "assistant",
+    "content": "Team **refactor-team** 準備完畢！你應該能在右上角看到「查看 Agent Team」按鈕，點擊後會在側欄開啟 Team Monitor 面板，實時顯示成員狀態、任務進度、通訊日誌和系統事件。",
+    "timestamp": 1700002003000
+  }
+]

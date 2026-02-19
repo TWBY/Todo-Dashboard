@@ -1,0 +1,32 @@
+[
+  {
+    "id": "fixture-5-3-01",
+    "role": "user",
+    "content": "啟動 data-pipeline-team 進行數據管道優化",
+    "timestamp": 1700003000000
+  },
+  {
+    "id": "fixture-5-3-02",
+    "role": "assistant",
+    "content": "正在組建數據管道優化團隊，負責 ETL 流程的設計和實作。",
+    "timestamp": 1700003001000
+  },
+  {
+    "id": "fixture-5-3-03",
+    "role": "tool",
+    "toolName": "TeamCreate",
+    "content": "{\"team_name\":\"data-pipeline-team\",\"description\":\"數據管道設計與最佳化\"}",
+    "teamEvent": {
+      "type": "create",
+      "teamName": "data-pipeline-team",
+      "description": "數據管道設計與最佳化"
+    },
+    "timestamp": 1700003002000
+  },
+  {
+    "id": "fixture-5-3-04",
+    "role": "assistant",
+    "content": "Team **data-pipeline-team** 已建立！打開 Team Monitor 面板可以看到完整的 60 秒模擬時間線：包括成員名單（team-lead、pipeline-builder、optimizer）、任務隊列、實時通訊、以及系統事件的時間軸展示。",
+    "timestamp": 1700003003000
+  }
+]

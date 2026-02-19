@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
-import { appendFile, access, stat } from 'fs/promises';
-import { openSync } from 'fs';
+import { access, stat } from 'fs/promises';
 import path from 'path';
 import { readJsonFile, flattenProjectsWithChildren, loadAllProjects } from '@/lib/data';
 import type { Project } from '@/lib/types';
@@ -19,17 +18,8 @@ const DASHBOARD_PORT = 3002;
 // In-memory cache to prevent concurrent polling from saturating the event loop
 let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
 const GET_CACHE_TTL = 5000; // 5 seconds
-const LOG_PATH = path.join(process.cwd(), '.dev-server.log');
-
-async function logEvent(message: string) {
-  const timestamp = new Date().toISOString();
-  const line = `[${timestamp}] ${message}\n`;
+function logEvent(message: string) {
   console.log(`[dev-server] ${message}`);
-  try {
-    await appendFile(LOG_PATH, line);
-  } catch {
-    // logging should never crash the server
-  }
 }
 
 // 驗證 devCommand 是否安全（防止命令注入）
@@ -405,17 +395,9 @@ export async function POST(request: Request) {
       const fullCommand = project.devCommand
         ? `cd "${projectPath}" && ${project.devCommand}`
         : `cd "${projectPath}" && npm run dev -- -p ${project.devPort}`;
-      // Capture stderr to per-port log file for crash diagnostics
-      let stderrFd: number | undefined;
-      try {
-        stderrFd = openSync(
-          path.join(process.cwd(), `.dev-server-${project.devPort}.log`),
-          'a'
-        );
-      } catch {}
       const child = spawn('sh', ['-c', fullCommand], {
         detached: true,
-        stdio: stderrFd !== undefined ? ['ignore', 'ignore', stderrFd] : 'ignore',
+        stdio: 'ignore',
       });
       child.unref();
 

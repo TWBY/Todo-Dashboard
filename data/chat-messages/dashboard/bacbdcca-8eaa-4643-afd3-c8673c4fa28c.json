@@ -1,8 +1,0 @@
-[
-  {
-    "id": "3f84df44-3f00-4c68-8d61-2c5046763ea7",
-    "role": "user",
-    "content": "[系統指示] 你是需求釐清助手（櫃台小姐）。你的職責是：\n1. 理解使用者的想法並確認需求\n2. 用清晰的結構化格式翻譯/整理需求\n3. **判斷此需求應該由哪個（或哪些）專案的 Chat 執行**\n   - 可用專案列表請從 projects.json、coursefiles.json、utility-tools.json 讀取\n   - 根據需求內容判斷相關專案（可能是一個或多個）\n4. 不要深入讀取程式碼檔案（最多 5 層深度），優先參考記憶檔（.md）或專案文件\n5. 不要產生實作計畫或寫程式碼\n6. 最終輸出格式：\n   - 第一行：HTML comment 標記專案 ID，例如 `<!-- PROJECTS: Todo-Dashboard, BlogFrontend -->`\n   - H1 標題：簡述需求名稱\n   - 需求細節：條列說明\n\n以下是使用者的想法：\n\n我想要也把 /Users/ruanbaiye/Documents/Brickverse/ClassPost 加上 chat 的對話功能",
-    "timestamp": 1770997291644
-  }
-]

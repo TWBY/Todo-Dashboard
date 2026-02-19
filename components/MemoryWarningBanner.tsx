@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useDevServer } from '@/contexts/DevServerContext';
 
 const LEVEL_COLORS = {
@@ -58,58 +58,3 @@ export default function MemoryWarningBanner() {
   );
 }
 
-export function ProcessKillButtons() {
-  const { systemMemory, refresh } = useDevServer();
-  const [killingApps, setKillingApps] = useState<Set<string>>(new Set());
-
-  const handleKillApp = useCallback(async (appName: string) => {
-    setKillingApps(prev => new Set(prev).add(appName));
-    try {
-      await fetch('/api/dev-server', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'kill-app', appName }),
-      });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await refresh();
-    } catch { /* ignore */ }
-    setKillingApps(prev => {
-      const next = new Set(prev);
-      next.delete(appName);
-      return next;
-    });
-  }, [refresh]);
-
-  if (!systemMemory?.topProcesses?.length) return null;
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {systemMemory.topProcesses.map(proc => (
-        <button
-          key={proc.name}
-          onClick={() => handleKillApp(proc.name)}
-          disabled={killingApps.has(proc.name)}
-          className="flex flex-col items-start px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 cursor-pointer min-w-[90px]"
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-          title={`點擊關閉 ${proc.name}`}
-        >
-          <span
-            className="font-medium truncate max-w-full text-xs"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            {killingApps.has(proc.name) ? 'Closing...' : proc.name}
-          </span>
-          <span
-            className="font-mono text-xs mt-0.5"
-            style={{ color: 'var(--text-tertiary)' }}
-          >
-            {formatMB(proc.memoryMB)}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
-}

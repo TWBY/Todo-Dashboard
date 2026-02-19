@@ -1,4 +1,4 @@
-import { readChatHistory, writeChatHistory } from '@/lib/data'
+import { readChatHistory, writeChatHistory, cleanExpiredChatMessages } from '@/lib/data'
 import type { ChatSessionRecord } from '@/lib/claude-chat-types'
 
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000
@@ -61,6 +61,9 @@ export async function POST(request: Request) {
     }
 
     await writeChatHistory(projectId, cleaned)
+
+    // 順便清理超過 2 天的 chat-messages 檔案
+    cleanExpiredChatMessages(projectId, TWO_DAYS_MS).catch(() => {})
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json' },
