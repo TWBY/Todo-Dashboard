@@ -944,7 +944,7 @@ function ResidentCard({ name, tier, port, showPort = false, framework, onRegiste
 }) {
   const [loading, setLoading] = useState(false)
   const isStation = tier >= 3
-  const isNonNextJs = framework && framework !== 'nextjs'
+  const isNonNextJs = !!(framework && framework !== 'nextjs')
 
   const handleAction = async (action: () => Promise<void>) => {
     setLoading(true)
