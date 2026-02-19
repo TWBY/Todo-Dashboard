@@ -565,6 +565,17 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
             >
               Skills
             </button>
+            <button
+              onClick={() => router.push('/agent-sdk')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              title="Agent SDK 入門指南"
+            >
+              SDK
+            </button>
           </div>
 
           {/* 第三排：Pack / Log */}
