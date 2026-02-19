@@ -934,5 +934,29 @@
     "messageCount": 4,
     "createdAt": 1771488159758,
     "lastActiveAt": 1771488369409
+  },
+  {
+    "sessionId": "bd1e64af-4634-4571-a581-fba8061e5896",
+    "projectId": "dashboard",
+    "title": "比喻：一棟辦公大樓\n你是大樓老闆。大樓裡有一個員工（Claude）。\n\nLayer 1 — permissionMode",
+    "messageCount": 4,
+    "createdAt": 1771488760772,
+    "lastActiveAt": 1771489728981
+  },
+  {
+    "sessionId": "c7eeba9e-29c0-4103-9988-5757c76048b8",
+    "projectId": "dashboard",
+    "title": "把「COMPONENT: DevServerPanel\nCHAIN: PathnameContext > SearchP",
+    "messageCount": 2,
+    "createdAt": 1771489423858,
+    "lastActiveAt": 1771489591995
+  },
+  {
+    "sessionId": "0fe9cd0e-842e-4a28-87bd-cbcce800319a",
+    "projectId": "dashboard",
+    "title": "因為 「COMPONENT: PortsPage\nCHAIN: InnerScrollAndFocusHandler >",
+    "messageCount": 3,
+    "createdAt": 1771489683918,
+    "lastActiveAt": 1771489818729
   }
 ]
