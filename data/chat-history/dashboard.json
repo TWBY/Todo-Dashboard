@@ -939,9 +939,9 @@
     "sessionId": "bd1e64af-4634-4571-a581-fba8061e5896",
     "projectId": "dashboard",
     "title": "比喻：一棟辦公大樓\n你是大樓老闆。大樓裡有一個員工（Claude）。\n\nLayer 1 — permissionMode",
-    "messageCount": 4,
+    "messageCount": 32,
     "createdAt": 1771488760772,
-    "lastActiveAt": 1771489728981
+    "lastActiveAt": 1771495011935
   },
   {
     "sessionId": "c7eeba9e-29c0-4103-9988-5757c76048b8",
@@ -955,8 +955,24 @@
     "sessionId": "0fe9cd0e-842e-4a28-87bd-cbcce800319a",
     "projectId": "dashboard",
     "title": "因為 「COMPONENT: PortsPage\nCHAIN: InnerScrollAndFocusHandler >",
-    "messageCount": 3,
+    "messageCount": 5,
     "createdAt": 1771489683918,
-    "lastActiveAt": 1771489818729
+    "lastActiveAt": 1771490440635
+  },
+  {
+    "sessionId": "f7d5086c-2c17-4d5c-941f-bb96a88f809e",
+    "projectId": "dashboard",
+    "title": "探索現有規則，解釋為何我 cursor 環境中，多數 bash 行為都需要我的手動允許",
+    "messageCount": 1,
+    "createdAt": 1771492634070,
+    "lastActiveAt": 1771492655849
+  },
+  {
+    "sessionId": "4cf9207c-d7f1-4cd4-971d-b526bfeaa5ce",
+    "projectId": "dashboard",
+    "title": "剛好 COMPONENT: DevServerPanel\nCHAIN: PathnameContext > Search",
+    "messageCount": 1,
+    "createdAt": 1771495134791,
+    "lastActiveAt": 1771495177634
   }
 ]
