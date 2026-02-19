@@ -474,12 +474,6 @@ export default function BuildPanel() {
     }
   }, [currentPhase]);
 
-  // Extract result summary from last assistant message
-  const resultSummary = useMemo(() => {
-    if (buildState !== 'done') return null;
-    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && m.content.trim());
-    return lastAssistant?.content || null;
-  }, [buildState, messages]);
 
   const handleStartBuild = async () => {
     setBuildState('running');
@@ -577,7 +571,7 @@ export default function BuildPanel() {
           {PHASES.map((phase, phaseIdx) => {
             const phaseStatus = finalStatuses[phaseIdx];
             const isAiPhase = phase.type === 'ai';
-            const isActiveAiPhase = isAiPhase && phaseStatus === 'running';
+            const showAiOutput = isAiPhase && (phaseStatus === 'running' || phaseStatus === 'done');
 
             return (
               <div key={phase.phase} className={phaseIdx > 0 ? 'mt-6' : ''} data-phase={phaseIdx + 1}>
@@ -608,8 +602,8 @@ export default function BuildPanel() {
                     return <StepNode key={`${phaseIdx}-${stepIdx}`} step={step} status={stepStatus} />;
                   })}
 
-                  {/* Inline AI output for Phase 2/3 when active */}
-                  {isActiveAiPhase && (
+                  {/* Inline AI output for Phase 2/3 — keep visible after completion */}
+                  {showAiOutput && (
                     <AiOutputArea
                       messages={messages}
                       isStreaming={isStreaming}
@@ -632,17 +626,12 @@ export default function BuildPanel() {
             </div>
           )}
 
-          {/* Result summary */}
-          {buildState === 'done' && resultSummary && (
+          {/* Completion marker */}
+          {buildState === 'done' && (
             <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border-color)' }}>
-              <div className="text-lg font-semibold mb-4" style={{ color: '#22c55e', lineHeight: '1.7' }}>
+              <div className="text-lg font-semibold" style={{ color: '#22c55e', lineHeight: '1.7' }}>
                 <i className="fa-solid fa-circle-check mr-2" />
                 Build 完成
-              </div>
-              <div className="build-ai-output" style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.8' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {resultSummary.trim()}
-                </ReactMarkdown>
               </div>
             </div>
           )}

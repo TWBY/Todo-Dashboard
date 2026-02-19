@@ -440,5 +440,123 @@
     "role": "assistant",
     "content": "完成。修改總結：\n\n**改動的三處（`BuildPanel.tsx`）：**\n\n1. **移除 `slice(-3)` 限制** — 原本只顯示最後 3 條 AI 訊息，現在顯示全部\n2. **移除 500 字截斷** — 原本超過 500 字會截尾，現在完整顯示 `msg.content`\n3. **移除內部 scroll** — 把 `AiOutputArea` 的 `overflow-y-auto` 拿掉，讓內容直接在外層大容器往下長，並改用 `bottomRef` + `scrollIntoView` 自動跟底部\n\n現在 Patch 產出的所有 Git 資訊（commit 細節、diff 輸出、版本訊息）都會完整顯示並持續往下增長，不會被截斷或收合。",
     "timestamp": 1771506480270
+  },
+  {
+    "id": "cec449ed-716c-4d6d-895f-602758788cfd",
+    "role": "user",
+    "content": "現在還是有我剛剛說的那個問題，就是不應該有所謂的「最外面」一層，而是應該要有容器。\n\n裡面的 AI 訊息有多少，就應該要顯示多少，可是現在還是一樣會縮回去。所以我根本看不到所謂的隱藏資訊，也就是它打包完後，不管是成功還是失敗，我都沒有辦法看到最終成果，這點非常奇怪。",
+    "timestamp": 1771506620966
+  },
+  {
+    "id": "28c1efd0-a528-4fa7-bd98-b33fc3baf8b6",
+    "role": "assistant",
+    "content": "讓我看一下完成後的顯示邏輯 — 問題可能是完成後 `AiOutputArea` 直接消失了。",
+    "timestamp": 1771506626978
+  },
+  {
+    "id": "d99107b5-47cc-4528-a8ed-2390d7dc858a",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 575,\n  \"limit\": 80\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506628830
+  },
+  {
+    "id": "684f5cf5-dc08-4fdf-afa2-beff1b4914bb",
+    "role": "assistant",
+    "content": "找到根因了。有兩個問題：\n\n1. **`isActiveAiPhase`**（第 580 行）= `isAiPhase && phaseStatus === 'running'` — Phase 完成後 status 變 `done`，`AiOutputArea` **直接消失**，所有過程中的訊息全沒了\n2. **`resultSummary`**（第 636 行）= 只取最後一條 assistant message — 所以完成後只看到最後一句總結，中間的 Git 細節全部不見\n\n現在看完成後的 `resultSummary` 怎麼取的：",
+    "timestamp": 1771506631868
+  },
+  {
+    "id": "ef6a486a-b9cd-4149-b3be-52961b9fcf57",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 476,\n  \"limit\": 6\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506636513
+  },
+  {
+    "id": "f4a6c1d6-d1f1-49a5-9636-6e3c82d5dfa4",
+    "role": "assistant",
+    "content": "確認了。修改方案：\n\n1. **`AiOutputArea` 改成 AI Phase 完成後也保留顯示**（不只 `running` 才顯示）\n2. **完成後的 Result Summary 改成顯示所有 AI 訊息**，不再只取最後一條",
+    "timestamp": 1771506638957
+  },
+  {
+    "id": "2cb7cb70-f7ab-4da1-948c-8d948d7fed14",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"            const isAiPhase = phase.type === 'ai';\\n            const isActiveAiPhase = isAiPhase && phaseStatus === 'running';\",\n  \"new_string\": \"            const isAiPhase = phase.type === 'ai';\\n            const showAiOutput = isAiPhase && (phaseStatus === 'running' || phaseStatus === 'done');\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506642540
+  },
+  {
+    "id": "fff3a49f-818a-4204-b606-96ffc2ac055e",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"                  {/* Inline AI output for Phase 2/3 when active */}\\n                  {isActiveAiPhase && (\",\n  \"new_string\": \"                  {/* Inline AI output for Phase 2/3 — keep visible after completion */}\\n                  {showAiOutput && (\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506646609
+  },
+  {
+    "id": "2eefb8ce-c15d-49f5-9e9e-d6b3bf02f789",
+    "role": "assistant",
+    "content": "現在把完成後的 `resultSummary` 也改成顯示全部訊息，而不是只最後一條：",
+    "timestamp": 1771506648705
+  },
+  {
+    "id": "605b8541-4436-425e-a8f1-f18fc08995c7",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"          {/* Result summary */}\\n          {buildState === 'done' && resultSummary && (\\n            <div className=\\\"mt-6 pt-5\\\" style={{ borderTop: '1px solid var(--border-color)' }}>\\n              <div className=\\\"text-lg font-semibold mb-4\\\" style={{ color: '#22c55e', lineHeight: '1.7' }}>\\n                <i className=\\\"fa-solid fa-circle-check mr-2\\\" />\\n                Build 完成\\n              </div>\\n              <div className=\\\"build-ai-output\\\" style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.8' }}>\\n                <ReactMarkdown remarkPlugins={[remarkGfm]}>\\n                  {resultSummary.trim()}\\n                </ReactMarkdown>\\n              </div>\\n            </div>\\n          )}\",\n  \"new_string\": \"          {/* Completion marker */}\\n          {buildState === 'done' && (\\n            <div className=\\\"mt-6 pt-5\\\" style={{ borderTop: '1px solid var(--border-color)' }}>\\n              <div className=\\\"text-lg font-semibold\\\" style={{ color: '#22c55e', lineHeight: '1.7' }}>\\n                <i className=\\\"fa-solid fa-circle-check mr-2\\\" />\\n                Build 完成\\n              </div>\\n            </div>\\n          )}\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506652864
+  },
+  {
+    "id": "1232cc2d-e3a6-4a37-9d76-ddc2242c16fe",
+    "role": "assistant",
+    "content": "`resultSummary` 現在沒用了，清掉：",
+    "timestamp": 1771506655127
+  },
+  {
+    "id": "68404d50-4e4e-414f-8e98-beee0cd33f8d",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"old_string\": \"  // Extract result summary from last assistant message\\n  const resultSummary = useMemo(() => {\\n    if (buildState !== 'done') return null;\\n    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && m.content.trim());\\n    return lastAssistant?.content || null;\\n  }, [buildState, messages]);\\n\\n\",\n  \"new_string\": \"\\n\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506657320
+  },
+  {
+    "id": "04987413-5c3c-4c8e-aa61-9f0aa4288bb0",
+    "role": "assistant",
+    "content": "確認 `useMemo` import 是否還需要（可能其他地方有用到）：",
+    "timestamp": 1771506659671
+  },
+  {
+    "id": "4b644f43-0e11-4ce2-9cdd-666b0d20d179",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"useMemo\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"output_mode\": \"content\"\n}",
+    "toolName": "Grep",
+    "toolDescription": "useMemo",
+    "timestamp": 1771506661270
+  },
+  {
+    "id": "5a790884-76c0-490b-a894-429e126ad176",
+    "role": "assistant",
+    "content": "`useMemo` 還有其他地方用到，沒問題。現在驗證一下最終結果：",
+    "timestamp": 1771506663786
+  },
+  {
+    "id": "3d978360-c7e6-40f5-9f1c-a7cae98ab5a2",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/components/BuildPanel.tsx\",\n  \"offset\": 575,\n  \"limit\": 70\n}",
+    "toolName": "Read",
+    "toolDescription": "BuildPanel.tsx",
+    "timestamp": 1771506665228
+  },
+  {
+    "id": "9437a0cb-2a18-4950-a9b0-729542701c38",
+    "role": "assistant",
+    "content": "改動完成。總結這次修復的**根因和改動**：\n\n**根因：AI 訊息在 Phase 完成後直接消失**\n\n- `isActiveAiPhase` 條件是 `phaseStatus === 'running'`，Phase 跑完變 `done` 後，整個 `AiOutputArea` 被卸載\n- 完成後只靠 `resultSummary` 顯示最後一條訊息的末 500 字\n\n**改動三處：**\n\n1. **`showAiOutput` 條件放寬** — `running` 或 `done` 都顯示，Phase 完成後 AI 輸出區域保留在原位\n2. **移除 `resultSummary`** — 不再只顯示最後一條的摘要，所有 Git 細節已經在各 Phase 的 `AiOutputArea` 中完整保留\n3. **完成標記簡化** — 底部只留「Build 完成」標記，不重複渲染內容\n\n這樣 Patch 過程中的所有 Git 資訊（commit 內容、diff、版本判斷等）都會一直向下增長，完成後也不會消失或收合。",
+    "timestamp": 1771506667555
   }
 ]
