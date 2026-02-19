@@ -99,6 +99,11 @@ function buildQueryOptions(
         command: 'npx',
         args: ['@playwright/mcp', '--cdp-endpoint', 'http://localhost:9222'],
       },
+      'bot-browser': {
+        type: 'stdio',
+        command: 'npx',
+        args: ['@playwright/mcp'],
+      },
     },
   }
 

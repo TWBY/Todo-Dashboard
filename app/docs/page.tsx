@@ -1301,9 +1301,10 @@ function McpTab() {
 
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
         {[
-          { name: 'arc-cdp',                command: 'npx @playwright/mcp --cdp-endpoint http://localhost:9222', note: '透過 CDP 9222 控制 Arc 瀏覽器', status: 'SDK 已手動加入', color: '#4ade80' },
-          { name: 'zeabur',                 command: 'npx @zeabur/mcp-server',                                  note: 'Zeabur 部署管理',              status: '僅 Extension',   color: '#fbbf24' },
-          { name: 'OfficeWebsite_insforge', command: 'npx -y @insforge/mcp@latest',                             note: 'Insforge 資料庫 MCP',          status: '僅 Extension',   color: '#fbbf24' },
+          { name: 'arc-cdp',                command: 'npx @playwright/mcp --cdp-endpoint http://localhost:9222', note: '透過 CDP 9222 控制 Arc 瀏覽器（人機協作）',   status: 'SDK 已手動加入', color: '#4ade80' },
+          { name: 'bot-browser',            command: 'npx @playwright/mcp',                                     note: 'AI 專屬 headless Chromium（自動化測試）', status: 'SDK 已手動加入', color: '#4ade80' },
+          { name: 'zeabur',                 command: 'npx @zeabur/mcp-server',                                  note: 'Zeabur 部署管理',                         status: '僅 Extension',   color: '#fbbf24' },
+          { name: 'OfficeWebsite_insforge', command: 'npx -y @insforge/mcp@latest',                             note: 'Insforge 資料庫 MCP',                     status: '僅 Extension',   color: '#fbbf24' },
         ].map((server, i, arr) => (
           <div key={server.name} className="grid grid-cols-[160px_1fr_auto] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
             <div className="px-4 py-3 font-mono font-semibold" style={{ color: '#a78bfa', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>
@@ -1340,6 +1341,21 @@ function McpTab() {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
+            <strong style={{ color: '#4ade80' }}>bot-browser（playwright-mcp headless）</strong>
+            <div style={{ marginTop: '6px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+              <div style={{ marginBottom: '4px' }}>不需要任何前置條件。Playwright 會在 AI 需要時自動在背景啟動一個 Chromium，不可見、不干擾 Arc。</div>
+              <div style={{ marginBottom: '4px' }}>啟動指令（SDK 自動執行，不需手動）：</div>
+              <pre style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontFamily: 'ui-monospace, monospace', marginTop: '4px', marginBottom: '8px' }}>
+{`npx @playwright/mcp`}
+              </pre>
+              <div style={{ color: '#4ade80' }}>
+                <i className="fa-solid fa-circle-check" style={{ marginRight: '6px' }} />
+                不依賴 Arc，不依賴 CDP port 9222，完全獨立運作。
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
             <strong style={{ color: '#a78bfa' }}>zeabur</strong>
             <div style={{ marginTop: '6px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
               <div style={{ marginBottom: '4px' }}>透過 npx 執行，不需預裝：</div>
@@ -1358,6 +1374,57 @@ function McpTab() {
 {`npx -y @insforge/mcp@latest`}
               </pre>
               <div>需要 Insforge API Key（設定在 MCP config 的 env 中）</div>
+            </div>
+          </div>
+        </div>
+      </ExpandableBox>
+
+      <ExpandableBox label="arc-cdp vs bot-browser — 兩種 MCP 的職責分離">
+        <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <div style={{ marginBottom: '12px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+            同樣都是 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>@playwright/mcp</code>，差一個 flag，行為完全不同。
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(167,139,250,0.3)', backgroundColor: 'rgba(167,139,250,0.05)' }}>
+              <div style={{ color: '#a78bfa', fontWeight: 600, marginBottom: '8px' }}>
+                <i className="fa-solid fa-user mr-2" />arc-cdp
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>模式：</strong>連接既有瀏覽器</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>依賴：</strong>Arc 必須以 CDP 啟動</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>可見性：</strong>你看得到 AI 的操作</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>適合：</strong>人機協作、截圖、觀察</div>
+                <div style={{ marginTop: '6px', color: '#fbbf24' }}>
+                  <i className="fa-solid fa-triangle-exclamation mr-1" />共用你的瀏覽器，有誤觸風險
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(74,222,128,0.3)', backgroundColor: 'rgba(74,222,128,0.05)' }}>
+              <div style={{ color: '#4ade80', fontWeight: 600, marginBottom: '8px' }}>
+                <i className="fa-solid fa-robot mr-2" />bot-browser
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>模式：</strong>自動啟動 headless Chromium</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>依賴：</strong>無，完全獨立</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>可見性：</strong>背景執行，不可見</div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>適合：</strong>自動化測試、CI/CD</div>
+                <div style={{ marginTop: '6px', color: '#4ade80' }}>
+                  <i className="fa-solid fa-circle-check mr-1" />完全不碰你的 Arc，零干擾
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '13px', marginBottom: '8px' }}>
+            <strong style={{ color: 'var(--text-primary)' }}>設計原則：</strong>
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+            <div>• <strong style={{ color: 'var(--text-secondary)' }}>arc-cdp</strong> 保留，供人類需要 AI 協助操作瀏覽器時使用（例如「幫我截圖這個頁面」）</div>
+            <div>• <strong style={{ color: 'var(--text-secondary)' }}>bot-browser</strong> 用於所有自動化情境，AI 自己跑、自己測、不需要 Arc</div>
+            <div style={{ marginTop: '8px', padding: '8px 12px', borderRadius: '6px', backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>
+              <i className="fa-solid fa-lightbulb mr-2" style={{ color: '#fbbf24' }} />
+              過去「AI 誤把你的 3001 分頁導走」、「重複開出多個 3002 分頁」的問題，根本原因是 AI 和人類共用同一個 Arc session。改用 bot-browser 後，AI 在自己的 Chromium 裡操作，從根本解決職責混淆的問題。
             </div>
           </div>
         </div>
@@ -1794,6 +1861,22 @@ function GapsTab() {
               </div>
               <div style={{ marginTop: '8px', fontSize: '13px' }}>
                 <strong>教訓：</strong> <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> 是 SDK 全局開關，優先於所有應用層設定。「我已經在 CLAUDE.md 開放了 bash」這句話，在 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode='plan'</code> 面前完全無效。
+              </div>
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>延伸踩坑：permissionMode 是對話層級的，文字輸入無法解除</strong>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>現象：</strong> 對話中叫 AI「退出 plan mode」、「切換到 default 模式」，AI 收到指令但 Bash 仍然被擋，錯誤訊息是 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>ZodError</code> 而非一般的 permission denied。
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>根因：</strong> <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> 是在對話開啟時就寫入 conversation metadata 的，屬於<strong>對話層級的設定</strong>。User message 只是對話內容，無法改變 metadata。AI 在對話中「說」它要切換模式，但 SDK 層的 permissionMode 根本沒動。
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>解法：</strong> 只能從 <strong>UI 層</strong>操作（Claude Code 介面的模式切換按鈕），或直接在 terminal 手動執行需要的指令，不能靠文字輸入讓 AI 解除。
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>教訓：</strong> 對話裡的 user message 只能影響 AI 的回應，不能影響 SDK 的 permission 狀態。兩者是不同層次的東西——一個是 conversation，另一個是 runtime configuration。
               </div>
             </div>
           </ExpandableBox>
