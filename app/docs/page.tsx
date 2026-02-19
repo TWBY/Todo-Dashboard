@@ -977,9 +977,67 @@ function SettingsTab() {
       </div>
 
       <ExpandableBox label="展開：permissionMode 兩邊各是什麼？">
-        <div style={{ marginBottom: '4px', color: 'var(--text-tertiary)', fontSize: '13px', lineHeight: '1.6' }}>
-          <i className="fa-solid fa-building mr-1.5" style={{ color: '#3b82f6' }} />
-          把 permissionMode 想成辦公室的「門禁等級」。<strong style={{ color: '#3b82f6' }}>acceptEdits</strong> 像是給員工一張全通行門禁卡——他可以自由進出各個房間改動文件。<strong style={{ color: '#f97316' }}>plan</strong> 則像是訪客證——每次要進新房間，他得先填單子交給櫃台（報告計劃），等你蓋章（按「開始實作」）才能進去。
+        <div style={{ marginBottom: '12px', color: 'var(--text-tertiary)', fontSize: '13px', lineHeight: '1.8' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <i className="fa-solid fa-building mr-1.5" style={{ color: '#3b82f6' }} />
+            <strong style={{ color: 'var(--text-secondary)' }}>用辦公大樓來理解三層架構</strong>
+          </div>
+          <div style={{ marginBottom: '10px' }}>
+            你是大樓老闆，Claude 是員工。大樓有三套不同的管制機制，各自管不同的事，搞混了就會不知道為什麼被擋。
+          </div>
+
+          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <div style={{ color: '#f87171', fontWeight: 600, marginBottom: '6px' }}>
+              <i className="fa-solid fa-id-card mr-2" />Layer 1 — permissionMode：員工的工作證等級（最高層，進門就決定）
+            </div>
+            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
+              員工進大樓時拿到的工作證，決定他能到哪些樓層。<strong style={{ color: 'var(--text-secondary)' }}>這張卡在進門時就決定了，進去之後無法在對話裡更改。</strong>
+              <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '120px 1fr', gap: '4px 12px' }}>
+                <div style={{ color: '#4ade80', fontFamily: 'monospace' }}>acceptEdits</div>
+                <div>萬用卡，所有樓層都能進，不需要找你確認</div>
+                <div style={{ color: '#fbbf24', fontFamily: 'monospace' }}>default</div>
+                <div>一般員工卡，能進大部分樓層，進機密室要你刷卡確認</div>
+                <div style={{ color: '#f87171', fontFamily: 'monospace' }}>plan</div>
+                <div>訪客證，只能在大廳等，什麼都不能動，只能提報告給你看</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
+            <div style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '6px' }}>
+              <i className="fa-solid fa-book mr-2" />Layer 2 — settings.json / CLAUDE.md：保全室的規則手冊（到了那層之後，哪些房間能進）
+            </div>
+            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
+              保全手冊寫著「幾樓不能去、哪些房間要登記」。<strong style={{ color: 'var(--text-secondary)' }}>但這本手冊只有在員工能進電梯的前提下才有用。</strong>
+              <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.2)', fontSize: '12px' }}>
+                如果員工是訪客證（plan mode）根本進不了電梯，保全手冊寫什麼都沒用——他根本到不了要被檢查的地方。這就是「CLAUDE.md 已開放 Bash，但還是被擋」的根本原因。
+              </div>
+              <div style={{ marginTop: '8px' }}>
+                「permissionMode 超寬鬆 + settings.json 超嚴格」不矛盾：前者管能不能到那一層，後者管到了之後哪些房間能進，兩者各管各的、互不衝突。
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '14px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)' }}>
+            <div style={{ color: '#4ade80', fontWeight: 600, marginBottom: '6px' }}>
+              <i className="fa-solid fa-note-sticky mr-2" />Layer 3 — Chat P/E/A 按鈕：桌上的便利貼（行為風格，不是權限）
+            </div>
+            <div style={{ fontSize: '13px', lineHeight: 1.7 }}>
+              你貼在員工桌上的便利貼，寫著「今天專注規劃」或「今天直接動手」。<strong style={{ color: 'var(--text-secondary)' }}>這只影響員工的工作風格，不影響他的工作證等級。</strong>
+              <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.2)', fontSize: '12px' }}>
+                特別注意：Chat 的「P 按鈕」名字叫 Plan，但它背後是 permissionMode = "default"，跟 SDK 的 plan mode（訪客證）完全不同。名字撞了，但一個是便利貼，一個是工作證。
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--background-tertiary)', fontSize: '13px' }}>
+            <strong style={{ color: 'var(--text-secondary)' }}>被擋住時，查的順序：</strong>
+            <div style={{ marginTop: '6px', color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+              1. 先看 Layer 1（工作證）— 這個 session 的 permissionMode 是什麼？是 plan 嗎？<br />
+              2. 再看 Layer 2（保全手冊）— settings.json 有沒有把這個指令列入黑名單？<br />
+              3. 最後才看 Layer 3（便利貼）— P/E/A 按鈕不會造成「被擋」，只影響風格。
+            </div>
+          </div>
         </div>
         <div style={{ marginTop: '12px', marginBottom: '12px' }}>
           <strong style={{ color: '#3b82f6' }}>Extension（Cursor）</strong>
@@ -1004,17 +1062,21 @@ function SettingsTab() {
               marginBottom: '8px',
             }}
           >
-{`const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'`}
+{`const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'default'`}
           </pre>
           <div style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <div>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "edit"</code> →  <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "acceptEdits"</code>（同 Extension）</div>
-            <div style={{ marginTop: '4px' }}>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "plan"</code>（預設）→  <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "plan"</code>（Claude 先規劃，等點核准才行動）</div>
+            <div>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "edit"</code> → <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "acceptEdits"</code>（可直接寫檔）</div>
+            <div style={{ marginTop: '4px' }}>• 當 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mode = "plan"</code> 或 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>"ask"</code> → <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode = "default"</code>（危險操作跳確認框）</div>
+            <div style={{ marginTop: '8px', padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', fontSize: '13px', color: '#fbbf24' }}>
+              <i className="fa-solid fa-triangle-exclamation mr-2" />
+              注意：Chat 的「P 按鈕」不等於 SDK 的 plan mode。P 按鈕背後是 <code style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '1px 4px', borderRadius: '2px' }}>permissionMode = "default"</code>，兩者名稱相同但完全不同層次的東西。
+            </div>
           </div>
         </div>
 
         <div style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>
           <i className="fa-solid fa-lightbulb" style={{ color: '#fbbf24', marginRight: '6px' }} />
-          這就是 Dashboard Chat 有「ExitPlanMode」互動的原因——Claude 必須先報告計劃，等你按「開始實作」，才能進入 acceptEdits 模式。
+          這就是 Dashboard Chat 有「ExitPlanMode」互動的原因——Claude 在 default 模式下運作，遇到需要規劃的任務會呼叫 ExitPlanMode，等你批准才繼續執行。
         </div>
       </ExpandableBox>
 
@@ -1837,6 +1899,30 @@ function GapsTab() {
               </div>
               <div style={{ marginTop: '8px' }}>
                 <strong>為什麼重要：</strong> 想理解「Extension 和 SDK 為什麼不同」，這個函式就是答案。本文件中提到的 permissionMode、opts.mcpServers 等概念都源自於此。
+              </div>
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>先搞清楚：這幾個東西不是同一層</strong>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+                被擋住的時候，很容易不知道是哪一層的問題。常見的混淆：「我 CLAUDE.md 已經開放 Bash 了，為什麼還被擋？」答案是：這三個東西在不同層次，上層擋住，下層設定完全沒效。
+              </div>
+              <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '1px', fontSize: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '8px 10px', backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>層次</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>是什麼</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>管什麼</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(239,68,68,0.08)', color: '#f87171', fontWeight: 600 }}>Layer 1（最強）</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(239,68,68,0.04)', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>SDK permissionMode</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(239,68,68,0.04)', color: 'var(--text-tertiary)' }}>全局開關，plan 模式下所有 tool 一律擋住</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', fontWeight: 600 }}>Layer 2</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(251,191,36,0.04)', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>CLAUDE.md / settings.json</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(251,191,36,0.04)', color: 'var(--text-tertiary)' }}>Bash 黑白名單，管哪些指令可以執行</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', fontWeight: 600 }}>Layer 3（最弱）</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(74,222,128,0.04)', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>Chat P/E/A 按鈕</div>
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(74,222,128,0.04)', color: 'var(--text-tertiary)' }}>AI 行為風格提示，不是真正的權限控制</div>
+              </div>
+              <div style={{ marginTop: '10px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                另一個常見混淆：<strong style={{ color: 'var(--text-secondary)' }}>Chat 的「P 按鈕」不等於 SDK 的 plan mode</strong>。P 按鈕背後是 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '2px' }}>permissionMode = "default"</code>，SDK 的 plan mode 才是真的把所有 tool 鎖住。名字一樣，層次完全不同。
               </div>
 
               <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
