@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
 
@@ -1259,10 +1259,84 @@ function McpTab() {
 }
 
 function ArcCdpTab() {
+  const [cdpStatus, setCdpStatus] = useState<{ portOpen: boolean; cdpResponding: boolean } | null>(null)
+  const [restarting, setRestarting] = useState(false)
+
+  const checkStatus = useCallback(() => {
+    fetch('/api/cdp-status')
+      .then(r => r.json())
+      .then(d => setCdpStatus({ portOpen: d.portOpen, cdpResponding: d.cdpResponding }))
+      .catch(() => setCdpStatus({ portOpen: false, cdpResponding: false }))
+  }, [])
+
+  useEffect(() => {
+    checkStatus()
+    const pollId = setInterval(checkStatus, 10 * 1000)
+    return () => clearInterval(pollId)
+  }, [checkStatus])
+
+  const handleRestart = useCallback((withCdp: boolean) => {
+    setRestarting(true)
+    fetch('/api/cdp-restart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cdp: withCdp }),
+    }).finally(() => {
+      setTimeout(() => {
+        setRestarting(false)
+        checkStatus()
+      }, 4000)
+    })
+  }, [checkStatus])
+
+  const isConnected = cdpStatus?.portOpen && cdpStatus?.cdpResponding
+  const statusColor = restarting ? '#6b7280' : isConnected ? '#10b981' : '#ef4444'
+  const statusText = restarting ? '重新啟動中...' : isConnected ? '已連線' : '未連線'
+
   return (
     <div>
       <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Arc CDP — 瀏覽器遠端偵錯協議</h2>
-      <p className="text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>Chrome DevTools Protocol (CDP) 是 Arc 瀏覽器的遠端控制介面，允許 Claude 自動化操控瀏覽器。</p>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>Chrome DevTools Protocol (CDP) 是 Arc 瀏覽器的遠端控制介面，允許 Claude 自動化操控瀏覽器。</p>
+
+      {/* 實時監控面板 */}
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: `2px solid ${statusColor}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>連線狀態監控</h4>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColor, boxShadow: `0 0 8px ${statusColor}` }} />
+            <span className="text-sm font-medium" style={{ color: statusColor }}>{statusText}</span>
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-3" style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+          <div className="flex items-center justify-between py-2 px-3 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+            <span>Port 9222 監聽</span>
+            <span style={{ color: cdpStatus?.portOpen ? '#10b981' : '#ef4444', fontWeight: 'bold' }}>
+              {cdpStatus?.portOpen ? '✓ 開啟' : '✗ 未開啟'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 px-3 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+            <span>CDP 端點回應</span>
+            <span style={{ color: cdpStatus?.cdpResponding ? '#10b981' : '#ef4444', fontWeight: 'bold' }}>
+              {cdpStatus?.cdpResponding ? '✓ 正常' : '✗ 無回應'}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => handleRestart(!isConnected)}
+          disabled={restarting}
+          className="w-full text-xs py-2 px-3 rounded-lg cursor-pointer transition-all font-medium"
+          style={{
+            backgroundColor: restarting ? 'var(--background-tertiary)' : isConnected ? 'transparent' : 'var(--accent-color, #0184ff)',
+            color: restarting ? 'var(--text-tertiary)' : isConnected ? 'var(--text-secondary)' : '#fff',
+            opacity: restarting ? 0.6 : 1,
+            border: isConnected ? '1px solid var(--border-color)' : 'none',
+          }}
+        >
+          {restarting ? '重新啟動中...' : isConnected ? '關閉 CDP' : '開啟 CDP'}
+        </button>
+      </div>
 
       <CalloutBox type="info">
         <strong>CDP 的作用：</strong> 讓 Claude Code 可以透過 Playwright MCP 自動化控制 Arc 瀏覽器（點擊、填表、截圖、讀取網頁內容）。這是 browser_click、browser_navigate、browser_snapshot 等工具的基礎。
