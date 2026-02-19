@@ -4,6 +4,7 @@ import './globals.css';
 import Providers from '@/components/Providers';
 import EnvironmentIndicator from '@/components/EnvironmentIndicator';
 import ComponentDebugOverlay from '@/components/ComponentDebugOverlay';
+import DashboardHost from '@/components/DashboardHost';
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ['latin'],
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <EnvironmentIndicator />
         <ComponentDebugOverlay />
         <main className="min-h-screen">
-          <Providers>{children}</Providers>
+          <Providers>
+            <DashboardHost>{children}</DashboardHost>
+          </Providers>
         </main>
       </body>
     </html>
