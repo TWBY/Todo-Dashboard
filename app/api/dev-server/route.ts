@@ -15,9 +15,7 @@ function execAsync(cmd: string, opts?: { timeout?: number }) {
 
 const DASHBOARD_PORT = 3002;
 
-// In-memory cache to prevent concurrent polling from saturating the event loop
-let cachedGetResponse: { data: unknown; timestamp: number } | null = null;
-const GET_CACHE_TTL = 12000; // 12 seconds — aligns with polling interval
+// Cache removed — no polling, all fetches are user-initiated (event-driven)
 function logEvent(message: string) {
   console.log(`[dev-server] ${message}`);
 }
@@ -232,10 +230,6 @@ async function checkPort(port: number): Promise<{ isRunning: boolean; pid?: numb
 // GET - Get status of all dev servers
 export async function GET() {
   try {
-    // Return cached response if fresh (prevents polling from multiple components saturating event loop)
-    if (cachedGetResponse && Date.now() - cachedGetResponse.timestamp < GET_CACHE_TTL) {
-      return NextResponse.json(cachedGetResponse.data);
-    }
 
     const brickverseProjects = await readJsonFile<Project>('projects.json');
     const courseFiles = await readJsonFile<Project>('coursefiles.json');
@@ -270,7 +264,6 @@ export async function GET() {
     const systemCpu = null;
 
     const responseData = { data: statuses, systemMemory, systemCpu };
-    cachedGetResponse = { data: responseData, timestamp: Date.now() };
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error getting dev server status:', error);

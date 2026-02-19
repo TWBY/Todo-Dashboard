@@ -77,12 +77,10 @@ export function DevServerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const controller = new AbortController()
     controllerRef.current = controller
+    // Only fetch once on mount — no polling. State updates are event-driven (start/stop actions call refresh).
     fetchData(controller.signal)
-    // Poll every 15 seconds — dev server state doesn't need sub-10s responsiveness
-    const interval = setInterval(() => fetchData(controller.signal), 15000)
     return () => {
       controller.abort()
-      clearInterval(interval)
     }
   }, [fetchData])
 
