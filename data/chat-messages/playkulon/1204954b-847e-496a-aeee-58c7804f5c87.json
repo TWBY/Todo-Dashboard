@@ -1,0 +1,22 @@
+[
+  {
+    "id": "0d6de9de-8c73-4009-bc7c-f1663ca69d4f",
+    "role": "user",
+    "content": "上網找找基隆跟九份景點",
+    "timestamp": 1771508900251
+  },
+  {
+    "id": "45abba9b-c5e0-4cee-b351-6c4175f1fd5b",
+    "role": "assistant",
+    "content": "Failed to spawn Claude Code process: spawn node ENOENT",
+    "timestamp": 1771508900290,
+    "isError": true
+  },
+  {
+    "id": "67cba637-a3bf-404a-a9c2-220e7c1b42fc",
+    "role": "assistant",
+    "content": "SDK query 未產生任何回應",
+    "timestamp": 1771508900290,
+    "isError": true
+  }
+]

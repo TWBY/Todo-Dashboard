@@ -1,0 +1,70 @@
+[
+  {
+    "id": "22e42c1d-ef6f-4051-9448-895db727f3c4",
+    "role": "user",
+    "content": "跟我介紹 https://vercel.com/docs/agent-resources/skills，這個頁面在幹嘛，而且有哪些功能",
+    "timestamp": 1771507378878
+  },
+  {
+    "id": "dbb6d8c3-2362-46f2-8e5e-f55eac4033ec",
+    "role": "tool",
+    "content": "{\n  \"action\": \"new\"\n}",
+    "toolName": "mcp__arc-cdp__browser_tabs",
+    "toolDescription": "",
+    "timestamp": 1771507385770
+  },
+  {
+    "id": "409549a4-d398-443e-896c-1a1655d1cfdc",
+    "role": "assistant",
+    "content": "CDP 連線失敗，改用 WebFetch 直接抓頁面內容。",
+    "timestamp": 1771507388667
+  },
+  {
+    "id": "f1dd80d4-70f8-4b4d-9fcb-b01fa64318dc",
+    "role": "tool",
+    "content": "{\n  \"url\": \"https://vercel.com/docs/agent-resources/skills\",\n  \"prompt\": \"這個頁面在介紹什麼？有哪些功能和特性？請詳細說明。\"\n}",
+    "toolName": "WebFetch",
+    "toolDescription": "vercel.com",
+    "timestamp": 1771507390172
+  },
+  {
+    "id": "5d0c8c94-710d-4bdc-8d4e-7bdf1e49de91",
+    "role": "assistant",
+    "content": "這個頁面是 **Vercel 的 Agent Skills 目錄**，介紹一個讓 AI agent 獲得「打包好能力」的系統。以下是重點整理：\n\n---\n\n## 什麼是 Agent Skills？\n\n一個 **Agent Skill** 是封裝好的能力模塊，讓 AI agent 能安全、結構化地執行真實工作流程（而不只是聊天）。\n\n特色：\n- **模組化、可組合** — 像積木一樣疊加\n- **生產就緒** — 已驗證、有文件\n- **跨 agent 兼容** — 支援 18+ AI agents，包括 **Claude Code、GitHub Copilot、Cursor、Cline** 等\n\n---\n\n## 安裝方式\n\n```bash\n# 安裝 skill\nnpx skills add <owner/repo>\n\n# 從多 skill 的 repo 中指定安裝\nnpx skills add <owner/repo> --skill <skill-name>\n\n# 搜尋 skill\nnpx skills find <query>\n```\n\n---\n\n## Skill 分類\n\n| 類別 | 用途 |\n|------|------|\n| **React & Next.js** | 建構高效能 React/Next.js 應用 |\n| **AI SDK** | 整合 Vercel AI SDK |\n| **Design & UI** | 可及性、高效能 UI |\n| **Browser Automation** | 瀏覽器自動化 |\n| **Deployment** | 部署到 Vercel |\n| **Commerce** | 電商與支付 |\n| **Workflow** | 耐久、可靠的工作流程 |\n| **JSON Render** | 生成式 UI 框架 |\n| **Utility** | 通用 agent 工作流程 |\n\n---\n\n## 和 Claude Code 的關係\n\n這個系統跟你現在用的 Claude Code Skill（`/commit`、`/port-sync` 等）是類似概念，只是 Vercel 做了一個**社群目錄平台**（[skills.sh](https://skills.sh)），讓任何人都能發布和安裝 skill，形成一個生態系。",
+    "timestamp": 1771507392359
+  },
+  {
+    "id": "d84bcaf3-6f07-4e41-8a8d-ded8d4630e40",
+    "role": "user",
+    "content": "看看 Browser Automation 功能",
+    "timestamp": 1771507420341
+  },
+  {
+    "id": "05f1e215-b244-4f15-ae73-85ebe4b894a5",
+    "role": "tool",
+    "content": "{\n  \"url\": \"https://vercel.com/docs/agent-resources/skills\",\n  \"prompt\": \"What are the Browser Automation skills? List all of them with their names, descriptions, and installation commands.\"\n}",
+    "toolName": "WebFetch",
+    "toolDescription": "vercel.com",
+    "timestamp": 1771507426427
+  },
+  {
+    "id": "562eec6c-dbae-4e80-8e66-1303ed3c27ab",
+    "role": "assistant",
+    "content": "頁面裡沒有展開 Browser Automation 的詳細內容，直接去 skills.sh 找。",
+    "timestamp": 1771507428317
+  },
+  {
+    "id": "02c00d3a-b0c0-4ad6-8cfd-cd75fa799882",
+    "role": "tool",
+    "content": "{\n  \"url\": \"https://skills.sh\",\n  \"prompt\": \"List all Browser Automation skills. What are their names, descriptions, and what do they do?\"\n}",
+    "toolName": "WebFetch",
+    "toolDescription": "skills.sh",
+    "timestamp": 1771507429862
+  },
+  {
+    "id": "c5bba088-877a-4156-8bc6-edac101b9e31",
+    "role": "assistant",
+    "content": "以下是 **Browser Automation** 類別的 Skill 清單：\n\n---\n\n## Browser Automation Skills\n\n### 1. `agent-browser` — vercel-labs/agent-browser\n**44,853 installs**\n\n讓 AI agent 能直接操控瀏覽器 — 導航網站、點擊、填表、執行自動化任務。Vercel 官方出品，是這類中裝機量最高的。\n\n```bash\nnpx skills add vercel-labs/agent-browser\n```\n\n---\n\n### 2. `browser-use` — browser-use/browser-use\n**34,019 installs**\n\n提供瀏覽器自動化能力，支援網頁互動和資料提取工作流程。社群熱門選擇。\n\n```bash\nnpx skills add browser-use/browser-use\n```\n\n---\n\n### 3. `firecrawl` — firecrawl/cli\n**4,440 installs**\n\n偏向**網頁爬蟲和結構化資料擷取**，而不是互動操作。適合大量抓取、整理網頁內容的場景。\n\n```bash\nnpx skills add firecrawl/cli\n```\n\n---\n\n## 和你現在的用法對比\n\n你目前已經有 **Arc CDP MCP** 做瀏覽器自動化（`mcp__arc-cdp__*` 工具），功能上和 `agent-browser` 很像，都是讓 AI 直接操控瀏覽器。\n\n差異在於：\n- **你的 Arc CDP** — 連接本機 Arc 瀏覽器，可以看到真實的使用者 session\n- **agent-browser** — 通常是啟動無頭瀏覽器（headless），獨立執行，更適合 CI/CD 環境",
+    "timestamp": 1771507437504
+  }
+]
