@@ -1299,7 +1299,7 @@ function ArcCdpTab() {
       <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>Chrome DevTools Protocol (CDP) 是 Arc 瀏覽器的遠端控制介面，允許 Claude 自動化操控瀏覽器。</p>
 
       {/* 實時監控面板 */}
-      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: `2px solid ${statusColor}` }}>
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)' }}>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>連線狀態監控</h4>
           <div className="flex items-center gap-2">
