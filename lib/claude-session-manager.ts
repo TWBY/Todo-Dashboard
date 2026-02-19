@@ -75,7 +75,7 @@ function buildQueryOptions(
   effort?: 'low' | 'medium' | 'high',
   systemPromptAppend?: string,
 ): Options {
-  const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'
+  const permissionMode: PermissionMode = mode === 'edit' ? 'acceptEdits' : 'default'
 
   const opts: Options = {
     cwd: projectPath,
