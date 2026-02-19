@@ -5,6 +5,7 @@ export interface ProjectChild {
   devCommand?: string;
   devBasePath?: string;
   devAddedAt?: string;
+  framework?: 'html' | 'python' | 'swift' | 'other';
 }
 
 export interface Project {
@@ -27,6 +28,8 @@ export interface Project {
   devCommand?: string;
   devBasePath?: string;
   devAddedAt?: string;
+  // Framework type (default: nextjs if not specified)
+  framework?: 'html' | 'python' | 'swift' | 'other';
 }
 
 // Claude Usage Limits (from Anthropic OAuth API)

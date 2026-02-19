@@ -202,6 +202,7 @@ const memoryVsClaudeMd = [
 const TABS = [
   { id: 'tech-stack',  label: '技術架構',          icon: 'fa-layer-group' },
   { id: 'env-compare', label: 'Claude 環境比較', icon: 'fa-code-compare' },
+  { id: 'model-choice', label: '模型選擇（H/S/O）', icon: 'fa-brain' },
   { id: 'settings',    label: 'settings.json',   icon: 'fa-gear' },
   { id: 'claude-md',   label: 'CLAUDE.md',        icon: 'fa-file-lines' },
   { id: 'memory',      label: 'Memory',            icon: 'fa-brain' },
@@ -603,6 +604,155 @@ function EnvCompareTab() {
           <li>• 想自訂 system prompt？進階研究 buildQueryOptions 程式碼</li>
         </ul>
       </div>
+    </div>
+  )
+}
+
+function ModelChoiceTab() {
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+        Chat 面板模型選擇（H/S/O）
+      </h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+        Chat 面板底部有三個模型快鍵：<strong>H</strong>（Haiku）、<strong>S</strong>（Sonnet）、<strong>O</strong>（Opus）。選擇不同模型會影響 Claude 的速度、成本和推理能力。本文檔記錄了模型選擇邏輯的驗證過程及實作細節。
+      </p>
+
+      <CalloutBox type="info">
+        把三個模型想成三種不同的顧問：<strong>Haiku</strong> 是快速回應的實習生（便宜、快），<strong>Sonnet</strong> 是全能的資深顧問（平衡），<strong>Opus</strong> 是思考最深的首席顧問（貴、慢、但最聰明）。根據任務複雜度選擇合適的人選。
+      </CalloutBox>
+
+      {/* Model Overview */}
+      <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-5 py-3 text-base font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+          <i className="fa-solid fa-brain mr-2" style={{ color: '#3b82f6' }} />
+          三種模型比較
+        </div>
+        <div style={{ backgroundColor: 'var(--background-primary)' }}>
+          {[
+            { model: 'H (Haiku)', speed: '極快', cost: '最便宜', use: '簡單查詢、文字處理、快速反饋', id: 'haiku' },
+            { model: 'S (Sonnet)', speed: '中等', cost: '中等（預設）', use: '一般任務、代碼審查、文章寫作', id: 'sonnet' },
+            { model: 'O (Opus)', speed: '慢', cost: '最貴', use: '複雜推理、深度分析、長篇規劃', id: 'opus' },
+          ].map((row, i, arr) => (
+            <div key={row.id} className="grid grid-cols-[120px_100px_100px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+              <div className="px-5 py-3.5 font-semibold" style={{ color: 'var(--text-primary)', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>{row.model}</div>
+              <div className="px-5 py-3.5" style={{ color: '#4ade80', borderRight: '1px solid var(--border-color)' }}>{row.speed}</div>
+              <div className="px-5 py-3.5" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{row.cost}</div>
+              <div className="px-5 py-3.5" style={{ color: 'var(--text-secondary)' }}>{row.use}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Implementation Details */}
+      <ExpandableBox label="實作細節：模型參數如何傳遞？">
+        <div style={{ marginBottom: '12px' }}>
+          <strong style={{ color: 'var(--text-primary)' }}>完整傳遞路徑</strong>
+          <pre style={{ backgroundColor: 'var(--background-secondary)', padding: '12px', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', overflow: 'auto', lineHeight: '1.5' }}>
+{`用戶點擊 [H] / [S] / [O]
+    ↓
+ChatContent.tsx (line 1353)
+  → setModelChoice('haiku'|'sonnet'|'opus')
+  → sendMessage(msg, mode, images, modelChoice, effortLevel)
+    ↓
+useClaudeChat.ts (line 668)
+  → executeStream({
+      model: modelOverride || config?.model || undefined
+    })
+    ↓
+POST /api/claude-chat
+  → body: { model: 'haiku'|'sonnet'|'opus', ... }
+    ↓
+route.ts (line 9)
+  → const { model } = await request.json()
+  → createSDKQuery(..., model)
+    ↓
+lib/claude-session-manager.ts (line 105-111)
+  → buildQueryOptions():
+      if (model === 'haiku') {
+        opts.model = 'haiku'
+      } else if (model === 'sonnet') {
+        opts.model = 'sonnet'  ← 2025-02-19 修復：新增此分支
+      } else if (model === 'opus') {
+        opts.model = 'opus'
+      }
+    ↓
+query({ prompt, options: opts })  ← 傳遞給 @anthropic-ai/claude-agent-sdk`}
+          </pre>
+        </div>
+      </ExpandableBox>
+
+      {/* Verification */}
+      <ExpandableBox label="如何驗證模型選擇是否正確？">
+        <div style={{ marginBottom: '12px', color: 'var(--text-secondary)' }}>
+          <strong style={{ color: 'var(--text-primary)' }}>方法 1：Terminal 日誌</strong>
+          <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+            啟動開發伺服器後（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>npm run dev</code>），在 Chat 面板分別點擊 H、S、O 發送訊息。Terminal 應該會輸出：
+            <pre style={{ backgroundColor: 'var(--background-secondary)', padding: '12px', borderRadius: '8px', fontSize: '12px', marginTop: '6px', lineHeight: '1.5', overflow: 'auto', color: '#4ade80' }}>
+{`[session-manager] opts.model: 'haiku' | opts.effort: undefined
+[session-manager] opts.model: 'sonnet' | opts.effort: undefined
+[session-manager] opts.model: 'opus' | opts.effort: 'high'  ← Opus 可配合 effort 調整`}
+            </pre>
+          </div>
+
+          <strong style={{ color: 'var(--text-primary)' }}>方法 2：Arc 瀏覽器 Network 標籤</strong>
+          <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+            1. 打開 Arc 瀏覽器開發者工具（F12）→ Network 標籤<br />
+            2. 在 Chat 面板選擇模型並傳送訊息<br />
+            3. 找到 POST `/api/claude-chat` 的請求 → 點擊 Payload 標籤<br />
+            4. 確認 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>model: 'haiku'|'sonnet'|'opus'</code> 欄位已傳入
+          </div>
+
+          <strong style={{ color: 'var(--text-primary)' }}>方法 3：Chat 面板的按鈕視覺反饋</strong>
+          <div style={{ marginTop: '8px' }}>
+            所選的模型按鈕會呈現不同的背景色和邊框：
+            <ul style={{ marginTop: '6px', marginLeft: '20px', listStyleType: 'disc', color: 'var(--text-secondary)' }}>
+              <li><strong style={{ color: '#34d399' }}>H</strong> — 綠色邊框（Haiku Active）</li>
+              <li><strong style={{ color: '#ffffff' }}>S</strong> — 白色邊框（Sonnet Active）</li>
+              <li><strong style={{ color: '#f5a623' }}>O</strong> — 橙色邊框（Opus Active）</li>
+            </ul>
+          </div>
+        </div>
+      </ExpandableBox>
+
+      {/* Known Issues */}
+      <ExpandableBox label="已知問題與修復">
+        <div style={{ marginBottom: '12px', color: 'var(--text-secondary)' }}>
+          <strong style={{ color: '#fbbf24' }}>問題（已修復）</strong>
+          <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+            在 2025-02-19 之前，<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>buildQueryOptions()</code> 中對 Sonnet 沒有明確傳遞 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>opts.model</code>，導致 S 選項依賴 SDK 的預設值而非明確指定。雖然結果通常是正確的（因為預設值也是 Sonnet），但這存在隱患。
+          </div>
+
+          <strong style={{ color: '#4ade80' }}>修復方案</strong>
+          <div style={{ marginTop: '8px' }}>
+            在 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>lib/claude-session-manager.ts</code> 第 107-108 行新增 sonnet 分支：
+            <pre style={{ backgroundColor: 'var(--background-secondary)', padding: '12px', borderRadius: '8px', fontSize: '12px', marginTop: '6px', lineHeight: '1.5', overflow: 'auto' }}>
+{`if (model === 'haiku') {
+  opts.model = 'haiku'
+} else if (model === 'sonnet') {
+  opts.model = 'sonnet'  // ← 新增（commit: pending）
+} else if (model === 'opus') {
+  opts.model = 'opus'
+}`}
+            </pre>
+            同時在第 190 行加上調試日誌：
+            <pre style={{ backgroundColor: 'var(--background-secondary)', padding: '12px', borderRadius: '8px', fontSize: '12px', marginTop: '6px', lineHeight: '1.5', overflow: 'auto' }}>
+{`console.log('[session-manager] opts.model:', opts.model, '| opts.effort:', opts.effort)`}
+            </pre>
+          </div>
+        </div>
+      </ExpandableBox>
+
+      {/* Best Practices */}
+      <CalloutBox type="tip">
+        <strong>最佳實踐建議：</strong>
+        <ul style={{ marginTop: '8px', marginLeft: '20px', listStyleType: 'disc', color: 'var(--text-secondary)' }}>
+          <li>一般任務預設用 <strong>S (Sonnet)</strong>，速度和成本平衡</li>
+          <li>簡單任務（查詢、格式轉換）用 <strong>H (Haiku)</strong> 節省成本</li>
+          <li>複雜推理（架構設計、深度分析）用 <strong>O (Opus)</strong>，搭配 <strong>effort: high</strong></li>
+          <li>Opus 搭配 effort 切換（L/M/H）來微調思考深度，Haiku 和 Sonnet 的 effort 欄位被忽略</li>
+        </ul>
+      </CalloutBox>
     </div>
   )
 }
@@ -1694,6 +1844,7 @@ export default function DocsPage() {
           <div style={{ maxWidth: '56rem' }}>
             {activeTab === 'tech-stack'  && <TechStackTab />}
             {activeTab === 'env-compare' && <EnvCompareTab />}
+            {activeTab === 'model-choice' && <ModelChoiceTab />}
             {activeTab === 'settings'    && <SettingsTab />}
             {activeTab === 'claude-md'   && <ClaudeMdTab />}
             {activeTab === 'memory'      && <MemoryTab />}

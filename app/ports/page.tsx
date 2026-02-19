@@ -313,15 +313,17 @@ export default function PortsPage() {
 
   // 報戶口完成後：更新城市資料、重新載入居民資料、座位資訊、審計資料
   const handleRegistered = async () => {
-    // 重新載入城市資料
+    // 重新載入城市資料（加 cache bust 確保拿到最新資料）
     setCitiesLoaded(false)
     // 重新載入居民資料 + 座位資訊 + 審計資料
     setLoading(true)
     try {
-      const [devRes, seatsRes, auditRes] = await Promise.all([
+      const now = Date.now()
+      const [devRes, seatsRes, auditRes, citiesRes] = await Promise.all([
         fetch('/api/dev-server'),
         fetch('/api/seats'),
         fetch('/api/port-audit'),
+        fetch(`/api/cities?_t=${now}`),  // cache bust: 加時間戳
       ])
 
       if (devRes.ok) {
@@ -345,6 +347,14 @@ export default function PortsPage() {
         const auditJson = await auditRes.json()
         setAuditEntries(auditJson.entries ?? [])
         setAuditStats(auditJson.stats ?? null)
+      }
+
+      if (citiesRes.ok) {
+        const citiesJson = await citiesRes.json()
+        setCityProjects(citiesJson.projects ?? [])
+        setCityCourseFiles(citiesJson.coursefiles ?? [])
+        setCityUtilityTools(citiesJson.utility ?? [])
+        setCitiesLoaded(true)
       }
     } finally {
       setLoading(false)
@@ -885,14 +895,14 @@ function TierDot({ tier }: { tier: 2 | 3 | 4 }) {
 }
 
 /** 報戶口按鈕（+）：城市居民 → Station */
-function RegisterButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+function RegisterButton({ onClick, loading, disabled, title }: { onClick: () => void; loading: boolean; disabled?: boolean; title?: string }) {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick() }}
-      disabled={loading}
+      disabled={loading || disabled}
       className="px-2 py-1 rounded-lg text-xs font-semibold transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
       style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
-      title="報戶口進入 Station"
+      title={title || "報戶口進入 Station"}
     >
       {loading ? (
         <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
@@ -928,12 +938,13 @@ function UnregisterButton({ onClick, loading }: { onClick: () => void; loading: 
   )
 }
 
-function ResidentCard({ name, tier, port, showPort = false, onRegister, onUnregister, onEnterStation }: {
-  name: string; tier: 2 | 3 | 4; port?: number; showPort?: boolean
+function ResidentCard({ name, tier, port, showPort = false, framework, onRegister, onUnregister, onEnterStation }: {
+  name: string; tier: 2 | 3 | 4; port?: number; showPort?: boolean; framework?: string
   onRegister?: () => Promise<void>; onUnregister?: () => Promise<void>; onEnterStation?: () => void
 }) {
   const [loading, setLoading] = useState(false)
   const isStation = tier >= 3
+  const isNonNextJs = framework && framework !== 'nextjs'
 
   const handleAction = async (action: () => Promise<void>) => {
     setLoading(true)
@@ -951,9 +962,14 @@ function ResidentCard({ name, tier, port, showPort = false, onRegister, onUnregi
         <span className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>{name}</span>
       </div>
       {showPort && port && <PortTag port={port} />}
-      {/* Tier 2: 顯示「+」報戶口 */}
+      {/* Tier 2: 顯示「+」報戶口（非 Next.js 框架 disabled） */}
       {tier === 2 && onRegister && (
-        <RegisterButton onClick={() => handleAction(onRegister)} loading={loading} />
+        <RegisterButton
+          onClick={() => handleAction(onRegister)}
+          loading={loading}
+          disabled={isNonNextJs}
+          title={isNonNextJs ? `${framework} 框架不支援 npm dev` : undefined}
+        />
       )}
       {/* Tier 3/4: 顯示「−」退出 Station（不用 hover，直接顯示） */}
       {isStation && onUnregister && (
@@ -966,7 +982,7 @@ function ResidentCard({ name, tier, port, showPort = false, onRegister, onUnregi
 function DistrictBlock({ name, districtId, childProjects, allEntries, onRegister, onUnregister, onEnterStation }: {
   name: string
   districtId: string
-  childProjects: { name: string; description: string; devPort?: number }[]
+  childProjects: { name: string; description: string; devPort?: number; framework?: string }[]
   allEntries: PortEntry[]
   onRegister: (projectId: string, childName: string) => Promise<void>
   onUnregister: (projectId: string, childName: string) => Promise<void>
@@ -993,6 +1009,7 @@ function DistrictBlock({ name, districtId, childProjects, allEntries, onRegister
               tier={tier}
               port={child.devPort}
               showPort={false}
+              framework={child.framework}
               onRegister={() => onRegister(districtId, child.name)}
               onUnregister={() => onUnregister(districtId, child.name)}
               onEnterStation={onEnterStation}
@@ -1008,6 +1025,8 @@ function CityBlock({ name, color, projects, allEntries, onEnterStation, onRegist
   name: string; color: string; projects: Project[]; allEntries: PortEntry[]
   onEnterStation: () => void; onRegistered: () => Promise<void>
 }) {
+  const [registerMessage, setRegisterMessage] = useState<{ text: string; type: 'ok' | 'warn' } | null>(null)
+
   const total = projects.reduce((sum, p) => sum + (p.children?.length || 1), 0)
   const stationCount = projects.reduce((sum, p) => {
     if (p.children?.length) return sum + p.children.filter(c => c.devPort).length
@@ -1020,7 +1039,19 @@ function CityBlock({ name, color, projects, allEntries, onEnterStation, onRegist
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projectId, childName, action: 'add-to-dev' }),
     })
-    if (res.ok) await onRegistered()
+    if (res.ok) {
+      const data = await res.json()
+      if (data.packageJsonStatus === 'updated') {
+        setRegisterMessage({ text: '報戶口完成，package.json 已同步', type: 'ok' })
+      } else if (data.packageJsonStatus?.startsWith('skipped-')) {
+        // html/python/swift 等老人家，不需要 package.json 更新
+        setRegisterMessage(null)
+      } else {
+        setRegisterMessage({ text: `package.json 未更新（${data.packageJsonStatus}），請到「登記審計」手動修復`, type: 'warn' })
+      }
+      await onRegistered()
+      setTimeout(() => setRegisterMessage(null), 5000)
+    }
   }
 
   const handleUnregister = async (projectId: string, childName?: string) => {
@@ -1041,6 +1072,17 @@ function CityBlock({ name, color, projects, allEntries, onEnterStation, onRegist
       className="rounded-[var(--radius-medium)] overflow-hidden"
       style={{ border: '1px solid var(--border-color)' }}
     >
+      {/* Flash message */}
+      {registerMessage && (
+        <div className={`text-xs px-3 py-1.5 ${
+          registerMessage.type === 'ok'
+            ? 'bg-green-500/10 text-green-400'
+            : 'bg-yellow-500/10 text-yellow-400'
+        }`}>
+          {registerMessage.text}
+        </div>
+      )}
+
       {/* 城市 Header */}
       <div
         className="px-3 py-2.5 flex items-center justify-between"
@@ -1090,6 +1132,7 @@ function CityBlock({ name, color, projects, allEntries, onEnterStation, onRegist
                   tier={tier}
                   port={project.devPort}
                   showPort={false}
+                  framework={project.framework}
                   onRegister={() => handleRegister(project.id)}
                   onUnregister={() => handleUnregister(project.id)}
                   onEnterStation={onEnterStation}

@@ -67,19 +67,23 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 /** 更新 package.json：在 scripts.dev 加上 -p <port> */
-async function updatePackageJsonPort(projectPath: string, port: number): Promise<void> {
+async function updatePackageJsonPort(projectPath: string, port: number): Promise<'updated' | 'no-scripts-dev' | 'no-file' | 'error'> {
   const pkgPath = join(projectPath, 'package.json')
-  if (!await fileExists(pkgPath)) return
+  if (!await fileExists(pkgPath)) return 'no-file'
   try {
     const raw = await readFile(pkgPath, 'utf-8')
     const pkg = JSON.parse(raw)
-    if (!pkg.scripts?.dev) return
+    if (!pkg.scripts?.dev) return 'no-scripts-dev'
     const devScript: string = pkg.scripts.dev
     // 如果已經有 -p，先移除舊的
     const cleaned = devScript.replace(/\s+-p\s+\d+/g, '').replace(/\s+--port\s+\d+/g, '')
     pkg.scripts.dev = `${cleaned} -p ${port}`
     await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
-  } catch { /* ignore parse errors */ }
+    return 'updated'
+  } catch (e) {
+    console.error('[updatePackageJsonPort] failed:', projectPath, e)
+    return 'error'
+  }
 }
 
 /** 從 package.json scripts.dev 移除 -p <port> */
@@ -167,11 +171,22 @@ export async function PATCH(request: Request) {
     targetList[targetIndex].updatedAt = new Date().toISOString();
     await writeJsonFile(targetFile, targetList);
 
-    // 雙重登記：package.json
+    // 雙重登記：package.json（非 Next.js 框架跳過）
     const projectPath = resolveProjectPath(targetList[targetIndex], childName);
-    await updatePackageJsonPort(projectPath, devPort);
+    const project = targetList[targetIndex];
+    const child = childName ? project.children?.find(c => c.name === childName) : undefined;
+    const projectFramework = child?.framework || project.framework;
 
-    return NextResponse.json({ devPort, devAddedAt });
+    let packageJsonStatus: string;
+    if (projectFramework) {
+      // html/python/swift 等老人家，不需要更新 package.json
+      packageJsonStatus = `skipped-${projectFramework}`;
+    } else {
+      // Next.js 預設，更新 package.json
+      packageJsonStatus = await updatePackageJsonPort(projectPath, devPort);
+    }
+
+    return NextResponse.json({ devPort, devAddedAt, packageJsonStatus });
   }
 
   if (action === 'remove-from-dev') {

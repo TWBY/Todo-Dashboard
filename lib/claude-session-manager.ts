@@ -104,6 +104,8 @@ function buildQueryOptions(
 
   if (model === 'haiku') {
     opts.model = 'haiku'
+  } else if (model === 'sonnet') {
+    opts.model = 'sonnet'
   } else if (model === 'opus') {
     opts.model = 'opus'
   }
@@ -185,6 +187,7 @@ export function createSDKQuery(
     resume: existingSessionId || null,
     newSession: newSessionId || null,
   })
+  console.log('[session-manager] opts.model:', opts.model, '| opts.effort:', opts.effort)
 
   const queryInstance = query({
     prompt: message,
