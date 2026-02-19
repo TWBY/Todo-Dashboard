@@ -1763,13 +1763,37 @@ function GapsTab() {
                 <strong>控制項包括：</strong>
               </div>
               <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-                • <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> — 工作模式（plan vs acceptEdits）<br />
+                • <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> — 工作模式（plan / default / acceptEdits）<br />
                 • <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>mcpServers</code> — 掛載哪些 MCP（Arc、Zeabur 等）<br />
                 • <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>systemPrompt</code> — 全局系統提示<br />
                 • <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>effort</code> — 努力程度（low/medium/high）
               </div>
               <div style={{ marginTop: '8px' }}>
                 <strong>為什麼重要：</strong> 想理解「Extension 和 SDK 為什麼不同」，這個函式就是答案。本文件中提到的 permissionMode、opts.mcpServers 等概念都源自於此。
+              </div>
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>實際踩坑範例：permissionMode 的三層架構</strong>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>現象：</strong> 全域 CLAUDE.md 已開放 Bash 權限，但在 Chat 視窗（Plan mode）執行 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>git status</code> 仍被擋住，必須先批准 ExitPlanMode 才能繼續。
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>根因：</strong> 權限控制有三個層次，優先度由高到低：
+              </div>
+              <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+                1. <strong>SDK permissionMode（最高）</strong> — <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>'plan'</code> 模式在 SDK 層全局禁止所有工具執行，不管下層怎麼設定<br />
+                2. <strong>canUseTool callback（中）</strong> — 應用層控制，對 Bash 返回 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>allow</code>，但被上層 SDK 覆蓋<br />
+                3. <strong>CLAUDE.md 黑白名單（低）</strong> — 全域用戶設定，最底層，影響不到 SDK 層行為
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>解法：</strong> 改用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>'default'</code> 取代 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>'plan'</code>，讓 canUseTool 的邏輯自行控制：
+              </div>
+              <div style={{ marginTop: '6px', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', whiteSpace: 'pre', backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>
+                {`// 修改前（Bash 被 SDK 攔截）\nconst permissionMode = mode === 'edit' ? 'acceptEdits' : 'plan'\n\n// 修改後（Bash 直接放行，ExitPlanMode 繼續被攔截）\nconst permissionMode = mode === 'edit' ? 'acceptEdits' : 'default'`}
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                <strong>教訓：</strong> <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode</code> 是 SDK 全局開關，優先於所有應用層設定。「我已經在 CLAUDE.md 開放了 bash」這句話，在 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>permissionMode='plan'</code> 面前完全無效。
               </div>
             </div>
           </ExpandableBox>
