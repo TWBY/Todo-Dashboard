@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import type { Project } from '@/lib/types';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
+import { useLeftPanel } from '@/contexts/LeftPanelContext';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { formatPort } from '@/lib/format';
-import Spinner from '@/components/Spinner';
 import { useToast } from '@/contexts/ToastContext';
 
 interface DevServerPanelProps {
@@ -28,6 +28,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
   const [prodLoading, setProdLoading] = useState(false);
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
+  const { toggle: toggleLeftPanel } = useLeftPanel();
   const { toggle: toggleBuildPanel } = useBuildPanel();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
@@ -311,13 +312,8 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
     return statuses.find(s => s.projectId === projectId);
   };
 
-  // Pin Todo-Dashboard to top, then split running vs stopped
-  const todoDashboard = projectsWithPort.find(p => p.id === 'dashboard');
-  const otherProjects = projectsWithPort.filter(p => p.id !== 'dashboard');
-  const runningProjects = otherProjects.filter(p => getStatus(p.id)?.isRunning);
-  const stoppedProjects = otherProjects.filter(p => !getStatus(p.id)?.isRunning);
-  const pinnedRunning = todoDashboard && getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
-  const pinnedStopped = todoDashboard && !getStatus(todoDashboard.id)?.isRunning ? [todoDashboard] : [];
+  // Use original order from projectsWithPort
+  const sortedProjects = projectsWithPort;
 
   // Production 自我保護：從 3001 訪問時，不能停止 Production server
   const isProdSelf = currentPort === 3001;
@@ -403,7 +399,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
                     }}
                     title={isRunning ? '停止' : '啟動'}
                   >
-                    {isLoading ? <Spinner /> : 'S'}
+                    S
                   </button>
                 ) : (
                   <span className="w-8" />
@@ -439,55 +435,91 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
 
   return (
     <div className="relative">
-      <div ref={headerBtnsRef} className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-lg flex items-center gap-2">
-          {currentPort === 3002 && versionConfig.development && (
-            <span
-              className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
-              title="Development 版本"
+      <div ref={headerBtnsRef} className="flex flex-col gap-2 mb-3">
+        {/* 第一行：版本標籤 + 收合按鈕 */}
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-lg flex items-center gap-2 shrink-0">
+            {currentPort === 3002 && versionConfig.development && (
+              <span
+                className="text-xs font-mono px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
+                title="Development 版本"
+              >
+                Dev {versionConfig.development}
+              </span>
+            )}
+            {currentPort === 3001 && versionConfig.production && (
+              <span
+                className="text-xs font-mono px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
+                title="Production 版本"
+              >
+                Prod {versionConfig.production}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={toggleLeftPanel}
+            className="flex-1 py-2 rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center"
+            style={{
+              backgroundColor: 'var(--background-tertiary)',
+              color: 'var(--text-secondary)',
+            }}
+            title="收合專案列表"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              Dev {versionConfig.development}
-            </span>
-          )}
-          {currentPort === 3001 && versionConfig.production && (
-            <span
-              className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
-              title="Production 版本"
-            >
-              Prod {versionConfig.production}
-            </span>
-          )}
-        </h2>
-        <div className="flex items-center gap-1.5">
-          <span className="w-8" />
+              <polyline points="10 3 5 8 10 13" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 第二行：R、P、L 按鈕 */}
+        <div className="flex items-center gap-2">
           <button
             onClick={handleProdReload}
             disabled={prodLoading}
-            className={`${btnBase} disabled:opacity-60 disabled:cursor-not-allowed`}
-            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151', ...btnStyle }}
+            className={`flex-1 disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]`}
+            style={{ backgroundColor: '#1f2937', color: '#9ca3af', border: '1px solid #374151' }}
             title="重新啟動 Production 3001"
           >
             {prodLoading ? <Spinner /> : 'R'}
           </button>
           <button
             onClick={toggleBuildPanel}
-            className={btnBase}
-            style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520', ...btnStyle }}
+            className="flex-1 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+            style={{ backgroundColor: '#332815', color: '#f59e0b', border: '1px solid #4a3520' }}
             title="版本升級與打包流程"
           >
             P
           </button>
           <button
             onClick={() => router.push('/changelog')}
-            className={btnBase}
-            style={{ backgroundColor: '#1f1533', color: '#a78bfa', border: '1px solid #3b2663', ...btnStyle }}
+            className="flex-1 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+            style={{ backgroundColor: '#1f1533', color: '#a78bfa', border: '1px solid #3b2663' }}
             title="版本歷史"
           >
             L
           </button>
         </div>
+
+        {/* 第三行：Ports 按鈕 */}
+        <button
+          onClick={() => router.push('/ports')}
+          className={`${btnBase} w-full`}
+          style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
+          title="Port 管理（國家全貌 + Station 居民表）"
+        >
+          <i className="fa-solid fa-network-wired text-xs" />
+        </button>
       </div>
 
       {isInitialLoad ? (
@@ -508,9 +540,7 @@ export default function DevServerPanel({ projects, onUpdate }: DevServerPanelPro
         </div>
       ) : (
         <div className="space-y-1">
-          {pinnedRunning.map(p => renderProjectRow(p))}
-          {runningProjects.map(p => renderProjectRow(p))}
-          {[...pinnedStopped, ...stoppedProjects].map(p => renderProjectRow(p))}
+          {sortedProjects.map(p => renderProjectRow(p))}
         </div>
       )}
 

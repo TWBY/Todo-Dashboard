@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import gsap from 'gsap'
 import { useChatPanels } from '@/contexts/ChatPanelsContext'
 import { useLeftPanel } from '@/contexts/LeftPanelContext'
@@ -8,6 +9,7 @@ import { useBuildPanel } from '@/contexts/BuildPanelContext'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
 import TeamMonitorPanel from '@/components/TeamMonitorPanel'
 import BuildPanel from '@/components/BuildPanel'
+import QuickTodoModal from '@/components/QuickTodoModal'
 
 // — M3 Easing Utilities —
 function bezierPoint(p1: number, p2: number, t: number): number {
@@ -61,9 +63,18 @@ function Divider({ onMouseDown, dividerRef }: { onMouseDown: (e: React.MouseEven
 }
 
 export default function ResizableLayout({ left }: ResizableLayoutProps) {
-  const { openPanels, removePanel } = useChatPanels()
+  const router = useRouter()
+  const { openPanels, removePanel, addPanel } = useChatPanels()
   const { collapsed: leftCollapsed, toggle: toggleLeft } = useLeftPanel()
   const { open: buildPanelOpen } = useBuildPanel()
+  const [todoModalOpen, setTodoModalOpen] = useState(false)
+
+  const DASHBOARD_PROJECT_ID = 'dashboard'
+  const DASHBOARD_PROJECT_NAME = 'Todo-Dashboard'
+
+  const openAskChat = () => {
+    addPanel(DASHBOARD_PROJECT_ID, DASHBOARD_PROJECT_NAME, { emailMode: true })
+  }
   const [rightPct, setRightPct] = useState(DEFAULT_RIGHT_PCT)
   const isDragging = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -477,10 +488,84 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
       {/* 左側主內容 — 不用條件式 style，完全由 GSAP 控制 */}
       <div
         ref={leftPanelRef}
-        className="min-w-0 shrink-0"
+        className="min-w-0 shrink-0 flex flex-col"
       >
-        <div ref={contentRef} className="h-full">
+        <div ref={contentRef} className="flex-1 overflow-y-auto">
           {left}
+        </div>
+        {/* 底部導覽按鈕 */}
+        <div className="flex flex-col gap-2 p-3 border-t border-[var(--border-secondary)]">
+          {/* 第一排：動作類 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTodoModalOpen(true)}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+            >
+              待辦
+            </button>
+            <button
+              onClick={openAskChat}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              suppressHydrationWarning
+            >
+              Email
+            </button>
+            <button
+              onClick={() => router.push('/docs')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+            >
+              技術文件
+            </button>
+          </div>
+
+          {/* 第二排：導覽類 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/chat/center')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              title="Chat 功能中心"
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => router.push('/blog/pipeline')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              title="Blog 編輯流水線"
+            >
+              Blog
+            </button>
+            <button
+              onClick={() => router.push('/skills')}
+              className="flex-1 py-2 rounded-lg text-base transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--background-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              title="Skills 總覽"
+            >
+              Skills
+            </button>
+          </div>
         </div>
       </div>
 
@@ -578,6 +663,11 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           </div>
         )}
       </div>
+
+      <QuickTodoModal
+        open={todoModalOpen}
+        onClose={() => setTodoModalOpen(false)}
+      />
     </div>
   )
 }

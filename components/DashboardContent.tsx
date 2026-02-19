@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import type { Project } from '@/lib/types';
 import DevServerPanel from './DevServerPanel';
 import ScratchPad from './ScratchPad';
-import { ClaudeUsageBar } from './SystemStatusBar';
 import ResizableLayout from './ResizableLayout';
 
 const CDP_INTERVAL = 10
@@ -164,18 +163,6 @@ export default function DashboardContent() {
 
           {/* CDP Status */}
           <CdpStatusBadge />
-
-          {/* Bottom: Claude Usage Indicator */}
-          <div className="flex-shrink-0 mt-2 px-3 py-2 rounded-lg flex gap-4" style={{ backgroundColor: 'var(--background-secondary)' }}>
-            {/* Left Column: Session */}
-            <div style={{ flex: '0 0 50%' }}>
-              <ClaudeUsageBar layout="session-only" />
-            </div>
-            {/* Right Column: Weekly */}
-            <div style={{ flex: '0 0 50%' }}>
-              <ClaudeUsageBar layout="weekly-only" />
-            </div>
-          </div>
 
         </div>
       }
