@@ -21,8 +21,13 @@ export async function POST(request: Request) {
     content: body.content.trim(),
     done: false,
     createdAt: new Date().toISOString(),
+    ...(body.title && { title: body.title.trim() }),
+    ...(body.category && { category: body.category }),
+    ...(body.source && { source: body.source }),
     ...(body.plan && { plan: body.plan }),
     ...(body.chatSessionId && { chatSessionId: body.chatSessionId }),
+    ...(body.projectId && { projectId: body.projectId }),
+    ...(body.projectName && { projectName: body.projectName }),
   };
   items.push(newItem);
   await writeJsonFile(FILE, items);
@@ -39,6 +44,9 @@ export async function PATCH(request: Request) {
   if (body.done !== undefined) items[index].done = body.done;
   if (body.chatSessionId !== undefined) items[index].chatSessionId = body.chatSessionId;
   if (body.plan !== undefined) items[index].plan = body.plan;
+  if (body.resolvedSessionId !== undefined) items[index].resolvedSessionId = body.resolvedSessionId;
+  if (body.projectId !== undefined) items[index].projectId = body.projectId;
+  if (body.projectName !== undefined) items[index].projectName = body.projectName;
   await writeJsonFile(FILE, items);
   return NextResponse.json({ data: items[index] });
 }
