@@ -1,7 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import { ModelBadge } from '@/components/SkillArchitecture'
+import SkillArchitecture from '@/components/SkillArchitecture'
+import BlogChatPanel from '@/components/BlogChatPanel'
+import {
+  CHAT_FEATURES,
+  generatePortingChecklist,
+  type ChatFeature,
+  type FeatureTier,
+} from '@/lib/chat-center-features'
+import versionConfig from '@/version.json'
 
 interface DocSection {
   title: string
@@ -208,8 +218,13 @@ const TABS = [
   { id: 'mcp',          label: 'MCP 設定' },
   { id: 'env-compare',  label: 'Extension vs SDK' },
   { id: 'cli-vs-sdk',   label: 'CLI 與 SDK' },
-  { id: 'arc-cdp',      label: 'Arc CDP' },
+  { id: 'arc-cdp',      label: 'Browser MCP' },
   { id: 'gaps',         label: '文件缺口' },
+  { id: 'chat',         label: 'Chat 功能中心' },
+  { id: 'blog',         label: 'Blog 編輯流水線' },
+  { id: 'skills',       label: 'Skills 總覽' },
+  { id: 'sdk',          label: 'Agent SDK' },
+  { id: 'changelog',    label: '版本歷史' },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────
@@ -516,6 +531,72 @@ function TechStackTab() {
           </div>
           <div style={{ marginTop: '12px', color: 'var(--text-tertiary)' }}>
             Source of Truth：JSON 檔案的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>devPort</code> 欄位。管理頁面：<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>/ports</code>
+          </div>
+
+          {/* 座位制度 */}
+          <div style={{ marginTop: '20px' }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Station 座位制度</p>
+            <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+              Station 有 <strong>8 個座位</strong>（Port 3003–3010）。每個進駐的專案占據一個座位。分配規則最簡單：<strong>優先給最小編號的空位</strong>。離開時座位釋出給下一個人。
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <div className="flex items-center gap-2"><i className="fa-solid fa-circle" style={{ color: '#22c55e', fontSize: 8 }} />空位 = 可以進駐</div>
+              <div className="flex items-center gap-2"><i className="fa-solid fa-circle" style={{ color: '#3b82f6', fontSize: 8 }} />被占用 = 已進駐</div>
+            </div>
+          </div>
+
+          {/* 雙重登記 */}
+          <div style={{ marginTop: '20px' }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>雙重登記（進駐必須同時做）</p>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {[
+                { num: 1, title: 'JSON devPort', role: '紀錄座位', desc: 'projects.json / coursefiles.json / utility-tools.json 記錄誰坐在哪個座位（port）。', color: '#3b82f6' },
+                { num: 2, title: 'package.json -p flag', role: '執行時讀取', desc: 'scripts.dev 寫死 -p <port>，讓 Node.js 啟動伺服器時用正確的 port。', color: '#22c55e' },
+              ].map(item => (
+                <div key={item.num} className="rounded-lg p-3 text-sm" style={{ backgroundColor: 'var(--background-primary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: item.color + '20', color: item.color }}>{item.num}</span>
+                    <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{item.title}</span>
+                  </div>
+                  <div className="text-xs mb-1" style={{ color: item.color }}>{item.role}</div>
+                  <div className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>一次 API 呼叫會自動同時更新這兩個地方。</p>
+          </div>
+
+          {/* 進駐 / 離開 */}
+          <div className="grid grid-cols-2 gap-3" style={{ marginTop: '20px' }}>
+            {[
+              { title: '進駐（坐下）', steps: ['從 Dashboard 點「進駐」', 'API 自動分配最小編號的空座位，同步更新 JSON 和 package.json', '完成！專案現在在 Station 可以被 Start / Open'] },
+              { title: '離開（站起來）', steps: ['先停止 dev server（如果正在運行）', '點「離開」→ API 清除 JSON devPort 和 package.json 的 -p flag', '座位釋出，下一個人可以坐'] },
+            ].map(block => (
+              <div key={block.title} className="rounded-lg p-3" style={{ backgroundColor: 'var(--background-primary)', border: '1px solid var(--border-color)' }}>
+                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{block.title}</p>
+                <ol className="space-y-1.5">
+                  {block.steps.map((step, i) => (
+                    <li key={i} className="flex gap-2 items-start text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <span className="w-4 h-4 rounded flex items-center justify-center font-mono font-bold shrink-0 mt-0.5" style={{ backgroundColor: 'var(--background-secondary)', color: 'var(--text-tertiary)', fontSize: 10 }}>{i + 1}</span>
+                      <span style={{ lineHeight: 1.6 }}>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+
+          {/* FAQ */}
+          <div style={{ marginTop: '16px', backgroundColor: 'var(--background-primary)', border: '1px solid var(--border-color)' }} className="rounded-lg p-3 text-xs leading-relaxed">
+            <p className="font-semibold mb-1.5" style={{ color: 'var(--text-primary)' }}>為什麼要同時更新 JSON 和 package.json？</p>
+            <div className="space-y-1" style={{ color: 'var(--text-secondary)' }}>
+              <p><strong>JSON</strong> 是 Dashboard 的紀錄簿；<strong>package.json</strong> 是 Node.js 的說明書。只更新一個會造成不一致：</p>
+              <ul className="ml-3 space-y-0.5 list-disc list-inside" style={{ color: 'var(--text-tertiary)' }}>
+                <li>只更新 JSON → package.json 說「用 3001」，但沒人在 3001 坐著，混亂</li>
+                <li>只更新 package.json → 程式用了 3001，但 Dashboard 不知道，找不到</li>
+              </ul>
+              <p>所以一次 API 呼叫會同時做好這兩件事。</p>
+            </div>
           </div>
         </div>
       </ExpandableBox>
@@ -2138,8 +2219,120 @@ function ArcCdpTab() {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Arc CDP — 瀏覽器遠端偵錯協議</h2>
-      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>Chrome DevTools Protocol (CDP) 是 Arc 瀏覽器的遠端控制介面，允許 Claude 自動化操控瀏覽器。</p>
+      <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Browser MCP — 瀏覽器自動化的兩條路</h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>這裡有兩個 MCP，底層都是同一個工具（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>@playwright/mcp</code>），卻解決了兩個截然不同的問題。要理解為什麼，得從頭說起。</p>
+
+      {/* 第一章 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fa-solid fa-robot mr-2" style={{ color: '#4ade80' }} />第一章：機器人測試員的誕生
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          很久以前，工程師們想讓程式自動測試網頁——點按鈕、填表單、確認結果。於是 Playwright 誕生了。它的做法很直接：<strong>自己開一個瀏覽器</strong>，在背景默默跑，不打擾任何人。這個瀏覽器沒有介面、不需要你盯著看，只管執行指令、回傳結果。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          這就是 <strong>bot-browser</strong> 的本質：一個全自動的無頭機器人，隨叫隨到，用完即棄，設定極其簡單——
+        </p>
+        <pre style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', padding: '10px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', marginTop: '10px', lineHeight: 1.6 }}>
+{`npx @playwright/mcp --browser chromium --headless`}</pre>
+        <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>不需要任何前置條件，Playwright 自己負責啟動和關閉 Chromium。</p>
+      </div>
+
+      {/* 第二章 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fa-solid fa-triangle-exclamation mr-2" style={{ color: '#fbbf24' }} />第二章：機器人沒有記憶
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          但問題來了。這個機器人每次啟動都是全新的 Chromium，<strong>沒有任何 cookies、沒有登入狀態</strong>。你登入 Google、GitHub、公司後台的那些 session，機器人完全看不到。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75, fontStyle: 'italic' }}>
+          「幫我看一下後台這個頁面有沒有問題。」<br />
+          機器人到了那個 URL，看到的是登入頁。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          對於需要身份驗證的頁面，無頭機器人是個瞎子。
+        </p>
+      </div>
+
+      {/* 第三章 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fa-solid fa-key mr-2" style={{ color: '#a78bfa' }} />第三章：Chrome 的後門
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          其實 Chrome 從很早就內建了一個「遠端偵錯協議」，叫做 <strong>CDP（Chrome DevTools Protocol）</strong>。它原本是給 DevTools 用的——你在 F12 裡看到的所有東西，背後都是 CDP。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          有人發現：只要讓瀏覽器開放這個後門（監聽一個 port），外部程式就可以「寄生」進去，<strong>繼承所有 session、cookies、登入狀態</strong>——用你正在使用的那個瀏覽器。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          Playwright 順勢加了一個參數 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>--cdp-endpoint</code>，不再自己開瀏覽器，改成連接你已經在用的那一個。這就是 <strong>arc-cdp</strong> 的誕生：
+        </p>
+        <pre style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', padding: '10px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', marginTop: '10px', lineHeight: 1.6 }}>
+{`npx @playwright/mcp --cdp-endpoint http://localhost:9222`}</pre>
+      </div>
+
+      {/* 第四章 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fa-solid fa-door-open mr-2" style={{ color: '#ef4444' }} />第四章：後門為什麼這麼麻煩
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          寄生進別人的瀏覽器，代價是你得讓對方先開門。Arc 預設不開放這個後門——每次從 Dock 或 Spotlight 點擊開啟，都是普通模式，沒有 CDP。你必須用特殊指令重啟：
+        </p>
+        <pre style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', padding: '10px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'ui-monospace, monospace', marginTop: '10px', lineHeight: 1.6 }}>
+{`pkill -a Arc; open -a Arc --args --remote-debugging-port=9222`}</pre>
+        <p className="text-sm mt-3" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          Arc UI 設定裡有個「Remote Debugging」開關，看起來能省掉這步——<strong>但它是假的，完全無效</strong>。唯一方式就是上面那行指令。
+        </p>
+        <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          還有另一個代價：你和 AI 現在共用同一個瀏覽器。AI 說「我要打開 localhost:3001」，它可能直接把你正在看的分頁導走。多個 Claude session 同時運行，就像多個人搶同一台電腦的滑鼠——誰都可能誤觸別人的分頁。
+        </p>
+      </div>
+
+      {/* 結局 */}
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fa-solid fa-code-branch mr-2" style={{ color: '#0184ff' }} />現在的分工
+        </div>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+          arc-cdp 解決了 bot-browser 解決不了的問題，但 bot-browser 本身從來沒有消失。它一直都在——只是之前沒有被放進 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '2px' }}>mcp.json</code>。現在兩個並存，根據場景選用。
+        </p>
+        <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(74,222,128,0.3)', backgroundColor: 'rgba(74,222,128,0.05)' }}>
+            <div className="text-sm font-semibold mb-2" style={{ color: '#4ade80' }}>
+              <i className="fa-solid fa-robot mr-2" />bot-browser <span style={{ fontSize: '10px', fontWeight: 400, color: '#6b7280' }}>（原始方案）</span>
+            </div>
+            <div className="text-xs space-y-1" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              <div>自己啟動 headless Chromium</div>
+              <div>無前置條件，隨叫隨到</div>
+              <div>無登入狀態（全新乾淨環境）</div>
+              <div>不碰你的 Arc，零干擾</div>
+              <div style={{ marginTop: '6px', color: 'var(--text-secondary)' }}>適合：UI 測試、點擊流程、截圖公開頁面</div>
+            </div>
+          </div>
+          <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid rgba(167,139,250,0.3)', backgroundColor: 'rgba(167,139,250,0.05)' }}>
+            <div className="text-sm font-semibold mb-2" style={{ color: '#a78bfa' }}>
+              <i className="fa-solid fa-user mr-2" />arc-cdp <span style={{ fontSize: '10px', fontWeight: 400, color: '#6b7280' }}>（後來加的）</span>
+            </div>
+            <div className="text-xs space-y-1" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              <div>連接你正在用的 Arc</div>
+              <div>需要特殊指令重啟 Arc</div>
+              <div>繼承你的所有 session / cookies</div>
+              <div>AI 和你共用同一個瀏覽器</div>
+              <div style={{ marginTop: '6px', color: 'var(--text-secondary)' }}>適合：需要登入的後台、staging 環境排查</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <CalloutBox type="info">
+        <strong>底層秘密：</strong> arc-cdp 和 bot-browser 的名字是我們自己取的，兩個都是 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>@playwright/mcp</code>，差的只是一個參數。bot-browser 用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>--browser chromium --headless</code>，arc-cdp 用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>--cdp-endpoint http://localhost:9222</code>。
+      </CalloutBox>
+
+      <h3 className="text-base font-semibold mt-6 mb-2" style={{ color: 'var(--text-primary)' }}>arc-cdp 即時狀態監控</h3>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>因為 arc-cdp 需要 Arc 以特殊模式運行，以下面板即時顯示連線狀態。</p>
 
       {/* 實時監控面板 */}
       <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)' }}>
@@ -2192,121 +2385,7 @@ function ArcCdpTab() {
         </div>
       </div>
 
-      <CalloutBox type="info">
-        <strong>CDP 的作用：</strong> 讓 Claude Code 可以透過 Playwright MCP 自動化控制 Arc 瀏覽器（點擊、填表、截圖、讀取網頁內容）。這是 browser_click、browser_navigate、browser_snapshot 等工具的基礎。
-      </CalloutBox>
-
-      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>啟動 Arc CDP</h3>
-      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-        <p className="text-sm mb-2">在終端執行以下指令：</p>
-        <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '8px 12px', borderRadius: '4px', display: 'block', color: 'var(--text-primary)', fontSize: '12px', lineHeight: '1.6' }}>
-          pkill -a Arc; open -a Arc --args --remote-debugging-port=9222
-        </code>
-      </div>
-
-      <CalloutBox type="warn">
-        <strong>重要：</strong> Arc UI 設定裡的「Remote Debugging」開關無效，必須使用上面的啟動指令才能真正啟用 CDP。從 Dock 或 Spotlight 點擊開啟 Arc 時，CDP 不會自動啟動。
-      </CalloutBox>
-
-      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>CDP 工作原理</h3>
-      <div className="space-y-3">
-        <div className="rounded-xl px-4 py-3 mb-2" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <strong className="text-sm" style={{ color: 'var(--text-primary)' }}>通訊層</strong>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Arc 瀏覽器監聽 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>localhost:9222</code>，Claude Code 透過 WebSocket 發送 CDP 命令。
-          </p>
-        </div>
-
-        <div className="rounded-xl px-4 py-3 mb-2" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <strong className="text-sm" style={{ color: 'var(--text-primary)' }}>MCP 橋接</strong>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Playwright MCP（arc-cdp）是中介層，將 Claude 的高階指令（「點擊登入按鈕」）轉換為低階 CDP 命令。
-          </p>
-        </div>
-
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <strong className="text-sm" style={{ color: 'var(--text-primary)' }}>頁面快照</strong>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Claude 透過 CDP 取得頁面 accessibility tree，可以理解頁面結構、找到對應元素、執行操作。
-          </p>
-        </div>
-      </div>
-
-      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>CDPStatusBadge 元件與連線狀態</h3>
-      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>首頁左側邊欄的「開啟 CDP」/「關閉 CDP」按鈕負責控制 CDP 連線狀態。按鈕的文案反映了當前的連線狀態。</p>
-
-      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <div><strong>位置：</strong> <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>components/DashboardContent.tsx</code> 中的 CdpStatusBadge 元件</div>
-          <div style={{ marginTop: '8px' }}><strong>核心功能：</strong></div>
-          <div style={{ marginTop: '4px', marginLeft: '12px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-            • 每 10 秒檢查一次 CDP 連線狀態（呼叫 /api/cdp-status）<br />
-            • 點擊按鈕時呼叫 /api/cdp-restart 重啟 Arc（帶或不帶 CDP）<br />
-            • 按鈕文案隨連線狀態動態更新
-          </div>
-        </div>
-      </div>
-
-      <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: 'var(--text-primary)' }}>三種連線狀態</h4>
-      <div className="space-y-2 mb-4">
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-            <strong>1. CDP 已連線</strong>
-          </div>
-          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-            <div><strong>條件：</strong> Port 9222 監聽中 + CDP 端點回應正常 + WebSocket 握手成功</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 透明背景、灰色文字、邊框</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「關閉 CDP」</div>
-            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器正在監聽 port 9222，Playwright MCP WebSocket 可以建立連線，Claude Code 可以控制瀏覽器</div>
-            <div style={{ marginTop: '4px' }}><strong>技術檢查項（三層）：</strong></div>
-            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
-              • Port 9222 正在被 Arc 進程監聽（可用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>lsof -i :9222</code> 檢查）<br />
-              • /json/version HTTP 端點回應正常<br />
-              • WebSocket 握手（HTTP Upgrade）成功 — 代表真正能建立 session
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-            <strong>2. CDP 未連線</strong>
-          </div>
-          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-            <div><strong>條件：</strong> Port 9222 未監聽 或 CDP 端點無回應</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 藍色背景（accent color）、白色文字</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「開啟 CDP」</div>
-            <div style={{ marginTop: '4px' }}><strong>含義：</strong> Arc 瀏覽器未正確啟動 CDP，或進程已終止</div>
-            <div style={{ marginTop: '4px' }}><strong>可能原因：</strong></div>
-            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
-              • Arc 進程未執行<br />
-              • Arc 啟動時未帶 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>--remote-debugging-port=9222</code> 參數<br />
-              • Arc 崩潰或被手動終止
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
-          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-            <strong>3. 重新啟動中</strong>
-          </div>
-          <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-            <div><strong>觸發條件：</strong> 點擊按鈕後，等待 Arc 重啟完成</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕外觀：</strong> 灰色背景、灰色文字、透明度降低</div>
-            <div style={{ marginTop: '4px' }}><strong>按鈕文案：</strong> 「重新啟動中...」</div>
-            <div style={{ marginTop: '4px' }}><strong>含義：</strong> 已發送 /api/cdp-restart 指令，等待 Arc 進程重啟（通常 3-4 秒）</div>
-            <div style={{ marginTop: '4px' }}><strong>狀態流轉：</strong></div>
-            <div style={{ marginTop: '2px', marginLeft: '12px' }}>
-              • 點擊按鈕 → cdpActive 變為 true，呼叫 /api/cdp-restart<br />
-              • restarting flag 設為 true，按鈕禁用<br />
-              • 等待 4000ms（給 Arc 重啟時間）<br />
-              • 重新檢查 /api/cdp-status 獲取新狀態<br />
-              • 按鈕重新啟用，顯示新的連線狀態
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>故障排除</h3>
+      <h3 className="text-base font-semibold mt-6 mb-3" style={{ color: 'var(--text-primary)' }}>arc-cdp 故障排除</h3>
       <div className="space-y-3">
         <ExpandableBox label="症狀：CDP 不可用（按鈕一直是「開啟 CDP」）">
           <div style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
@@ -2371,6 +2450,7 @@ function ArcCdpTab() {
           <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>測試 Playwright MCP 是否正常運作（已棄用，技術債）</div>
         </div>
       </div>
+
     </div>
   )
 }
@@ -2560,10 +2640,812 @@ function GapsTab() {
   )
 }
 
+// ── Chat Tab ─────────────────────────────────────────────────────
+
+function ChatTierBadge({ tier }: { tier: FeatureTier }) {
+  const config: Record<FeatureTier, { label: string; bg: string; fg: string; border: string }> = {
+    core:     { label: '基本配備', bg: 'rgba(34,197,94,0.1)',  fg: '#22c55e', border: 'rgba(34,197,94,0.2)' },
+    standard: { label: '標準配備', bg: 'rgba(249,115,22,0.1)', fg: '#f97316', border: 'rgba(249,115,22,0.2)' },
+    optional: { label: '選配',     bg: 'rgba(59,130,246,0.1)', fg: '#3b82f6', border: 'rgba(59,130,246,0.2)' },
+    advanced: { label: '進階',     bg: 'rgba(168,85,247,0.1)', fg: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+  }
+  const c = config[tier]
+  return (
+    <span className="text-sm px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: c.bg, color: c.fg, border: `1px solid ${c.border}` }}>
+      {c.label}
+    </span>
+  )
+}
+
+function ChatFeatureCard({ feature, expanded, onToggle }: { feature: ChatFeature; expanded: boolean; onToggle: () => void }) {
+  return (
+    <div
+      className="rounded-lg cursor-pointer transition-colors duration-150 hover:bg-white/5"
+      style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)', padding: '12px 16px' }}
+      onClick={onToggle}
+    >
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{feature.label}</span>
+          <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>{feature.name}</span>
+        </div>
+        <ChatTierBadge tier={feature.tier} />
+      </div>
+      <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{feature.description}</div>
+      {feature.useCases.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {feature.useCases.map((uc, i) => (
+            <span key={i} className="text-sm px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)' }}>
+              {uc}
+            </span>
+          ))}
+        </div>
+      )}
+      {expanded && (
+        <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+          <div className="text-sm mb-1.5 font-semibold" style={{ color: 'var(--text-secondary)' }}>包含檔案</div>
+          {feature.files.map(file => (
+            <div key={file} className="text-sm font-mono ml-4" style={{ color: 'var(--text-tertiary)' }}>{file}</div>
+          ))}
+          {feature.npmPackages && feature.npmPackages.length > 0 && (
+            <>
+              <div className="text-sm mt-2 mb-1 font-semibold" style={{ color: 'var(--text-secondary)' }}>npm 套件</div>
+              {feature.npmPackages.map(pkg => (
+                <div key={pkg} className="text-sm font-mono ml-4" style={{ color: 'var(--text-tertiary)' }}>{pkg}</div>
+              ))}
+            </>
+          )}
+          {feature.dependencies.length > 0 && (
+            <>
+              <div className="text-sm mt-2 mb-1 font-semibold" style={{ color: 'var(--text-secondary)' }}>依賴</div>
+              <div className="text-sm font-mono ml-4" style={{ color: 'var(--text-tertiary)' }}>{feature.dependencies.join(', ')}</div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChatConfiguratorRow({ feature, checked, locked, onToggle }: { feature: ChatFeature; checked: boolean; locked: boolean; onToggle: () => void }) {
+  const depLabels = feature.dependencies
+    .map(depId => CHAT_FEATURES.find(f => f.id === depId)?.label)
+    .filter(Boolean)
+  return (
+    <label
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-150 ${locked ? '' : 'cursor-pointer hover:bg-white/5'}`}
+      style={{ backgroundColor: checked ? 'rgba(255,255,255,0.03)' : 'transparent', border: '1px solid var(--border-color)' }}
+    >
+      <input type="checkbox" checked={checked} disabled={locked} onChange={onToggle} className="accent-[#3b82f6] w-4 h-4" />
+      <span className="text-sm flex-1" style={{ color: checked ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>{feature.label}</span>
+      {depLabels.length > 0 && (
+        <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{depLabels.join(', ')}</span>
+      )}
+      <ChatTierBadge tier={feature.tier} />
+    </label>
+  )
+}
+
+function ChatTab() {
+  const { copy, isCopied } = useCopyToClipboard(2000)
+  const [expandedCard, setExpandedCard] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(CHAT_FEATURES.filter(f => f.tier === 'core' || f.tier === 'standard').map(f => f.id))
+  )
+  const [showOutput, setShowOutput] = useState(false)
+
+  const toggleFeature = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        for (const f of CHAT_FEATURES) {
+          if (f.dependencies.includes(id) && f.tier !== 'core') next.delete(f.id)
+        }
+      } else {
+        next.add(id)
+        const feature = CHAT_FEATURES.find(f => f.id === id)
+        if (feature) {
+          for (const depId of feature.dependencies) next.add(depId)
+        }
+      }
+      return next
+    })
+    setShowOutput(false)
+  }
+
+  const coreFeatures     = CHAT_FEATURES.filter(f => f.tier === 'core')
+  const standardFeatures = CHAT_FEATURES.filter(f => f.tier === 'standard')
+  const optionalFeatures = CHAT_FEATURES.filter(f => f.tier === 'optional')
+  const advancedFeatures = CHAT_FEATURES.filter(f => f.tier === 'advanced')
+  const selectedFeatures = CHAT_FEATURES.filter(f => selectedIds.has(f.id))
+  const totalFiles       = selectedFeatures.reduce((sum, f) => sum + f.files.length, 0)
+  const checklist        = useMemo(() => generatePortingChecklist(selectedIds), [selectedIds])
+  const copied           = isCopied(checklist)
+
+  return (
+    <div className="max-w-[820px]">
+      {/* Section 1: 功能展示 */}
+      <section className="mb-12">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>功能展示</span>
+          <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Chat 系統的所有模組一覽</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {CHAT_FEATURES.map(feature => (
+            <ChatFeatureCard
+              key={feature.id}
+              feature={feature}
+              expanded={expandedCard === feature.id}
+              onToggle={() => setExpandedCard(prev => (prev === feature.id ? null : feature.id))}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Section 2: 自定義選配 */}
+      <section className="mb-12">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>自定義選配</span>
+          <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>勾選要移植的功能模組</span>
+        </div>
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>基本配備 <span className="ml-2 font-normal" style={{ color: 'var(--text-tertiary)' }}>— 必要元件，無法取消</span></div>
+          <div className="space-y-2">
+            {coreFeatures.map(f => <ChatConfiguratorRow key={f.id} feature={f} checked={true} locked={true} onToggle={() => {}} />)}
+          </div>
+        </div>
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>標準配備 <span className="ml-2 font-normal" style={{ color: 'var(--text-tertiary)' }}>— 大多數場景都需要，預設包含</span></div>
+          <div className="space-y-2">
+            {standardFeatures.map(f => <ChatConfiguratorRow key={f.id} feature={f} checked={selectedIds.has(f.id)} locked={false} onToggle={() => toggleFeature(f.id)} />)}
+          </div>
+        </div>
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>選配功能 <span className="ml-2 font-normal" style={{ color: 'var(--text-tertiary)' }}>— 依需求自由搭配</span></div>
+          <div className="space-y-2">
+            {optionalFeatures.map(f => <ChatConfiguratorRow key={f.id} feature={f} checked={selectedIds.has(f.id)} locked={false} onToggle={() => toggleFeature(f.id)} />)}
+          </div>
+        </div>
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>進階功能 <span className="ml-2 font-normal" style={{ color: 'var(--text-tertiary)' }}>— 較複雜的擴充模組</span></div>
+          <div className="space-y-2">
+            {advancedFeatures.map(f => <ChatConfiguratorRow key={f.id} feature={f} checked={selectedIds.has(f.id)} locked={false} onToggle={() => toggleFeature(f.id)} />)}
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3 rounded-lg mt-4" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>已選 <strong>{selectedIds.size}</strong> 項功能，共 <strong>{totalFiles}</strong> 個檔案</span>
+          <button
+            onClick={() => setShowOutput(true)}
+            className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer"
+            style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}
+          >
+            生成移植清單
+          </button>
+        </div>
+      </section>
+
+      {/* Section 3: 一鍵複製 */}
+      {showOutput && (
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>移植清單</span>
+            </div>
+            <button
+              onClick={() => copy(checklist)}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: copied ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
+                color: copied ? '#22c55e' : 'var(--text-secondary)',
+                border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'var(--border-color)'}`,
+              }}
+            >
+              {copied ? '已複製' : '複製到剪貼簿'}
+            </button>
+          </div>
+          <pre className="text-sm font-mono p-5 rounded-lg overflow-x-auto whitespace-pre-wrap" style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', lineHeight: 1.6 }}>
+            {checklist}
+          </pre>
+        </section>
+      )}
+    </div>
+  )
+}
+
+// ── Blog Tab ──────────────────────────────────────────────────────
+
+interface BlogNodeData {
+  command: string
+  label: string
+  model?: string
+  role?: string
+  description?: string
+  conditional?: string
+}
+
+const BLOG_PHASE_1: BlogNodeData = {
+  command: '/blog-intake',
+  label: 'blog-intake',
+  model: 'opus',
+  role: 'Bridge Skill',
+  description: '收斂對話中的素材，整理成結構化素材包後啟動流水線',
+}
+const BLOG_PHASE_2_BEFORE: BlogNodeData[] = [
+  { command: '/blog-outline-architect', label: 'outline-architect', model: 'opus',   role: '大綱架構師', description: '將靈感收斂為文章骨架' },
+  { command: '/blog-pitfall-recorder',  label: 'pitfall-recorder',  model: 'sonnet', role: '踩坑記錄員', description: '補充技術坑點', conditional: '僅技術文' },
+  { command: '/blog-beginner-reviewer', label: 'beginner-reviewer', model: 'sonnet', role: '小白審查員', description: '用初學者視角找出看不懂的地方' },
+  { command: '/blog-visual-advisor',    label: 'visual-advisor',    model: 'sonnet', role: '視覺顧問',   description: '建議圖片、表格、callout 的位置' },
+  { command: '/blog-professional-editor', label: 'professional-editor', model: 'sonnet', role: '專業編輯', description: '文字潤色、用詞統一、排版規範' },
+]
+const BLOG_PHASE_2_MIDPOINT: BlogNodeData = {
+  command: '',
+  label: '提前寫入 + 語意計算',
+  role: '單向模式',
+  description: '將文章以 draft 寫入 Insforge，觸發 bge-m3 embedding 計算（skipBidirectional），讓後續 Skill 能取得 ML 推薦',
+}
+const BLOG_PHASE_2_AFTER: BlogNodeData[] = [
+  { command: '/blog-seo-specialist',    label: 'seo-specialist',    model: 'sonnet', role: 'SEO 專家',       description: '標題、關鍵詞、meta description、內鏈推薦（讀取語意索引）' },
+  { command: '/blog-ai-quoter',         label: 'ai-quoter',         model: 'opus',   role: 'AI 引用優化師',  description: '讓文章更容易被 AI 搜尋引擎引用（讀取語意索引）' },
+  { command: '/blog-engagement-designer', label: 'engagement-designer', model: 'sonnet', role: '互動設計師', description: 'CTA、延伸閱讀推薦（讀取語意索引）' },
+]
+const BLOG_PHASE_5: BlogNodeData = {
+  command: '',
+  label: '語意索引雙向更新',
+  role: '發布後觸發',
+  description: '完整雙向更新 — 讓其他文章的推薦清單也能「看見」這篇新文章',
+}
+const BLOG_UTILITIES: BlogNodeData[] = [
+  { command: '/blog-articles',       label: 'blog-articles',       model: 'haiku', role: '站內文章查詢',  description: '被 SEO、AI 引用、互動設計等 Skill 引用' },
+  { command: '/blog-pipeline-review', label: 'pipeline-review',   model: 'opus',  role: '流水線覆盤',   description: '手動觸發，檢討各 Skill 是否需要調整' },
+]
+
+function BlogVArrow({ dashed }: { dashed?: boolean }) {
+  return (
+    <div className="flex flex-col items-center" style={{ height: '28px', margin: '4px 0' }}>
+      <div style={{ width: dashed ? 0 : 2, height: 16, borderLeft: dashed ? '2px dashed var(--text-tertiary)' : undefined, backgroundColor: dashed ? 'transparent' : 'var(--text-tertiary)' }} />
+      <div style={{ width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '6px solid var(--text-tertiary)' }} />
+    </div>
+  )
+}
+
+function BlogSkillNode({ node, index, copy, isCopied }: { node: BlogNodeData; index?: number; copy: (text: string) => boolean; isCopied: (text: string) => boolean }) {
+  const hasCmd = !!node.command
+  const copied = hasCmd && isCopied(node.command)
+  return (
+    <div
+      className={`rounded-lg transition-colors duration-150 ${hasCmd ? 'cursor-pointer hover:bg-white/5' : ''}`}
+      style={{ backgroundColor: 'var(--background-tertiary)', border: copied ? '1px solid rgba(34,197,94,0.4)' : '1px solid var(--border-color)', padding: '10px 14px' }}
+      onClick={hasCmd ? () => copy(node.command) : undefined}
+      title={hasCmd ? '點擊複製指令' : undefined}
+    >
+      <div className="flex items-start gap-2">
+        {typeof index === 'number' && (
+          <span className="text-sm shrink-0 mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{String.fromCharCode(9312 + index)}</span>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-mono" style={{ color: hasCmd ? 'var(--primary-blue-light)' : 'var(--text-primary)' }}>
+                {hasCmd ? <>/{copied ? <span style={{ color: '#22c55e' }}>已複製</span> : node.label}</> : node.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {node.conditional && (
+                <span className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' }}>
+                  {node.conditional}
+                </span>
+              )}
+              {node.model && <ModelBadge model={node.model} />}
+            </div>
+          </div>
+          {node.role && <div className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{node.role}</div>}
+          {node.description && <div className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{node.description}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BlogPhaseHeader({ phase, title }: { phase: string; title: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-sm font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>{phase}</span>
+      <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{title}</span>
+    </div>
+  )
+}
+
+function BlogStatusBadge({ label, color }: { label: string; color: 'green' | 'blue' }) {
+  const colors = {
+    green: { bg: 'rgba(34,197,94,0.1)',  fg: '#22c55e', border: 'rgba(34,197,94,0.2)' },
+    blue:  { bg: 'rgba(59,130,246,0.1)', fg: '#3b82f6', border: 'rgba(59,130,246,0.2)' },
+  }
+  const c = colors[color]
+  return (
+    <span className="text-sm px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: c.bg, color: c.fg, border: `1px solid ${c.border}` }}>
+      {label}
+    </span>
+  )
+}
+
+function BlogTab() {
+  const { copy, isCopied } = useCopyToClipboard(1000)
+  return (
+    <div className="max-w-[820px]">
+      <div className="flex items-center gap-5 mb-6">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-[2px]" style={{ backgroundColor: 'var(--text-tertiary)' }} />
+          <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>依序執行</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-0" style={{ borderTop: '2px dashed var(--text-tertiary)' }} />
+          <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>條件執行</span>
+        </div>
+      </div>
+
+      {/* Phase 1 */}
+      <BlogPhaseHeader phase="Phase 1" title="收斂討論" />
+      <BlogSkillNode node={BLOG_PHASE_1} copy={copy} isCopied={isCopied} />
+      <BlogVArrow />
+
+      {/* Phase 2 */}
+      <BlogPhaseHeader phase="Phase 2" title="流水線（依序執行）" />
+      {BLOG_PHASE_2_BEFORE.map((node, i) => (
+        <div key={node.command}>
+          {i > 0 && <BlogVArrow dashed={node.conditional !== undefined} />}
+          <BlogSkillNode node={node} index={i} copy={copy} isCopied={isCopied} />
+        </div>
+      ))}
+      <BlogVArrow />
+
+      {/* Midpoint */}
+      <div className="rounded-lg px-4 py-3" style={{ border: '1px dashed rgba(168,85,247,0.4)', backgroundColor: 'rgba(168,85,247,0.04)' }}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <i className="fa-sharp fa-regular fa-brain-circuit text-sm" style={{ color: '#a855f7' }} />
+            <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>{BLOG_PHASE_2_MIDPOINT.label}</span>
+          </div>
+          <span className="text-sm px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)' }}>
+            bge-m3 模型
+          </span>
+        </div>
+        <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{BLOG_PHASE_2_MIDPOINT.description}</div>
+      </div>
+      <BlogVArrow />
+
+      {BLOG_PHASE_2_AFTER.map((node, i) => (
+        <div key={node.command}>
+          {i > 0 && <BlogVArrow />}
+          <BlogSkillNode node={node} index={BLOG_PHASE_2_BEFORE.length + i} copy={copy} isCopied={isCopied} />
+          <div className="mt-1.5 ml-6 text-xs" style={{ color: 'var(--text-tertiary)', opacity: 0.6 }}>
+            <i className="fa-sharp fa-regular fa-bookmark mr-1" style={{ color: '#a855f7' }} />
+            讀取小紙條（Insforge `article_similarities` 表）
+          </div>
+        </div>
+      ))}
+      <BlogVArrow />
+
+      {/* Phase 3 */}
+      <BlogPhaseHeader phase="Phase 3" title="更新入庫" />
+      <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>Insforge DB</span>
+          <BlogStatusBadge label="PATCH 更新" color="green" />
+        </div>
+        <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>將最終版內容 PATCH 更新到資料庫（文章已在流水線中提前寫入）</div>
+      </div>
+      <BlogVArrow dashed />
+
+      {/* Phase 4 */}
+      <BlogPhaseHeader phase="Phase 4" title="人工審閱" />
+      <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>BlogBackend</span>
+          <BlogStatusBadge label="published" color="blue" />
+        </div>
+        <div className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>人工審閱、微調後發布</div>
+        <div className="text-sm mt-0.5 font-mono" style={{ color: 'var(--text-tertiary)' }}>~/Documents/Brickverse/BlogBackend</div>
+      </div>
+      <BlogVArrow dashed />
+
+      {/* Phase 5 */}
+      <BlogPhaseHeader phase="Phase 5" title="語意索引雙向更新（發布後手動觸發）" />
+      <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px dashed rgba(168,85,247,0.4)' }}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <i className="fa-sharp fa-regular fa-brain-circuit text-sm" style={{ color: '#a855f7' }} />
+            <span className="text-sm font-mono" style={{ color: 'var(--text-primary)' }}>{BLOG_PHASE_5.label}</span>
+          </div>
+          <span className="text-sm px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)' }}>
+            bge-m3 模型
+          </span>
+        </div>
+        <div className="text-sm mt-1.5" style={{ color: 'var(--text-tertiary)' }}>{BLOG_PHASE_5.description}</div>
+        <div className="text-sm mt-3 px-3 py-2 rounded" style={{ backgroundColor: 'rgba(168,85,247,0.06)', color: 'var(--text-secondary)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <i className="fa-sharp fa-regular fa-arrow-turn-up fa-rotate-180 text-xs" style={{ color: '#a855f7' }} />
+            <span className="font-medium" style={{ color: '#a855f7' }}>回饋循環</span>
+          </div>
+          <div style={{ color: 'var(--text-tertiary)' }}>
+            流水線中已做單向計算（新文章知道跟誰像）；發布後按「更新此篇」做雙向更新，讓其他文章也能推薦這篇
+          </div>
+        </div>
+      </div>
+
+      {/* Utilities */}
+      <div className="mt-10 pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
+        <div className="text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>輔助工具</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {BLOG_UTILITIES.map(node => (
+            <BlogSkillNode key={node.command} node={node} copy={copy} isCopied={isCopied} />
+          ))}
+        </div>
+        <div className="text-sm font-mono px-4 py-2.5 rounded-lg mt-3" style={{ color: 'var(--text-tertiary)', border: '1px dashed var(--border-color)' }}>
+          ⑥⑦⑧ 讀取流水線中提前計算的語意索引推薦相關文章，/blog-articles 作為補充
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Skills Tab ────────────────────────────────────────────────────
+
+function SkillsTab() {
+  return (
+    <div>
+      <SkillArchitecture />
+    </div>
+  )
+}
+
+// ── SDK Tab ───────────────────────────────────────────────────────
+
+function SdkSectionHeader({ icon, color, title, subtitle }: { icon: string; color: string; title: string; subtitle: string }) {
+  return (
+    <div className="flex items-start gap-3 mb-4">
+      <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}>
+        <i className={`fa-solid ${icon} text-sm`} style={{ color }} />
+      </div>
+      <div>
+        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>{subtitle}</p>
+      </div>
+    </div>
+  )
+}
+
+function SdkToolBadge({ name, desc }: { name: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <i className="fa-solid fa-circle-check text-xs mt-0.5 shrink-0" style={{ color: '#4ade80' }} />
+      <span className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+        <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 5px', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary)' }}>{name}</code>
+        {' '}— {desc}
+      </span>
+    </div>
+  )
+}
+
+function SdkCodeBlock({ code, lang = 'typescript' }: { code: string; lang?: string }) {
+  return (
+    <div className="rounded-xl overflow-hidden mt-3 mb-1" style={{ border: '1px solid var(--border-color)' }}>
+      <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+        <i className="fa-solid fa-code text-xs" style={{ color: 'var(--text-tertiary)' }} />
+        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'ui-monospace, monospace' }}>{lang}</span>
+      </div>
+      <pre className="px-5 py-4 text-sm overflow-x-auto" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--background-primary)', fontFamily: 'ui-monospace, SFMono-Regular, monospace', whiteSpace: 'pre', lineHeight: '1.7', margin: 0 }}>
+        {code}
+      </pre>
+    </div>
+  )
+}
+
+function SdkUsageList({ items }: { items: string[] }) {
+  return (
+    <div className="grid gap-1.5 mt-3">
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-2 items-start">
+          <i className="fa-solid fa-chevron-right text-xs mt-1 shrink-0" style={{ color: '#0184ff' }} />
+          <span className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>{item}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SdkDivider() {
+  return <div className="my-8" style={{ borderTop: '1px solid var(--border-color)' }} />
+}
+
+function SdkTab() {
+  return (
+    <div className="max-w-2xl">
+      {/* Overview */}
+      <div className="rounded-xl px-5 py-4 mb-8" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <i className="fa-solid fa-robot text-sm" style={{ color: '#a78bfa' }} />
+          <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Claude Agent SDK</h1>
+          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}>前身 claude-code-sdk</span>
+        </div>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          Claude Agent SDK 提供了強大且直觀的基礎功能，讓你幾行程式碼就能做出能「自己動手」的 AI 代理。
+          它把 Claude Code CLI binary 打包在裡面，呼叫 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px' }}>query()</code> 時會在背景 spawn 一個 subprocess 去執行。
+        </p>
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          {[
+            { icon: 'fa-file-lines', color: '#3b82f6', label: '讀寫檔案' },
+            { icon: 'fa-terminal',   color: '#f97316', label: '執行指令' },
+            { icon: 'fa-globe',      color: '#4ade80', label: '搜尋網路' },
+          ].map(({ icon, color, label }) => (
+            <div key={label} className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+              <i className={`fa-solid ${icon} text-xs`} style={{ color }} />
+              <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Section 1 */}
+      <SdkSectionHeader icon="fa-magnifying-glass" color="#3b82f6" title="1. 檔案讀取與搜尋" subtitle="讓 Claude 能看到你專案裡的檔案內容，自動分析程式碼、文件、設定檔等。最基礎的起手式。" />
+      <div className="grid gap-2">
+        <SdkToolBadge name="Read" desc="讀取指定檔案全部或部分內容" />
+        <SdkToolBadge name="Glob" desc="用模式匹配找檔案（例如 **/*.py 或 src/**/*.ts）" />
+        <SdkToolBadge name="Grep" desc="用正則表達式在檔案內容中搜尋關鍵字" />
+      </div>
+      <SdkCodeBlock lang="typescript" code={`import { query } from '@anthropic-ai/claude-agent-sdk'
+
+for await (const msg of query({
+  prompt: '找出專案裡所有用到 deprecated API 的地方',
+  options: { allowedTools: ['Read', 'Glob', 'Grep'] }
+})) {
+  process.stdout.write(msg.type === 'text' ? msg.text : '')
+}`} />
+      <SdkUsageList items={['幫我找出專案裡所有用到 deprecated API 的地方', '讀取 README.md 並總結專案功能', '搜尋所有 TODO 留言並列表顯示']} />
+
+      <SdkDivider />
+
+      {/* Section 2 */}
+      <SdkSectionHeader icon="fa-pen-to-square" color="#f97316" title="2. 寫入與編輯檔案" subtitle="寫程式、修 bug、產生新檔案時最常用的功能。支援精準的行號級修改。" />
+      <div className="grid gap-2">
+        <SdkToolBadge name="Write" desc="建立新檔案（包含完整內容）" />
+        <SdkToolBadge name="Edit"  desc="對現有檔案做精準修改（支援替換、插入，不覆蓋整個檔案）" />
+      </div>
+      <SdkCodeBlock lang="typescript" code={`for await (const msg of query({
+  prompt: '在 main.ts 裡新增一個 validateEmail() function，並加上 unit test',
+  options: { allowedTools: ['Read', 'Write', 'Edit'] }
+})) { /* handle stream */ }`} />
+      <SdkUsageList items={['在 main.py 裡新增一個 function，並補上文件字串', '把所有 console.log 改成 logger.debug', '根據現有格式產生一個新的 requirements.txt']} />
+
+      <SdkDivider />
+
+      {/* Section 3 */}
+      <SdkSectionHeader icon="fa-terminal" color="#fbbf24" title="3. 執行終端機指令" subtitle="給代理「完整電腦」的能力——git commit、安裝套件、跑測試、build 專案，全都行。" />
+      <div className="grid gap-2">
+        <SdkToolBadge name="Bash" desc="執行任意 shell 指令，並取得輸出結果" />
+      </div>
+      <SdkCodeBlock lang="typescript" code={`for await (const msg of query({
+  prompt: '跑 npm test，找出失敗的測試並修復',
+  options: { allowedTools: ['Read', 'Edit', 'Bash'] }
+})) { /* handle stream */ }`} />
+      <SdkUsageList items={['git status 看看有什麼變更，然後幫我整理 commit message', '跑 npm test 並告訴我哪裡失敗', '安裝 package 並確認 package.json 已更新']} />
+      <div className="rounded-xl px-4 py-3 mt-3" style={{ backgroundColor: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)' }}>
+        <p className="text-xs font-semibold mb-1" style={{ color: '#fbbf24' }}>
+          <i className="fa-solid fa-triangle-exclamation mr-1.5" />注意
+        </p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+          Bash 工具功能強大，建議搭配 <code style={{ fontSize: '12px', backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>allowedTools</code> 明確限制可用工具範圍，避免代理執行非預期的系統指令。
+        </p>
+      </div>
+
+      <SdkDivider />
+
+      {/* Section 4 */}
+      <SdkSectionHeader icon="fa-globe" color="#4ade80" title="4. 網頁搜尋與內容擷取" subtitle="讓代理能查最新資料、讀文章、彙整報告。非 coding 任務超常用的功能組合。" />
+      <div className="grid gap-2">
+        <SdkToolBadge name="WebSearch" desc="搜尋網路最新資訊（搜尋引擎結果）" />
+        <SdkToolBadge name="WebFetch"  desc="抓取並解析特定網頁的完整內容" />
+      </div>
+      <SdkCodeBlock lang="typescript" code={`for await (const msg of query({
+  prompt: 'React 19 有哪些新功能？幫我整理成 markdown 報告並存到 react19-notes.md',
+  options: { allowedTools: ['WebSearch', 'WebFetch', 'Write'] }
+})) { /* handle stream */ }`} />
+      <SdkUsageList items={['查最新的比特幣價格並整理成報表', '找 React 19 的新功能並總結成 markdown', '研究型代理：自動搜尋 → 讀文章 → 彙整報告']} />
+
+      <SdkDivider />
+
+      {/* Section 5 */}
+      <SdkSectionHeader icon="fa-rotate" color="#a78bfa" title="5. Agent Loop（核心執行機制）" subtitle="query() 內建的自動循環：思考 → 用工具 → 看結果 → 再思考 → 直到完成。你只需要發 prompt。" />
+      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>最簡單的 Hello World 範例（TypeScript）——Claude 會自己決定用什麼工具：</p>
+      <SdkCodeBlock lang="typescript" code={`import { query } from '@anthropic-ai/claude-agent-sdk'
+
+// 最基本的用法：只給 prompt，讓 Claude 自己決定工具
+for await (const message of query({
+  prompt: '列出目前資料夾的所有 TypeScript 檔案，並統計行數',
+})) {
+  if (message.type === 'assistant') {
+    for (const block of message.message.content) {
+      if (block.type === 'text') process.stdout.write(block.text)
+    }
+  }
+}`} />
+      <p className="text-sm mt-4 mb-2" style={{ color: 'var(--text-secondary)' }}>進階：限制工具範圍 + 串流顯示</p>
+      <SdkCodeBlock lang="typescript" code={`import { query, type SDKMessage } from '@anthropic-ai/claude-agent-sdk'
+
+async function runAgent(prompt: string) {
+  const messages: SDKMessage[] = []
+
+  for await (const msg of query({
+    prompt,
+    options: {
+      allowedTools: ['Read', 'Glob', 'Edit', 'Bash'],
+      permissionMode: 'acceptEdits',   // 自動接受所有檔案修改
+      model: 'claude-sonnet-4-6',
+    },
+  })) {
+    messages.push(msg)
+    // 即時顯示 Claude 的思考過程
+    if (msg.type === 'assistant') {
+      for (const block of msg.message.content) {
+        if (block.type === 'text') process.stdout.write(block.text)
+      }
+    }
+  }
+
+  return messages
+}`} />
+
+      <SdkDivider />
+
+      {/* Section 6 */}
+      <SdkSectionHeader icon="fa-layer-group" color="#0184ff" title="6. 常見組合應用" subtitle="這些是最高頻使用的代理模式，開箱即用，不需要自己寫 tool calling 邏輯。" />
+      <div className="grid gap-3">
+        {[
+          { title: 'Bug 修復代理',    icon: 'fa-bug',            color: '#ef4444', desc: '讀取錯誤 log → 找相關檔案 → 提出修改 → 跑測試驗證',        tools: 'Read, Glob, Edit, Bash' },
+          { title: '程式碼重構代理',  icon: 'fa-arrows-rotate',  color: '#f97316', desc: 'Glob 找所有相關檔案 → 逐一 Edit → 確保格式一致',           tools: 'Read, Glob, Edit' },
+          { title: '研究 / 報告代理', icon: 'fa-file-lines',     color: '#4ade80', desc: 'WebSearch + WebFetch → 總結成 markdown → Write 成檔案',   tools: 'WebSearch, WebFetch, Write' },
+          { title: '自動 commit 代理', icon: 'fa-code-branch',   color: '#a78bfa', desc: '讀取 git diff → 分析變更 → 產生 commit message → git commit', tools: 'Read, Bash' },
+        ].map(({ title, icon, color, desc, tools }) => (
+          <div key={title} className="rounded-xl px-4 py-3.5 flex gap-3 items-start" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+            <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}25` }}>
+              <i className={`fa-solid ${icon} text-xs`} style={{ color }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{title}</p>
+              <p className="text-sm mb-1.5" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>{desc}</p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                <i className="fa-solid fa-wrench mr-1" />
+                工具：<code style={{ fontSize: '11px' }}>{tools}</code>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Changelog Tab ─────────────────────────────────────────────────
+
+interface ChangelogEntry {
+  version: string
+  summary: string
+  hash: string
+  date: string
+  type: 'release' | 'commit'
+}
+
+function ChangelogTab() {
+  const [entries, setEntries] = useState<ChangelogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/changelog')
+      .then(r => r.json())
+      .then(data => { setEntries(data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  return (
+    <div className="max-w-2xl">
+      {loading ? (
+        <div className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>載入中...</div>
+      ) : entries.length === 0 ? (
+        <div className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>尚無 release 記錄</div>
+      ) : (
+        <div className="relative ml-16">
+          <div className="absolute left-[7px] top-3 bottom-3" style={{ width: 2, backgroundColor: 'var(--border-color)' }} />
+          <div className="space-y-0">
+            {(() => {
+              const currentDevVersion = versionConfig.development
+              const latestReleaseVersion = entries.find(e => e.type === 'release')?.version?.replace(/^v/, '')
+              const devVersionNumber = currentDevVersion.replace(/-dev$/, '')
+              const isVersionGreater = (a: string, b: string): boolean => {
+                const aParts = a.split('.').map(Number)
+                const bParts = b.split('.').map(Number)
+                for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                  const aPart = aParts[i] || 0
+                  const bPart = bParts[i] || 0
+                  if (aPart > bPart) return true
+                  if (aPart < bPart) return false
+                }
+                return false
+              }
+              if (latestReleaseVersion && isVersionGreater(devVersionNumber, latestReleaseVersion)) {
+                return (
+                  <div className="relative pl-8 pb-8">
+                    <div className="absolute -left-16 top-0">
+                      <span className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}>DEV</span>
+                    </div>
+                    <div className="absolute left-0 top-1.5 w-4 h-4">
+                      <div className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: '#4ade80', opacity: 0.3 }} />
+                      <div className="absolute inset-0 rounded-full" style={{ backgroundColor: '#22c55e', border: '2px solid #16a34a' }} />
+                    </div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-lg font-bold shrink-0" style={{ color: '#4ade80' }}>v{devVersionNumber}</span>
+                      <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>開發中</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>{currentDevVersion}</span>
+                    </div>
+                    <p className="text-base" style={{ color: 'var(--text-secondary)' }}>尚未發布的開發版本</p>
+                  </div>
+                )
+              }
+              return null
+            })()}
+
+            {entries.map((entry, i) => {
+              const isRelease = entry.type === 'release'
+              const isFirst = i === 0
+              return (
+                <div key={entry.hash} className={`relative pl-8 ${isRelease ? 'pb-8' : 'pb-4'}`}>
+                  {isRelease && (() => {
+                    const ver = entry.version.replace(/^v/, '')
+                    const isProd = ver === versionConfig.production
+                    const isDev  = ver === versionConfig.development.replace(/-dev$/, '')
+                    if (!isProd && !isDev) return null
+                    return (
+                      <div className="absolute -left-16 top-0 flex flex-col gap-1">
+                        {isProd && <span className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap" style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}>PROD</span>}
+                        {isDev  && <span className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap" style={{ backgroundColor: 'rgba(34,197,94,0.15)',  color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}>DEV</span>}
+                      </div>
+                    )
+                  })()}
+                  <div
+                    className={`absolute left-0 ${isRelease ? 'top-1.5 w-4 h-4' : 'top-1.5 w-3 h-3 ml-0.5'} rounded-full`}
+                    style={isRelease
+                      ? { backgroundColor: isFirst ? '#a78bfa' : '#7c3aed', border: isFirst ? '2px solid #7c3aed' : '2px solid #6d28d9' }
+                      : { backgroundColor: '#333333', border: '2px solid #444444' }
+                    }
+                  />
+                  {isRelease ? (
+                    <>
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-lg font-bold shrink-0" style={{ color: isFirst ? '#a78bfa' : '#c4b5fd' }}>{entry.version}</span>
+                        <span className="text-sm shrink-0 whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>{entry.date}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0" style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}>{entry.hash}</span>
+                      </div>
+                      {entry.summary && <p className="text-base" style={{ color: 'var(--text-secondary)' }}>{entry.summary}</p>}
+                    </>
+                  ) : (
+                    <div className="grid items-start gap-x-2" style={{ gridTemplateColumns: 'auto 1fr auto' }}>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-mono whitespace-nowrap" style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}>{entry.hash}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{entry.summary}</span>
+                      <span className="text-xs whitespace-nowrap pt-0.5" style={{ color: 'var(--text-tertiary)' }}>{entry.date}</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Page ────────────────────────────────────────────────────────
 
 export default function DocsPage() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState('tech-stack')
   const mainRef = useRef<HTMLElement>(null)
 
@@ -2593,22 +3475,6 @@ export default function DocsPage() {
           overflowY: 'auto',
         }}
       >
-        {/* Back button */}
-        <div style={{ padding: '16px 12px 8px', flexShrink: 0 }}>
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 w-full"
-            style={{
-              color: 'var(--text-tertiary)',
-              backgroundColor: 'transparent',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-tertiary)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)' }}
-          >
-            <i className="fa-solid fa-arrow-left text-xs" />
-            <span>返回儀表板</span>
-          </button>
-        </div>
 
         {/* Divider + label */}
         <div style={{ padding: '4px 16px 8px', borderTop: '1px solid var(--border-color)', marginTop: 4 }}>
@@ -2653,7 +3519,7 @@ export default function DocsPage() {
 
       {/* Center: scrollable documentation content */}
       <main ref={mainRef} className="flex-1 overflow-y-auto" style={{ minWidth: 0 }}>
-        <div style={{ maxWidth: '52rem', padding: '32px 36px 0' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '32px 48px 0' }}>
           {activeTab === 'tech-stack'   && <TechStackTab />}
           {activeTab === 'model-choice' && <ModelChoiceTab />}
           {activeTab === 'settings'     && <SettingsTab />}
@@ -2665,12 +3531,17 @@ export default function DocsPage() {
           {activeTab === 'cli-vs-sdk'   && <CliVsSdkTab />}
           {activeTab === 'arc-cdp'      && <ArcCdpTab />}
           {activeTab === 'gaps'         && <GapsTab />}
+          {activeTab === 'chat'         && <ChatTab />}
+          {activeTab === 'blog'         && <BlogTab />}
+          {activeTab === 'skills'       && <SkillsTab />}
+          {activeTab === 'sdk'          && <SdkTab />}
+          {activeTab === 'changelog'    && <ChangelogTab />}
         </div>
 
         {/* Prev / Next navigation */}
         <div
           className="flex items-center justify-between"
-          style={{ maxWidth: '52rem', padding: '32px 36px 48px', marginTop: 8, borderTop: '1px solid var(--border-color)' }}
+          style={{ maxWidth: '72rem', margin: '0 auto', padding: '32px 48px 48px', marginTop: 8, borderTop: '1px solid var(--border-color)' }}
         >
           {prevTab ? (
             <button
