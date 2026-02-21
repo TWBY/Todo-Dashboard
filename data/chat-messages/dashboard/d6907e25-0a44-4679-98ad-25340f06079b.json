@@ -1,8 +1,0 @@
-[
-  {
-    "id": "b3d50e70-4b69-4f9a-8579-9c7c48e7b4b8",
-    "role": "user",
-    "content": "# Claude Code Extension vs Dashboard SDK 環境差異\n\n## 核心差異（一句話）\nExtension 有工頭幫你帶工具進來。你的 SDK 直接雇人，工頭的工具他拿不到，要自己帶。\n\n## 正確的比較對象\n**Claude Code extension（Cursor 裡的套件）** vs **Dashboard Chat 的 SDK**\n\n兩個都在跑同一個 Claude Code 執行檔。差別在於誰啟動它、怎麼啟動：\n\n**Claude Code extension 啟動時：**\n```\n--mcp-config {\"mcpServers\":{\"claude-vscode\":{\"type\":\"sdk\",\"name\":\"claude-vscode\"}}}\n--setting-sources user,project,local\n```\n`claude-vscode` 是 extension 本身，作為中間人把它管理的 MCP servers（playwright-mcp、github 等）橋接給 Claude。\n\n**Dashboard SDK 啟動時：**\n`@anthropic-ai/claude-agent-sdk` 也跑同一個 Claude binary，但沒有 `claude-vscode` 橋接中間人。Extension 管理的 MCP servers 完全看不到，必須透過 `opts.mcpServers` 明確傳入。\n\n## 已知會遇到的問題\n\n1. **新 MCP 工具在 Dashboard Chat 用不了** — Cursor 新增的 MCP server 不會自動同步，每次都要手動加進 `opts.mcpServers`（見 `lib/claude-session-manager.ts`）\n\n2. **GitHub MCP 目前缺席** — Cursor 裡可用的 `mcp__github__*` 工具，Dashboard Chat 沒有\n\n3. **IDE 感知功能永遠缺席** — Extension 版知道你選了哪段程式碼、哪個檔案開著。SDK 版永遠不知道，只有 cwd\n\n4. **`settingSources` 載入 MCP 不可靠** — 寫進 `mcp.json` 不保證 SDK 子進程會載入，必須用 `opts.mcpServers` 才確保有效\n\n5. **MCP 冷啟動較慢** — SDK 每個 session 重新 spawn MCP 子進程，Extension 版是常駐的\n\n## 已修復的問題\n- arc-cdp（playwright-mcp）已透過 `opts.mcpServers` 明確加入，Dashboard Chat 現在可以使用 `/cdp-test`\n- 修改位置：`lib/claude-session-manager.ts` 的 `buildQueryOptions`\n",
-    "timestamp": 1771425193703
-  }
-]

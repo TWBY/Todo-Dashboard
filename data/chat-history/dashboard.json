@@ -1115,16 +1115,48 @@
     "sessionId": "6c55c146-3357-44da-9669-c919530c1e7d",
     "projectId": "dashboard",
     "title": "測試 bot-browser 是否能用",
-    "messageCount": 7,
+    "messageCount": 23,
     "createdAt": 1771520167905,
-    "lastActiveAt": 1771520452324
+    "lastActiveAt": 1771522309373
   },
   {
     "sessionId": "433a0e21-2544-4c42-b12e-5adae17aa7dd",
     "projectId": "dashboard",
     "title": "現在我有哪些 mcp 工具",
-    "messageCount": 1,
+    "messageCount": 2,
     "createdAt": 1771520471106,
-    "lastActiveAt": 1771520486228
+    "lastActiveAt": 1771520642183
+  },
+  {
+    "sessionId": "8d8ef20e-8967-47ad-aeb9-4b88abac5676",
+    "projectId": "dashboard",
+    "title": "以下是一個開發中遇到的待辦問題，請幫我研究並解決：\n\n**bot-browser MCP 尚未驗證**\n\n已在 clau",
+    "messageCount": 1,
+    "createdAt": 1771674713890,
+    "lastActiveAt": 1771674716780
+  },
+  {
+    "sessionId": "56a8f4b0-ca16-4de9-91fe-e180c636d172",
+    "projectId": "dashboard",
+    "title": "Untitled",
+    "messageCount": 1,
+    "createdAt": 1771674723691,
+    "lastActiveAt": 1771674723691
+  },
+  {
+    "sessionId": "09660e78-9497-433c-96e5-654eda9bc670",
+    "projectId": "dashboard",
+    "title": "現在我們系統 Claude Opus 4.6 預設是有開 adative thing 的嗎",
+    "messageCount": 1,
+    "createdAt": 1771685244343,
+    "lastActiveAt": 1771685292854
+  },
+  {
+    "sessionId": "bfe8200a-2837-487c-9779-a1d6f652ca59",
+    "projectId": "dashboard",
+    "title": "打開專案 3001",
+    "messageCount": 2,
+    "createdAt": 1771685821044,
+    "lastActiveAt": 1771685933062
   }
 ]
