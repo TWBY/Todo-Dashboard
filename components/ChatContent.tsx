@@ -753,11 +753,15 @@ const LOW_LEVEL_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'Diff'
 function MessageList({
   messages,
   isStreaming,
+  streamingAssistantId,
   emailMode,
+  docsMode,
 }: {
   messages: ChatMessage[]
   isStreaming: boolean
+  streamingAssistantId: string | null
   emailMode: boolean
+  docsMode?: boolean
 }) {
   const isLowLevelTool = (m: ChatMessage) =>
     m.role === 'tool' &&
@@ -809,8 +813,10 @@ function MessageList({
                       ))}
                     </div>
                   )}
-                  {emailMode && msg.content.startsWith('[系統指示]')
-                    ? (msg.content.match(/以下是用戶貼上的內容：\s*\n(.+)/s)?.[1] ?? msg.content)
+                  {(emailMode || docsMode) && msg.content.startsWith('[系統指示]')
+                    ? (msg.content.match(/以下是使用者的問題：\s*\n(.+)/s)?.[1]
+                        ?? msg.content.match(/以下是用戶貼上的內容：\s*\n(.+)/s)?.[1]
+                        ?? msg.content)
                     : msg.content
                   }
                 </div>
@@ -818,7 +824,7 @@ function MessageList({
             )}
 
             {msg.role === 'assistant' && (() => {
-              if (isStreaming && isLastGroup) {
+              if (isStreaming && msg.id === streamingAssistantId) {
                 return <StreamingAssistantMessage msg={msg} emailMode={emailMode} />
               }
               return (
@@ -868,6 +874,7 @@ interface ChatContentProps {
   compact?: boolean
   planOnly?: boolean
   emailMode?: boolean
+  docsMode?: boolean
   model?: string
   resumeSessionId?: string
   initialMessage?: string
@@ -884,7 +891,7 @@ interface SkillInfo { name: string; description: string; model?: 'haiku' | 'sonn
 
 export { ContentsRate }
 
-export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, systemPrompt, ref, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
+export default function ChatContent({ projectId, projectName, compact, planOnly, emailMode, docsMode, model: modelProp, resumeSessionId, initialMessage, initialMode, ephemeral, systemPrompt, ref, onSessionIdChange, onSessionMetaChange, onPanelStatusChange }: ChatContentProps) {
   // input 改為 uncontrolled（不觸發 React re-render），只在送出/清空時用 ref 讀取
   const inputRef = useRef('')
   const hasInputRef = useRef(false) // 用 ref 避免 onChange 閉包 stale
@@ -926,7 +933,7 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
   }, [allSkills, slashFilter])
 
   const effectiveModel = modelProp || modelChoice
-  const { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral, systemPromptAppend: systemPrompt })
+  const { messages, todos, isStreaming, streamStatus, streamingActivity, streamingAssistantId, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime } = useClaudeChat(projectId, { model: effectiveModel, ephemeral, systemPromptAppend: systemPrompt })
   const { addPanel, openPanels, updatePanelTeamName } = useChatPanels()
 
   // 暴露 stopStream / triggerMessage 給父元件
@@ -1371,6 +1378,41 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
       messageToSend = emailSystemPrompt + messageToSend
     }
 
+    // docsMode 且是第一則訊息：加上技術文件系統指示前綴
+    if (docsMode && messages.filter(m => m.role === 'user').length === 0) {
+      const docsSystemPrompt = `[系統指示] 你是「技術文件助手」，專門回答這個 Dashboard 的技術文件頁面上的內容。
+
+**你能回答的範圍（對應技術文件頁面各分頁）**：
+- 技術架構：Cursor Extension vs Claude Agent SDK 的差異、MCP 工具、IDE 感知、效能
+- 權限模型：Claude Code 安全政策、Bash 命令黑白名單、allowedTools / denyTools
+- 模型選擇：Haiku / Sonnet / Opus 各自適用情境
+- settings.json：Cursor IDE 設定慣例
+- CLAUDE.md：專案級與全局設定、Memory vs CLAUDE.md 差異
+- MCP 設定：arc-cdp、GitHub MCP、新增 MCP 同步方式
+- Browser MCP：Arc CDP 連線流程、注意事項、啟動指令
+- CLI 與 SDK：claude-code CLI 與 @anthropic-ai/claude-agent-sdk 的差別
+- Chat 功能中心：Dashboard Chat Panel 功能說明
+- Skills 總覽：各 Skill 的用途與觸發時機
+- Agent SDK：程式化呼叫 Claude 的方式
+- Blog 編輯流水線：Blog 文章從草稿到發布的 Skill 流程
+- Port 管理：Station 報戶口制度、Tier 分級
+
+**嚴格限制**：
+- 只回答上述技術文件範圍內的問題
+- 不代撰 Email
+- 不執行任何程式碼或讀取任何檔案
+- 若問題超出範圍，禮貌說明並建議切換到一般 Chat
+
+**回覆格式**：
+- 優先使用程式碼區塊展示指令或程式碼
+- 可用條列清單、對照表格說明差異
+- 引用技術文件頁面的分頁名稱作為來源標示
+
+以下是使用者的問題：
+`
+      messageToSend = docsSystemPrompt + messageToSend
+    }
+
     sendMessage(messageToSend, mode, images.length > 0 ? images : undefined, modelChoice, effortLevel)
     inputRef.current = ''
     hasInputRef.current = false
@@ -1497,10 +1539,24 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
           </div>
         )}
 
+        {/* docsMode 初始歡迎訊息 */}
+        {docsMode && displayMessages.length === 0 && (
+          <div className="animate-fade-in">
+            <div
+              className="text-base leading-[1.5] prose prose-invert max-w-none"
+              style={{ color: '#999999' }}
+            >
+              你好，我是技術文件助手。請問你想了解哪個部分？（技術架構、MCP 設定、CLAUDE.md、Skills、Browser MCP 等）
+            </div>
+          </div>
+        )}
+
         <MessageList
           messages={displayMessages}
           isStreaming={isStreaming}
+          streamingAssistantId={streamingAssistantId}
           emailMode={!!emailMode}
+          docsMode={!!docsMode}
         />
 
         {isLoadingHistory && (
@@ -1745,13 +1801,13 @@ export default function ChatContent({ projectId, projectName, compact, planOnly,
         <div className="flex items-center px-3 py-2">
           {/* Left group: P E A + Skills + ContentsRate */}
           <div className="flex items-center gap-1 flex-1 min-w-0">
-            {(planOnly || emailMode) ? (
+            {(planOnly || emailMode || docsMode) ? (
               <span
                 className="w-7 h-7 rounded-md text-sm font-semibold flex items-center justify-center"
                 style={{ backgroundColor: '#222222', color: '#ffffff', border: '1px solid #333333' }}
-                title={emailMode ? "Email mode (locked)" : "Plan mode (locked)"}
+                title={emailMode ? "Email mode (locked)" : docsMode ? "Docs mode (locked)" : "Plan mode (locked)"}
               >
-                {emailMode ? 'A' : 'P'}
+                {planOnly ? 'P' : 'A'}
               </span>
             ) : MODE_CYCLE.map(m => {
               const isActive = mode === m
