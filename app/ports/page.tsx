@@ -124,7 +124,7 @@ function statusLabel(status: PkgStatus): string {
   }
 }
 
-export default function PortsPage() {
+export default function PortsPage({ onBack }: { onBack?: () => void } = {}) {
   const router = useRouter()
   const { refresh: refreshDevContext } = useDevServer()
   const [entries, setEntries] = useState<PortEntry[]>([])
@@ -142,8 +142,6 @@ export default function PortsPage() {
   const [fixAllLoading, setFixAllLoading] = useState(false)
   const [stationLoading, setStationLoading] = useState<Record<string, boolean>>({})
   const [seats, setSeats] = useState<(SeatEntry | null)[]>([])
-  const [showRules, setShowRules] = useState(false)
-
   // 重新載入審計資料
   const reloadAudit = async () => {
     setAuditLoading(true)
@@ -263,6 +261,8 @@ export default function PortsPage() {
           const seatsJson = await seatsRes.json()
           setSeats(seatsJson.seats ?? [])
         }
+      } catch {
+        // Failed to fetch（dev server 未啟動或網路錯誤）時不拋出，僅結束 loading
       } finally {
         setLoading(false)
       }
@@ -372,140 +372,15 @@ export default function PortsPage() {
       style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', minHeight: '100vh' }}
       className="flex flex-col"
     >
-      {/* Sticky header */}
-      <div
-        style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}
-        className="sticky top-0 z-40"
-      >
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/')}
-              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)' }}
-            >
-              <i className="fa-solid fa-arrow-left text-xs" />
-              <span>儀表板</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleRegistered}
-              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-              style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)' }}
-              title="重新整理所有狀態"
-            >
-              <i className="fa-solid fa-arrows-rotate text-xs" />
-            </button>
-            <button
-              onClick={() => setShowRules(prev => !prev)}
-              className="px-2.5 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.02] flex items-center gap-2"
-              style={{
-                backgroundColor: showRules ? 'rgba(1,132,255,0.15)' : 'var(--background-tertiary)',
-                color: showRules ? '#0184ff' : 'var(--text-tertiary)',
-                border: showRules ? '1px solid rgba(1,132,255,0.25)' : '1px solid var(--border-color)',
-              }}
-            >
-              <i className="fa-solid fa-book text-xs" />
-              查看說明
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Body */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto">
       <div className="px-4 py-6 pb-16">
 
-        {/* 主內容：如果顯示說明，只顯示說明；否則顯示城市 + Station + 審計 */}
-        {showRules ? (
-          <div className="space-y-6">
-
-            {/* 座位制度說明 */}
-            <Section title="Station 座位制度">
-              <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-                Station 有 <strong>8 個座位</strong>（Port 3003 - 3010）。每個進駐的專案占據一個座位。
-                分配規則最簡單：<strong>優先給最小編號的空位</strong>。離開時座位釋出給下一個人。
-              </p>
-              <div className="p-3 rounded-[var(--radius-small)] mb-4" style={{ backgroundColor: 'var(--background-tertiary)' }}>
-                <p className="text-sm font-semibold mb-2">座位狀態：</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><i className="fa-solid fa-circle text-lg text-green-500 mr-1" />空位 = 可以進駐</div>
-                  <div><i className="fa-solid fa-circle text-lg text-blue-500 mr-1" />被占用 = 已進駐</div>
-                </div>
-              </div>
-            </Section>
-
-            {/* 雙重登記 */}
-            <Section title="雙重登記（進駐必須同時做）">
-              <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                <RegistrationItem
-                  number={1}
-                  title="JSON devPort"
-                  role="紀錄座位"
-                  description="projects.json / coursefiles.json / utility-tools.json 記錄誰坐在哪個座位（port）。"
-                  color="#3b82f6"
-                />
-                <RegistrationItem
-                  number={2}
-                  title="package.json -p flag"
-                  role="執行時讀取"
-                  description="scripts.dev 寫死 -p <port>，讓 Node.js 啟動伺服器時用正確的 port。"
-                  color="#22c55e"
-                />
-              </div>
-              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                一次 API 呼叫會自動同時更新這兩個地方。
-              </p>
-            </Section>
-
-            {/* 進駐 */}
-            <Section title="進駐（坐下）">
-              <ol className="text-base space-y-2" style={{ color: 'var(--text-secondary)' }}>
-                <FlowStep step={1}>從 Dashboard 點「進駐」</FlowStep>
-                <FlowStep step={2}>API 自動分配最小編號的空座位，同步更新 JSON 和 package.json</FlowStep>
-                <FlowStep step={3}>完成！專案現在在 Station 可以被 Start / Open</FlowStep>
-              </ol>
-            </Section>
-
-            {/* 離開 */}
-            <Section title="離開（站起來）">
-              <ol className="text-base space-y-2" style={{ color: 'var(--text-secondary)' }}>
-                <FlowStep step={1}>先停止 dev server（如果正在運行）</FlowStep>
-                <FlowStep step={2}>點「離開」→ API 清除 JSON devPort 和 package.json 的 -p flag</FlowStep>
-                <FlowStep step={3}>座位釋出，下一個人可以坐</FlowStep>
-              </ol>
-            </Section>
-
-            {/* 為什麼需要兩個地方都更新 */}
-            <Section title="為什麼要同時更新 JSON 和 package.json？">
-              <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                <p>
-                  <strong>JSON</strong> 是 Dashboard 的紀錄簿 — 用來顯示「誰坐在哪個座位」。
-                  <strong>package.json</strong> 是 Node.js 的說明書 — 用來告訴程式「用哪個 port 啟動」。
-                </p>
-                <p>
-                  只更新一個會造成不一致：
-                </p>
-                <ul className="ml-4 space-y-1 text-sm">
-                  <li>只更新 JSON → package.json 說「用 3001」，但沒人在 3001 坐著，混亂</li>
-                  <li>只更新 package.json → 程式用了 3001，但 Dashboard 不知道，找不到</li>
-                </ul>
-                <p>
-                  所以一次 API 呼叫會同時做好這兩件事。
-                </p>
-              </div>
-            </Section>
-          </div>
-        ) : (
-          <>
+        {/* 主內容 */}
+        <>
             {/* Station Section */}
             <div className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Station（工作園區）</h2>
-              </div>
-
               {/* VIP 座位 */}
               <div className="mb-6">
                 <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
@@ -779,90 +654,12 @@ export default function PortsPage() {
                 </div>
               )}
             </div>
-          </>
-        )}
+        </>
 
       </div>
         </div>
       </div>
     </div>
-  )
-}
-
-// --- Sub-components ---
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div
-      className="rounded-[var(--radius-medium)] p-4"
-      style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}
-    >
-      <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>{title}</h2>
-      {children}
-    </div>
-  )
-}
-
-function RegistrationItem({ number, title, role, description, color }: {
-  number: number; title: string; role: string; description: string; color: string
-}) {
-  return (
-    <div
-      className="flex flex-col gap-2 p-3 rounded-[var(--radius-small)]"
-      style={{ backgroundColor: 'var(--background-tertiary)' }}
-    >
-      <div className="flex items-center gap-2">
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-          style={{ backgroundColor: color + '20', color }}
-        >
-          {number}
-        </div>
-        <div className="flex flex-col">
-          <div className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
-            {title}
-          </div>
-          <div className="text-sm" style={{ color }}>{role}</div>
-        </div>
-      </div>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
-    </div>
-  )
-}
-
-function TierItem({ tier, label, color, description }: {
-  tier: number; label: string; color: string; description: string
-}) {
-  return (
-    <div
-      className="flex flex-col gap-2 p-3 rounded-[var(--radius-small)]"
-      style={{ backgroundColor: 'var(--background-tertiary)' }}
-    >
-      <div className="flex items-center gap-2">
-        <div
-          className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold shrink-0"
-          style={{ backgroundColor: color + '20', color }}
-        >
-          {tier}
-        </div>
-        <div className="text-base font-medium" style={{ color }}>{label}</div>
-      </div>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
-    </div>
-  )
-}
-
-function FlowStep({ step, children }: { step: number; children: React.ReactNode }) {
-  return (
-    <li className="flex gap-3 items-start">
-      <span
-        className="w-6 h-6 rounded flex items-center justify-center text-sm font-mono font-bold shrink-0 mt-0.5"
-        style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}
-      >
-        {step}
-      </span>
-      <span>{children}</span>
-    </li>
   )
 }
 
