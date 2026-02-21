@@ -1158,5 +1158,45 @@
     "messageCount": 2,
     "createdAt": 1771685821044,
     "lastActiveAt": 1771685933062
+  },
+  {
+    "sessionId": "846141d7-9103-4de6-84e5-3ca76c8fa1ff",
+    "projectId": "dashboard",
+    "title": "現在我們 chat 系統 Claude Opus 4.6 預設是有開 adative thing 的嗎",
+    "messageCount": 13,
+    "createdAt": 1771686122495,
+    "lastActiveAt": 1771687955504
+  },
+  {
+    "sessionId": "cad0d198-b43c-4596-8d86-11f0397ea4bd",
+    "projectId": "dashboard",
+    "title": "現在的 changelog 內容都是英文，我在想之前有中文，能不能有一些設計可以讓它強制使用中文的內容？",
+    "messageCount": 3,
+    "createdAt": 1771686345651,
+    "lastActiveAt": 1771686573480
+  },
+  {
+    "sessionId": "11665826-eefe-4210-8815-cf26f6b75027",
+    "projectId": "dashboard",
+    "title": "現在 claude code 有一個 insight 功能，他是如何實作的",
+    "messageCount": 6,
+    "createdAt": 1771687197977,
+    "lastActiveAt": 1771688254871
+  },
+  {
+    "sessionId": "6dd152c1-5b9b-4549-b10f-ccc88bef8886",
+    "projectId": "dashboard",
+    "title": "我現在需要寫一個 Skill，需要你針對這個 Skill 訪談我一下。\n\n這個 Skill 的定位等同於我個人的「編輯分",
+    "messageCount": 6,
+    "createdAt": 1771688193530,
+    "lastActiveAt": 1771688668352
+  },
+  {
+    "sessionId": "b808afe0-5aeb-4fc6-a5b7-6f3581414fd4",
+    "projectId": "dashboard",
+    "title": "現在 COMPONENT: ResizableLayout\nCHAIN: GlobalLayoutRouterConte",
+    "messageCount": 11,
+    "createdAt": 1771688348215,
+    "lastActiveAt": 1771688894573
   }
 ]

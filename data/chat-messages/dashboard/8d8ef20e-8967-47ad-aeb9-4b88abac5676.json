@@ -1,0 +1,8 @@
+[
+  {
+    "id": "958bd5b2-c69f-4399-bf76-15a124c6fc73",
+    "role": "user",
+    "content": "以下是一個開發中遇到的待辦問題，請幫我研究並解決：\n\n**bot-browser MCP 尚未驗證**\n\n已在 claude-session-manager.ts 加入 bot-browser MCP（npx @playwright/mcp，無 --cdp-endpoint），用於 AI 自動化測試的 headless Chromium。\n\n待確認：\n- bot-browser 實際能否正常啟動 Chromium\n- AI 在 Chat 裡呼叫 bot-browser 工具的行為是否符合預期\n- 與 arc-cdp 的職責分離是否有效（AI 測試不誤觸 Arc）",
+    "timestamp": 1771674713687
+  }
+]
