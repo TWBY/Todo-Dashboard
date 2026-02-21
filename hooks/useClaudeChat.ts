@@ -447,6 +447,21 @@ function processStreamEvent(
       if (streamEvent.subtype === 'success') {
         ctx.resultSuccess = true
       }
+      // Store cost/duration on the last assistant message for budget tracking
+      if (streamEvent.total_cost_usd !== undefined || streamEvent.duration_ms !== undefined) {
+        actions.setMessages(prev => {
+          const lastAssistantIdx = [...prev].reverse().findIndex(m => m.role === 'assistant')
+          if (lastAssistantIdx === -1) return prev
+          const idx = prev.length - 1 - lastAssistantIdx
+          const updated = [...prev]
+          updated[idx] = {
+            ...updated[idx],
+            costUsd: streamEvent.total_cost_usd,
+            durationMs: streamEvent.duration_ms,
+          }
+          return updated
+        })
+      }
     }
     return
   }
@@ -599,12 +614,29 @@ function persistSession(
   projectId: string,
   sessionId: string,
   messages: ChatMessage[],
+  meta?: { totalCostUsd?: number; totalDurationMs?: number; model?: string | null; totalInputTokens?: number; totalOutputTokens?: number },
 ): void {
   const userMsgCount = messages.filter(m => m.role === 'user').length
+
+  const totalCostUsd = meta?.totalCostUsd
+  const totalDurationMs = meta?.totalDurationMs
+  const totalInputTokens = meta?.totalInputTokens
+  const totalOutputTokens = meta?.totalOutputTokens
+  const modelMsg = meta?.model
+
   fetch('/api/claude-chat/history', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ projectId, sessionId, messageCount: userMsgCount }),
+    body: JSON.stringify({
+      projectId,
+      sessionId,
+      messageCount: userMsgCount,
+      ...(totalCostUsd !== undefined && totalCostUsd > 0 && { totalCostUsd }),
+      ...(totalDurationMs !== undefined && totalDurationMs > 0 && { totalDurationMs }),
+      ...(totalInputTokens !== undefined && totalInputTokens > 0 && { totalInputTokens }),
+      ...(totalOutputTokens !== undefined && totalOutputTokens > 0 && { totalOutputTokens }),
+      ...(modelMsg && { model: modelMsg }),
+    }),
   }).catch(() => {})
 
   const persistable = messages.map(m => {
@@ -809,7 +841,19 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       const sid = sessionIdRef.current || ctx.newSessionIdForHistory
       if (sid && !config?.ephemeral) {
         setMessages(prev => {
-          persistSession(projectId, sid, prev)
+          // Aggregate cost from messages (result events store costUsd on last assistant msg)
+          const totalCostUsd = prev.reduce((sum, m) => sum + (m.costUsd ?? 0), 0)
+          const totalDurationMs = prev.reduce((sum, m) => sum + (m.durationMs ?? 0), 0)
+          setSessionMeta(meta => {
+            persistSession(projectId, sid, prev, {
+              totalCostUsd: totalCostUsd || undefined,
+              totalDurationMs: totalDurationMs || undefined,
+              model: meta.model,
+              totalInputTokens: meta.totalInputTokens || undefined,
+              totalOutputTokens: meta.totalOutputTokens || undefined,
+            })
+            return meta
+          })
           return prev
         })
       }

@@ -73,6 +73,12 @@ export interface ChatMessage {
   teamEvent?: { type: 'create' | 'delete'; teamName: string; description?: string } // TeamCreate/TeamDelete tool data
   isError?: boolean // Error message from backend
   timestamp: number
+  // Budget tracking fields (stored on the final result message)
+  costUsd?: number
+  durationMs?: number
+  model?: string
+  inputTokens?: number
+  outputTokens?: number
 }
 
 // Chat history record
@@ -83,6 +89,12 @@ export interface ChatSessionRecord {
   messageCount: number
   createdAt: number
   lastActiveAt: number
+  // Budget tracking (populated after session ends)
+  totalCostUsd?: number
+  totalDurationMs?: number
+  model?: string
+  totalInputTokens?: number
+  totalOutputTokens?: number
 }
 
 // Streaming 即時活動狀態
