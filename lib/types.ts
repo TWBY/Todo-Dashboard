@@ -76,4 +76,7 @@ export interface ScratchItem {
   createdAt: string;
   chatSessionId?: string;
   plan?: string;
+  projectId?: string;
+  projectName?: string;
+  resolvedSessionId?: string;
 }

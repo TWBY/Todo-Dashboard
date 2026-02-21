@@ -13,6 +13,7 @@ export interface ChatPanelState {
   sessionId?: string
   planOnly?: boolean
   emailMode?: boolean
+  docsMode?: boolean
   scratchItemId?: string
   initialMessage?: string
   initialMode?: 'plan' | 'edit'
@@ -25,6 +26,7 @@ interface AddPanelOpts {
   teamName?: string
   planOnly?: boolean
   emailMode?: boolean
+  docsMode?: boolean
   scratchItemId?: string
   initialMessage?: string
   initialMode?: 'plan' | 'edit'
@@ -40,6 +42,7 @@ interface PersistedPanelState {
   sessionId?: string
   planOnly?: boolean
   emailMode?: boolean
+  docsMode?: boolean
   scratchItemId?: string
 }
 
@@ -68,8 +71,8 @@ function loadPanels(): ChatPanelState[] {
 function savePanels(panels: ChatPanelState[]) {
   const persisted: PersistedPanelState[] = panels
     .filter(p => !p.ephemeral)
-    .map(({ panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId }) => ({
-      panelId, projectId, projectName, sessionId, planOnly, emailMode, scratchItemId,
+    .map(({ panelId, projectId, projectName, sessionId, planOnly, emailMode, docsMode, scratchItemId }) => ({
+      panelId, projectId, projectName, sessionId, planOnly, emailMode, docsMode, scratchItemId,
     }))
   localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
 }

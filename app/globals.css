@@ -265,13 +265,11 @@ option {
   scrollbar-color: rgba(255, 255, 255, 0.15) var(--background-primary);
 }
 
-/* 面板分隔線 hover 效果 */
+/* 面板分隔線 — hover 1 秒漸變關閉效果 */
 .divider-handle .divider-bg {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.2s;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
   pointer-events: none;
 }
 
@@ -279,18 +277,48 @@ option {
   width: 1px;
   border-radius: 9999px;
   background-color: rgba(255,255,255,0.1);
-  transition: all 0.2s;
+  transition: background-color 1s linear, width 1s linear;
   pointer-events: none;
 }
 
-.divider-handle:hover .divider-bg {
-  opacity: 1;
+.divider-handle[data-hovering="true"] .divider-bg {
+  animation: divider-fill 1s linear forwards;
 }
 
-.divider-handle:hover .divider-line {
+.divider-handle[data-hovering="true"] .divider-line {
   width: 4px;
   background-color: #ffffff;
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.divider-handle[data-hovering="false"] .divider-bg,
+.divider-handle:not([data-hovering]) .divider-bg {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes divider-fill {
+  from { opacity: 0; background-color: rgba(0, 0, 0, 0.7); }
+  to   { opacity: 1; background-color: rgba(255, 255, 255, 0.9); }
+}
+
+/* 展開長條 hover 填充動畫 */
+.expand-handle {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.expand-handle[data-hovering="true"] {
+  animation: expand-fill 400ms linear forwards;
+}
+
+.expand-handle[data-hovering="false"],
+.expand-handle:not([data-hovering]) {
+  animation: none;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes expand-fill {
+  from { background-color: rgba(255, 255, 255, 0.08); }
+  to   { background-color: rgba(255, 255, 255, 0.7); }
 }
 
 /* 浮動決策面板進入動畫 */

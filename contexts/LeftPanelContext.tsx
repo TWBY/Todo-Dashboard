@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 interface LeftPanelContextValue {
   collapsed: boolean
@@ -10,12 +10,13 @@ interface LeftPanelContextValue {
 const LeftPanelContext = createContext<LeftPanelContextValue>({ collapsed: false, toggle: () => {} })
 
 export function LeftPanelProvider({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
+  // 一律先以 false 渲染，避免 SSR 與 client 讀取 localStorage 結果不同造成 hydration mismatch
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
     const stored = localStorage.getItem('dashboard-left-collapsed')
-    // 預設為展開（false），只有明確設定為 'true' 時才收合
-    return stored === 'true'
-  })
+    if (stored === 'true') setCollapsed(true)
+  }, [])
 
   const toggle = useCallback(() => {
     setCollapsed(prev => {

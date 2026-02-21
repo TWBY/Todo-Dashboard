@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useClaudeChat } from '@/hooks/useClaudeChat';
 import PulsingDots from '@/components/PulsingDots';
 import ReactMarkdown from 'react-markdown';
@@ -418,10 +419,50 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
   );
 }
 
+// --- Rescue Prompt Builder ---
+
+function buildRescuePrompt(messages: ChatMessage[], currentPhase: number, error: string | null): string {
+  const phaseName = currentPhase > 0 && currentPhase <= PHASES.length
+    ? `${PHASES[currentPhase - 1].phase} — ${PHASES[currentPhase - 1].title}`
+    : `Phase ${currentPhase}`;
+
+  // Collect last few tool messages for error context
+  const recentToolMsgs = messages
+    .filter(m => m.role === 'tool' && m.content.trim())
+    .slice(-5)
+    .map(m => `[${m.toolName}] ${m.content.slice(0, 500)}`)
+    .join('\n');
+
+  // Collect completed phases
+  const completedPhases = PHASES
+    .filter((_, i) => i + 1 < currentPhase)
+    .map(p => `${p.phase} ${p.title}`)
+    .join('、');
+
+  return `Pack 打包流程在「${phaseName}」階段出錯，請協助診斷並修復。
+
+## 錯誤資訊
+${error || '（串流中斷或未知錯誤）'}
+
+## 已完成的階段
+${completedPhases || '（尚未完成任何階段）'}
+
+## 最近的工具輸出
+\`\`\`
+${recentToolMsgs || '（無）'}
+\`\`\`
+
+請先分析錯誤原因，然後嘗試修復問題。修復完成後，從失敗的階段繼續執行剩餘的 Pack 流程。
+
+完整的 Pack 流程供參考：
+${BUILD_PROMPT}`;
+}
+
 // --- Main Panel ---
 
 export default function BuildPanel() {
   const { close, buildState, setBuildState, resetBuild } = useBuildPanel();
+  const { addPanel } = useChatPanels();
   const {
     messages,
     isStreaming,
@@ -502,12 +543,22 @@ export default function BuildPanel() {
   const handleStartBuild = async () => {
     setBuildState('running');
     setCurrentPhase(0);
-    await sendMessage(BUILD_PROMPT, 'edit');
+    await sendMessage(BUILD_PROMPT, 'edit', undefined, 'sonnet');
   };
 
   const handleReset = () => {
     resetBuild();
     setCurrentPhase(0);
+  };
+
+  const handleRescue = () => {
+    const rescuePrompt = buildRescuePrompt(messages, currentPhase, error);
+    addPanel('dashboard', 'Pack 救援', {
+      initialMessage: rescuePrompt,
+      initialMode: 'edit',
+      model: 'opus',
+      ephemeral: true,
+    });
   };
 
   return (
@@ -522,14 +573,6 @@ export default function BuildPanel() {
       {/* Header */}
       <div className="flex items-center justify-start py-4 mb-6 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            onClick={close}
-            className="w-9 h-9 rounded-md flex items-center justify-center text-sm transition-colors hover:bg-white/20 shrink-0"
-            style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
-            title="關閉"
-          >
-            <i className="fa-solid fa-xmark" />
-          </button>
           {buildState === 'idle' && (
             <button
               onClick={handleStartBuild}
@@ -549,13 +592,25 @@ export default function BuildPanel() {
             </button>
           )}
           {(buildState === 'done' || buildState === 'error') && (
-            <button
-              onClick={handleReset}
-              className="h-9 px-4 rounded-md text-sm font-semibold transition-colors cursor-pointer hover:bg-white/10"
-              style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
-            >
-              重新執行
-            </button>
+            <>
+              <button
+                onClick={handleReset}
+                className="h-9 px-4 rounded-md text-sm font-semibold transition-colors cursor-pointer hover:bg-white/10"
+                style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+              >
+                重新執行
+              </button>
+              {buildState === 'error' && (
+                <button
+                  onClick={handleRescue}
+                  className="h-9 px-4 rounded-md text-sm font-semibold transition-colors cursor-pointer hover:brightness-110"
+                  style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}
+                >
+                  <i className="fa-solid fa-life-ring mr-1.5" />
+                  救援
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

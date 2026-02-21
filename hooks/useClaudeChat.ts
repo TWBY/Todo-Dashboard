@@ -61,6 +61,7 @@ interface UseClaudeChatReturn {
   isStreaming: boolean
   streamStatus: StreamStatus
   streamingActivity: StreamingActivity | null
+  streamingAssistantId: string | null
   sessionId: string | null
   sessionMeta: SessionMeta
   pendingQuestions: PendingQuestionsState | null
@@ -119,6 +120,7 @@ interface StreamActions {
   setPendingQuestions: React.Dispatch<React.SetStateAction<PendingQuestionsState | null>>
   setPendingPlanApproval: React.Dispatch<React.SetStateAction<PendingPlanApprovalState | null>>
   setStreamingActivity: React.Dispatch<React.SetStateAction<StreamingActivity | null>>
+  setStreamingAssistantId: React.Dispatch<React.SetStateAction<string | null>>
   projectId: string
   message: string
   currentSessionId: string | null
@@ -176,6 +178,7 @@ function processStreamEvent(
         actions.setStreamingActivity({ status: 'replying' })
         if (!ctx.currentAssistantId) {
           ctx.currentAssistantId = crypto.randomUUID()
+          actions.setStreamingAssistantId(ctx.currentAssistantId)
           const aid = ctx.currentAssistantId
           actions.setMessages(prev => [...prev, {
             id: aid,
@@ -197,6 +200,7 @@ function processStreamEvent(
         console.debug('[chat] stream content_block_start tool_use', { name: contentBlock.name, id: contentBlock.id })
         actions.setStreamingActivity({ status: 'tool', toolName: contentBlock.name })
         ctx.currentAssistantId = null // 結束文字累積
+        actions.setStreamingAssistantId(null)
 
         // ExitPlanMode — 從 stream event 提早建立 pending 狀態
         // （不等 assistant 完整訊息，避免 canUseTool 阻塞後 assistant 訊息延遲到達）
@@ -259,6 +263,7 @@ function processStreamEvent(
         actions.setStreamingActivity({ status: 'replying' })
         if (!ctx.currentAssistantId) {
           ctx.currentAssistantId = crypto.randomUUID()
+          actions.setStreamingAssistantId(ctx.currentAssistantId)
           const aid = ctx.currentAssistantId
           actions.setMessages(prev => [...prev, {
             id: aid,
@@ -294,6 +299,7 @@ function processStreamEvent(
             }])
           }
           ctx.currentAssistantId = null
+          actions.setStreamingAssistantId(null)
           return
         }
 
@@ -318,6 +324,7 @@ function processStreamEvent(
             }])
           }
           ctx.currentAssistantId = null
+          actions.setStreamingAssistantId(null)
           return
         }
 
@@ -341,6 +348,7 @@ function processStreamEvent(
             timestamp: Date.now(),
           }])
           ctx.currentAssistantId = null
+          actions.setStreamingAssistantId(null)
           return
         }
 
@@ -359,6 +367,7 @@ function processStreamEvent(
             timestamp: Date.now(),
           }])
           ctx.currentAssistantId = null
+          actions.setStreamingAssistantId(null)
           return
         }
 
@@ -376,6 +385,7 @@ function processStreamEvent(
             timestamp: Date.now(),
           }])
           ctx.currentAssistantId = null
+          actions.setStreamingAssistantId(null)
           return
         }
 
@@ -389,6 +399,7 @@ function processStreamEvent(
           timestamp: Date.now(),
         }])
         ctx.currentAssistantId = null
+        actions.setStreamingAssistantId(null)
       }
     }
     return
@@ -628,6 +639,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
   const [pendingQuestions, _setPendingQuestions] = useState<PendingQuestionsState | null>(null)
   const [pendingPlanApproval, _setPendingPlanApproval] = useState<PendingPlanApprovalState | null>(null)
   const [streamingActivity, setStreamingActivity] = useState<StreamingActivity | null>(null)
+  const [streamingAssistantId, setStreamingAssistantId] = useState<string | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [sessionMeta, setSessionMeta] = useState<SessionMeta>({
     model: null,
@@ -659,6 +671,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
     abortRef.current?.abort()
     abortRef.current = null
     setStreamStatus('idle')
+    setStreamingAssistantId(null)
   }, [])
 
   const resetStreamStatus = useCallback(() => {
@@ -752,6 +765,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       setPendingQuestions,
       setPendingPlanApproval,
       setStreamingActivity,
+      setStreamingAssistantId,
       projectId,
       message,
       currentSessionId,
@@ -789,6 +803,7 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
       console.debug('[chat] stream ended', { resultSuccess: ctx.resultSuccess, finalStatus, hasPendingApproval: ctx.hasPendingApproval })
       setStreamStatus(finalStatus)
       setStreamingActivity(null)
+      setStreamingAssistantId(null)
 
       // 更新歷史紀錄（ephemeral 模式跳過）
       const sid = sessionIdRef.current || ctx.newSessionIdForHistory
@@ -953,5 +968,5 @@ export function useClaudeChat(projectId: string, config?: UseClaudeChatConfig): 
 
   const clearError = useCallback(() => setError(null), [])
 
-  return { messages, todos, isStreaming, streamStatus, streamingActivity, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime }
+  return { messages, todos, isStreaming, streamStatus, streamingActivity, streamingAssistantId, sessionId, sessionMeta, pendingQuestions, pendingPlanApproval, sendMessage, answerQuestion, approvePlan, stopStreaming, resetStreamStatus, clearChat, resumeSession, isLoadingHistory, error, clearError, lastFailedMessage, streamStartTime }
 }

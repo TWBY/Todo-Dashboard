@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useDevServer } from '@/contexts/DevServerContext';
+import { useLeftPanel } from '@/contexts/LeftPanelContext';
+import { usePortsPanel } from '@/contexts/PortsPanelContext';
+import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useTodoPanel } from '@/contexts/TodoPanelContext';
+import { useDocsPanel } from '@/contexts/DocsPanelContext';
 import { formatPort } from '@/lib/format';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -19,6 +24,11 @@ export default function DevServerPanel() {
   const [prodLoading, setProdLoading] = useState(false);
   const [prodRunning, setProdRunning] = useState(false);
   const { addPanel } = useChatPanels();
+  const { collapsed: leftCollapsed, toggle: toggleLeft } = useLeftPanel();
+  const { open: portsPanelOpen, toggle: togglePortsPanel, close: closePortsPanel } = usePortsPanel();
+  const { open: buildPanelOpen, toggle: toggleBuildPanel, close: closeBuildPanel } = useBuildPanel();
+  const { close: closeTodoPanel } = useTodoPanel();
+  const { close: closeDocsPanel } = useDocsPanel();
   const [compact, setCompact] = useState(false);
   const headerBtnsRef = useRef<HTMLDivElement>(null);
   const [currentPort, setCurrentPort] = useState<number>(0);
@@ -318,7 +328,7 @@ export default function DevServerPanel() {
       >
         <div className="overflow-hidden min-h-0">
           <div
-            className={`py-2 px-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
+            className={`py-2 pl-3 rounded-[var(--radius-medium)] transition-[opacity,transform] duration-300 ${
               isRemoving ? 'opacity-0 scale-95 -translate-x-4' : ''
             }`}
             style={{ backgroundColor: 'var(--background-secondary)' }}
@@ -336,8 +346,19 @@ export default function DevServerPanel() {
                 <span className="text-xs text-green-500 flex-shrink-0">Copied</span>
               )}
 
-              {/* 右：固定 4 欄（O + S + C + X） */}
+              {/* 右：O + S + C + X（Todo-Dashboard 額外有 R） */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
+                {isPinned && (
+                  <button
+                    onClick={() => fetchStatuses()}
+                    className={btnBase}
+                    style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-color)', ...btnStyle }}
+                    title="重新整理所有狀態"
+                  >
+                    <i className="fa-solid fa-arrows-rotate text-xs" />
+                  </button>
+                )}
+
                 {showO ? (
                   <button
                     onClick={() => handleOpenBrowser(s.projectId, s.port, s.devBasePath, s.source, s.projectPath)}
@@ -371,7 +392,10 @@ export default function DevServerPanel() {
                 )}
 
                 <button
-                  onClick={() => addPanel(s.projectId, displayName)}
+                  onClick={() => {
+                    if (!leftCollapsed) toggleLeft()
+                    addPanel(s.projectId, displayName)
+                  }}
                   className={btnBase}
                   style={{ backgroundColor: '#111a22', color: '#999999', border: '1px solid #333333', ...btnStyle }}
                   title="開啟 Claude 對話視窗"
@@ -381,7 +405,18 @@ export default function DevServerPanel() {
 
                 {isPinned ? (
                   <button
-                    onClick={() => router.push('/ports')}
+                    onClick={() => {
+                      if (portsPanelOpen) {
+                        closePortsPanel()
+                        if (leftCollapsed) setTimeout(() => toggleLeft(), 130)
+                      } else {
+                        closeBuildPanel()
+                        closeTodoPanel()
+                        closeDocsPanel()
+                        if (!leftCollapsed) toggleLeft()
+                        togglePortsPanel()
+                      }
+                    }}
                     className={btnBase}
                     style={{ backgroundColor: '#0c1a2e', color: '#60a5fa', border: '1px solid #1e3a5f', ...btnStyle }}
                     title="Port 管理（國家全貌 + Station 居民表）"
@@ -410,7 +445,7 @@ export default function DevServerPanel() {
   return (
     <div className="relative">
       <div ref={headerBtnsRef} className="flex flex-col gap-2 mb-3">
-        {/* 版本標籤 + Ports 按鈕（同一行） */}
+        {/* 版本標籤 + P (Pack) 按鈕（同一行） */}
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-lg flex items-center gap-2 shrink-0 flex-1">
             {currentPort === 3002 && versionConfig.development && (
@@ -438,6 +473,29 @@ export default function DevServerPanel() {
               </span>
             )}
           </h2>
+          <button
+            onClick={() => {
+              if (buildPanelOpen) {
+                closeBuildPanel()
+                if (leftCollapsed) setTimeout(() => toggleLeft(), 130)
+              } else {
+                closeTodoPanel()
+                closeDocsPanel()
+                closePortsPanel()
+                if (!leftCollapsed) toggleLeft()
+                toggleBuildPanel()
+              }
+            }}
+            className="h-8 px-2.5 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer shrink-0"
+            style={{
+              backgroundColor: buildPanelOpen ? 'rgba(245,158,11,0.2)' : '#332815',
+              color: '#f59e0b',
+              border: buildPanelOpen ? '1px solid rgba(245,158,11,0.4)' : '1px solid #4a3520',
+            }}
+            title="版本升級與打包流程"
+          >
+            P
+          </button>
         </div>
       </div>
 
