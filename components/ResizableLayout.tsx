@@ -368,7 +368,7 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
   }, [virtualPanelCount])
 
   // 所有面板：僅動態面板
-  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, type: p.type || 'chat' as const, teamName: p.teamName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, model: p.model, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId, ephemeral: p.ephemeral, scratchItemId: p.scratchItemId }))
+  const allPanels = openPanels.map(p => ({ panelId: p.panelId, projectId: p.projectId, projectName: p.projectName, type: p.type || 'chat' as const, teamName: p.teamName, isFixed: false, planOnly: p.planOnly, emailMode: p.emailMode, docsMode: p.docsMode, model: p.model, initialMessage: p.initialMessage, initialMode: p.initialMode, sessionId: p.sessionId, ephemeral: p.ephemeral, scratchItemId: p.scratchItemId }))
 
   // Chat 面板退場：設定 exitingIds，CSS transition 處理淡出，onTransitionEnd 移除
   const handlePanelClose = useCallback((panelId: string) => {

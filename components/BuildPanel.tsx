@@ -5,8 +5,6 @@ import { useBuildPanel } from '@/contexts/BuildPanelContext';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useClaudeChat } from '@/hooks/useClaudeChat';
 import PulsingDots from '@/components/PulsingDots';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { ChatMessage, StreamingActivity } from '@/lib/claude-chat-types';
 
 // --- Build Prompt ---
@@ -20,7 +18,7 @@ Phase 1 — 偵察（機械執行）
 Phase 2 — 智能 Commit（AI 介入）
 3. 查看 git diff + untracked files，判斷哪些文件該 commit
 4. 按功能/模組將變更智能分組成多次 commit（同一功能放一個 commit，資料更新另一個，UI 調整又一個）
-5. 逐組執行 git add <files> + git commit -m "描述"
+5. 逐組執行 git add <files> + git commit -m "描述"（commit message 必須使用繁體中文，格式：「類型：說明」，類型用中文，例如「新增：聊天面板背景執行功能」「修復：版本比較邏輯錯誤」「重構：簡化 ResizableLayout 狀態管理」）
 
 Phase 3 — 版本判斷（AI 介入）
 6. git log <上次release>..HEAD --oneline 列出所有新 commit
@@ -32,7 +30,7 @@ Phase 4 — 版本升級與打包（機械執行）
 
 Phase 5 — Release Commit（機械執行）
 10. git add version.json
-11. git commit -m "release: vX.Y.Z — 一行功能摘要"（使用 production 版本號，不加前綴）
+11. git commit -m "release: vX.Y.Z — 一行功能摘要"（使用 production 版本號，不加前綴；摘要必須使用繁體中文，例如「新增 Agent Team 監控面板與背景執行支援」）
 12. 將 development 版本升級為下一個 patch-dev（例如 production 是 1.15.7，則 development 改為 1.15.8-dev）
 13. git add version.json && git commit -m "chore: bump dev version to X.Y.Z-dev"
 14. 回報新版本號和本次變更摘要（所有中文標點使用全形，例如冒號用「：」不用「:」）`;
@@ -329,6 +327,107 @@ function StepNode({ step, status }: { step: StepData; status: StepStatus }) {
   );
 }
 
+// --- Tool type config ---
+
+interface ToolConfig {
+  icon: string;
+  color: string;
+  bg: string;
+  border: string;
+  label: string;
+}
+
+function getToolConfig(toolName: string | undefined): ToolConfig {
+  const name = (toolName || '').toLowerCase();
+  if (name === 'bash') return { icon: 'fa-terminal', color: '#4ade80', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.2)', label: 'Bash' };
+  if (name === 'read') return { icon: 'fa-file-lines', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)', label: 'Read' };
+  if (name === 'write') return { icon: 'fa-file-pen', color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)', label: 'Write' };
+  if (name === 'edit') return { icon: 'fa-pen-to-square', color: '#facc15', bg: 'rgba(250,204,21,0.08)', border: 'rgba(250,204,21,0.2)', label: 'Edit' };
+  if (name === 'glob') return { icon: 'fa-magnifying-glass', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)', label: 'Glob' };
+  if (name === 'grep') return { icon: 'fa-filter', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)', label: 'Grep' };
+  if (name === 'todowrite') return { icon: 'fa-list-check', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)', label: 'Todo' };
+  return { icon: 'fa-gear', color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', label: toolName || 'Tool' };
+}
+
+// Collapsible tool output
+const OUTPUT_COLLAPSE_LINES = 5;
+
+function ToolOutput({ content }: { content: string }) {
+  const lines = content.split('\n');
+  const needsCollapse = lines.length > OUTPUT_COLLAPSE_LINES;
+  const [expanded, setExpanded] = useState(false);
+
+  const displayed = needsCollapse && !expanded
+    ? lines.slice(0, OUTPUT_COLLAPSE_LINES).join('\n')
+    : content;
+
+  return (
+    <div>
+      <pre
+        className="text-xs font-mono whitespace-pre-wrap"
+        style={{ color: '#7a8a9a', lineHeight: '1.6', margin: 0, wordBreak: 'break-word' }}
+      >
+        {displayed}
+        {needsCollapse && !expanded && <span style={{ color: '#4a5568' }}>…</span>}
+      </pre>
+      {needsCollapse && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="mt-1 text-xs flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
+          style={{ color: '#4a5568' }}
+        >
+          <i className={`fa-solid ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-xs`} />
+          {expanded ? '收起' : `展開全部（${lines.length} 行）`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Single tool message card
+function ToolCard({ msg }: { msg: ChatMessage }) {
+  const cfg = getToolConfig(msg.toolName);
+  const hasOutput = msg.content.trim().length > 0;
+
+  return (
+    <div
+      className="rounded"
+      style={{
+        backgroundColor: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header row */}
+      <div
+        className="flex items-center gap-2 px-2.5 py-1.5"
+        style={{ borderBottom: hasOutput ? `1px solid ${cfg.border}` : 'none' }}
+      >
+        <i className={`fa-solid ${cfg.icon} text-xs`} style={{ color: cfg.color, opacity: 0.85 }} />
+        <span className="text-xs font-mono font-semibold" style={{ color: cfg.color }}>
+          {cfg.label}
+        </span>
+        {msg.toolDescription && (
+          <span
+            className="text-xs font-mono truncate flex-1 min-w-0"
+            style={{ color: '#5a6a7a' }}
+            title={msg.toolDescription}
+          >
+            {msg.toolDescription}
+          </span>
+        )}
+      </div>
+
+      {/* Output */}
+      {hasOutput && (
+        <div className="px-2.5 py-1.5">
+          <ToolOutput content={msg.content.trim()} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Inline AI output area — shows ALL messages (assistant + tool) as a continuous log */
 function AiOutputArea({ messages, isStreaming, streamingActivity }: {
   messages: ChatMessage[];
@@ -337,83 +436,79 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, streamingActivity]);
 
-  // Show all messages except user messages and empty ones
   const visibleMessages = messages.filter(m => m.role !== 'user' && (m.content.trim() || m.toolName));
 
   if (visibleMessages.length === 0 && !isStreaming) return null;
 
-  return (
-    <div
-      className="mt-3 rounded-md"
-      style={{
-        backgroundColor: 'rgba(0,0,0,0.15)',
-        border: '1px solid rgba(168,85,247,0.2)',
-        padding: '10px 12px',
-      }}
-    >
-      {/* Activity indicator */}
-      {isStreaming && streamingActivity && (
-        <div className="flex items-center gap-2 mb-2">
-          {streamingActivity.status === 'tool' ? (
-            <span className="text-base font-mono" style={{ color: '#a855f7', lineHeight: '1.7' }}>
-              {streamingActivity.toolName}
-              {streamingActivity.toolDetail && (
-                <span style={{ color: 'var(--text-tertiary)' }}> — {streamingActivity.toolDetail}</span>
-              )}
-            </span>
-          ) : streamingActivity.status === 'thinking' ? (
-            <span className="text-base flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>
-              <PulsingDots color="#a855f7" /> 思考中
-            </span>
-          ) : streamingActivity.status === 'replying' ? (
-            <span className="text-base flex items-center gap-2" style={{ color: 'var(--text-tertiary)', lineHeight: '1.7' }}>
-              <PulsingDots color="#a855f7" /> 回應中
-            </span>
-          ) : null}
+  // Live activity badge
+  const activityBadge = isStreaming && streamingActivity ? (() => {
+    if (streamingActivity.status === 'thinking') {
+      return (
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+          <PulsingDots color="#a855f7" />
+          <span className="text-xs" style={{ color: '#a855f7' }}>思考中</span>
         </div>
-      )}
+      );
+    }
+    if (streamingActivity.status === 'replying') {
+      return (
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+          <PulsingDots color="#a855f7" />
+          <span className="text-xs" style={{ color: '#a855f7' }}>回應中</span>
+        </div>
+      );
+    }
+    if (streamingActivity.status === 'tool') {
+      const cfg = getToolConfig(streamingActivity.toolName);
+      return (
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded" style={{ backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}>
+          <i className={`fa-solid fa-spinner fa-spin text-xs`} style={{ color: cfg.color }} />
+          <span className="text-xs font-mono font-semibold" style={{ color: cfg.color }}>{streamingActivity.toolName}</span>
+          {streamingActivity.toolDetail && (
+            <span className="text-xs font-mono truncate" style={{ color: '#5a6a7a' }}>{streamingActivity.toolDetail}</span>
+          )}
+        </div>
+      );
+    }
+    return null;
+  })() : null;
 
-      {/* All messages — continuous log, no collapse, no truncation */}
+  return (
+    <div className="mt-3 flex flex-col gap-1.5">
       {visibleMessages.map(msg => (
-        <div key={msg.id} className="mb-2">
+        <div key={msg.id}>
           {msg.role === 'assistant' ? (
-            <div className="text-base build-ai-output" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {msg.content}
-              </ReactMarkdown>
-            </div>
-          ) : (
-            /* Tool message */
-            <div
-              className="px-2.5 py-1.5 rounded text-sm font-mono"
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.2)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                color: '#999999',
-              }}
-            >
-              <div className="font-medium mb-1 text-xs" style={{ color: '#a855f7' }}>
-                {msg.toolName}
-                {msg.toolDescription && (
-                  <span style={{ color: '#666666' }}> — {msg.toolDescription}</span>
-                )}
+            // Assistant text — subtle left border, no markdown rendering
+            msg.content.trim() && (
+              <div
+                className="pl-3 py-0.5 text-sm"
+                style={{
+                  borderLeft: '2px solid rgba(168,85,247,0.35)',
+                  color: 'var(--text-tertiary)',
+                  lineHeight: '1.7',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {msg.content.trim()}
               </div>
-              {msg.content.trim() && (
-                <div className="whitespace-pre-wrap break-all text-xs" style={{ color: '#888888' }}>
-                  {msg.content}
-                </div>
-              )}
-            </div>
+            )
+          ) : (
+            <ToolCard msg={msg} />
           )}
         </div>
       ))}
+
+      {/* Live activity indicator — always at bottom */}
+      {activityBadge && (
+        <div>{activityBadge}</div>
+      )}
+
       <div ref={bottomRef} />
     </div>
   );
