@@ -208,24 +208,76 @@ const memoryVsClaudeMd = [
   },
 ]
 
-const TABS = [
-  { id: 'tech-stack',   label: '技術架構' },
-  { id: 'permissions',  label: '權限模型' },
-  { id: 'model-choice', label: '模型選擇（H/S/O）' },
-  { id: 'settings',     label: 'settings.json' },
-  { id: 'claude-md',    label: 'CLAUDE.md' },
-  { id: 'memory',       label: 'Memory' },
-  { id: 'mcp',          label: 'MCP 設定' },
-  { id: 'env-compare',  label: 'Extension vs SDK' },
-  { id: 'cli-vs-sdk',   label: 'CLI 與 SDK' },
-  { id: 'arc-cdp',      label: 'Browser MCP' },
-  { id: 'gaps',         label: '文件缺口' },
-  { id: 'chat',         label: 'Chat 功能中心' },
-  { id: 'blog',         label: 'Blog 編輯流水線' },
-  { id: 'skills',       label: 'Skills 總覽' },
-  { id: 'sdk',          label: 'Agent SDK' },
-  { id: 'changelog',    label: '版本歷史' },
+interface TabGroup {
+  group: string
+  icon: string
+  letter: string
+  tabs: { id: string; label: string }[]
+}
+
+const TAB_GROUPS: TabGroup[] = [
+  {
+    group: '系統藍圖',
+    icon: 'fa-city',
+    letter: 'A',
+    tabs: [
+      { id: 'tech-stack',   label: '技術架構' },
+      { id: 'cli-vs-sdk',   label: 'CLI 與 SDK' },
+      { id: 'env-compare',  label: 'Extension vs SDK' },
+    ],
+  },
+  {
+    group: '規章制度',
+    icon: 'fa-building-shield',
+    letter: 'B',
+    tabs: [
+      { id: 'permissions',  label: '權限模型' },
+      { id: 'settings',     label: 'settings.json' },
+      { id: 'claude-md',    label: 'CLAUDE.md' },
+      { id: 'memory',       label: 'Memory' },
+    ],
+  },
+  {
+    group: '工具箱',
+    icon: 'fa-toolbox',
+    letter: 'C',
+    tabs: [
+      { id: 'model-choice', label: '模型選擇（H/S/O）' },
+      { id: 'mcp',          label: 'MCP 設定' },
+      { id: 'arc-cdp',      label: 'Browser MCP' },
+    ],
+  },
+  {
+    group: '產品線',
+    icon: 'fa-industry',
+    letter: 'D',
+    tabs: [
+      { id: 'chat',         label: 'Agent SDK Chat' },
+      { id: 'chat-doc',     label: 'Chat 技術文件' },
+      { id: 'blog',         label: 'Blog 編輯流水線' },
+      { id: 'skills',       label: 'Skills 總覽' },
+      { id: 'sdk',          label: 'Agent SDK' },
+    ],
+  },
+  {
+    group: '檔案室',
+    icon: 'fa-book-open',
+    letter: 'E',
+    tabs: [
+      { id: 'gaps',         label: '文件缺口' },
+      { id: 'changelog',    label: '版本歷史' },
+    ],
+  },
 ]
+
+const TABS = TAB_GROUPS.flatMap(g => g.tabs)
+const TAB_ID_TO_CODE = (() => {
+  const map: Record<string, string> = {}
+  TAB_GROUPS.forEach(g => {
+    g.tabs.forEach((t, i) => { map[t.id] = `${g.letter}${i + 1}` })
+  })
+  return map
+})()
 
 // ── Sub-components ──────────────────────────────────────────────
 
@@ -2764,7 +2816,7 @@ function ChatTab() {
   const copied           = isCopied(checklist)
 
   return (
-    <div className="max-w-[820px]">
+    <div>
       {/* Section 1: 功能展示 */}
       <section className="mb-12">
         <div className="flex items-center gap-2 mb-4">
@@ -2849,6 +2901,394 @@ function ChatTab() {
           </pre>
         </section>
       )}
+    </div>
+  )
+}
+
+// ── Chat Doc Tab ─────────────────────────────────────────────────
+
+function ChatDocSectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3 mt-8 first:mt-0">
+      <span className="text-sm font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>{title}</span>
+      {subtitle && <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{subtitle}</span>}
+    </div>
+  )
+}
+
+function ChatDocTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+      <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: 'var(--background-secondary)' }}>
+            {headers.map((h, i) => (
+              <th key={i} className="px-4 py-2.5 text-left font-medium" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'var(--background-primary)' : 'var(--background-secondary)' }}>
+              {row.map((cell, j) => (
+                <td key={j} className="px-4 py-2" style={{ color: 'var(--text-secondary)', borderBottom: i < rows.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
+                  {j === 0 ? <code className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--primary-blue-light)' }}>{cell}</code> : cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function ChatDocCodeBlock({ code, label }: { code: string; label?: string }) {
+  return (
+    <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+      {label && (
+        <div className="px-4 py-2 text-xs font-medium" style={{ backgroundColor: 'var(--background-secondary)', color: 'var(--text-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
+          {label}
+        </div>
+      )}
+      <pre className="px-4 py-3 text-sm font-mono overflow-x-auto" style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+        {code}
+      </pre>
+    </div>
+  )
+}
+
+function ChatDocTab() {
+  return (
+    <div>
+      {/* Overview */}
+      <div className="rounded-xl px-5 py-4 mb-8" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+        <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+          本頁記錄 Chat 系統的技術實作細節，包含 SDK 版本、Thinking 機制、架構分層與參數傳遞。
+          功能模組總覽請參考
+          <span className="font-medium" style={{ color: 'var(--primary-blue-light)' }}> Agent SDK Chat </span>
+          分頁。
+        </div>
+      </div>
+
+      {/* Section 1: 核心依賴 */}
+      <ChatDocSectionHeader title="核心依賴" subtitle="runtime 層級的套件" />
+      <ChatDocTable
+        headers={['套件', '版本', '角色']}
+        rows={[
+          ['@anthropic-ai/claude-agent-sdk', '0.2.45', '核心 SDK — spawn Claude Code binary，提供 query() 函數'],
+          ['@anthropic-ai/sdk', 'SDK 內部依賴', '底層 Anthropic API 型別定義（BetaMessage、BetaRawMessageStreamEvent）'],
+          ['@modelcontextprotocol/sdk', 'SDK 內部依賴', 'MCP 伺服器連接層（McpServer、CallToolResult）'],
+        ]}
+      />
+      <div className="text-sm mb-6" style={{ color: 'var(--text-tertiary)', lineHeight: 1.75 }}>
+        <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--primary-blue-light)' }}>claude-agent-sdk</code> 不是直接呼叫 Anthropic Messages API，
+        而是在 Node.js 環境中 spawn 一個 Claude Code CLI binary（與終端機中使用的 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--primary-blue-light)' }}>claude</code> 指令相同），
+        透過 stdin/stdout JSON 串流與之通訊。這意味著 SDK 繼承了 Claude Code 的所有功能：工具執行、檔案操作、MCP 連接、session 持久化等。
+      </div>
+
+      {/* Section 2: 系統架構 */}
+      <ChatDocSectionHeader title="系統架構" subtitle="四層結構" />
+      <ChatDocCodeBlock
+        label="資料流方向（由前端到底層）"
+        code={`前端 Hook (useClaudeChat)          hooks/useClaudeChat.ts
+  \u2192 API Route (POST /api/claude-chat)  app/api/claude-chat/route.ts
+    \u2192 Session Manager (createSDKQuery)   lib/claude-session-manager.ts
+      \u2192 Claude Agent SDK (query())         node_modules/@anthropic-ai/claude-agent-sdk`}
+      />
+      <div className="space-y-3 mb-6">
+        {[
+          {
+            layer: 'useClaudeChat',
+            file: 'hooks/useClaudeChat.ts',
+            desc: '前端 React Hook\u3002管理 messages state\u3001sendMessage \u7de8\u6392\u5668\uff08\u5716\u7247\u4e0a\u50b3 \u2192 SSE fetch \u2192 retry \u2192 \u6301\u4e45\u5316\uff09\u3001SSE \u89e3\u6790\u5f15\u64ce\uff08readSSEStream \u9010\u884c\u89e3\u6790 + carry-over buffer\uff09\u3001stopStreaming\u3001clearChat\u3001\u932f\u8aa4\u8655\u7406\u8207\u81ea\u52d5\u91cd\u8a66\u3002',
+            details: '\u5167\u5efa processStreamEvent \u5206\u6d3e\u5668\uff0c\u5c07\u4e0d\u540c\u985e\u578b\u7684 SSE \u4e8b\u4ef6\uff08system / assistant / stream / result / tool_stats\uff09\u8def\u7531\u5230\u5c0d\u61c9\u7684 state \u66f4\u65b0\u3002\u6bcf\u500b\u5de5\u5177\u547c\u53eb\u6703\u900f\u904e extractToolDescription \u64f7\u53d6\u7c21\u77ed\u63cf\u8ff0\uff0c\u986f\u793a\u5728 UI \u7684 ToolGroup \u4e2d\u3002',
+          },
+          {
+            layer: 'API Route',
+            file: 'app/api/claude-chat/route.ts',
+            desc: 'Next.js API Route\uff08maxDuration: 300s\uff09\u3002\u63a5\u6536\u524d\u7aef POST \u8acb\u6c42\uff0c\u89e3\u6790 projectId \u2192 \u5c08\u6848\u8def\u5f91\uff08\u652f\u63f4\u865b\u64ec\u5c08\u6848 port-manager / chat-lab\uff09\uff0c\u5efa\u7acb SDK query\uff0c\u518d\u7528 ReadableStream \u5c07 SDK message \u8f49\u767c\u70ba SSE\u3002',
+            details: '\u8655\u7406\u56db\u7a2e SDK \u8a0a\u606f\u578b\u5225\uff1asystem\uff08init\u3001\u6a21\u578b\u8cc7\u8a0a\uff09\u3001assistant\uff08BetaMessage \u683c\u5f0f\u7684\u5b8c\u6574\u56de\u61c9\uff09\u3001stream_event\uff08\u9010\u5b57\u4e32\u6d41\u7247\u6bb5\uff09\u3001result\uff08\u6210\u529f/\u5931\u6557 + \u8cbb\u7528\u7d71\u8a08\uff09\u3002\u76e3\u807d request.signal abort \u4ee5\u5075\u6e2c client \u65b7\u958b\u9023\u7dda\u3002',
+          },
+          {
+            layer: 'Session Manager',
+            file: 'lib/claude-session-manager.ts',
+            desc: 'SDK query \u5de5\u5ee0\u3002buildQueryOptions \u5c07\u524d\u7aef\u53c3\u6578\uff08model / effort / mode / sessionId\uff09\u7d44\u88dd\u6210 SDK Options \u7269\u4ef6\uff0ccanUseTool callback \u653e\u884c\u4e00\u822c\u5de5\u5177\u4f46\u6514\u622a AskUserQuestion \u548c ExitPlanMode\u3002',
+            details: '\u7ba1\u7406\u4e09\u500b\u5168\u57df Map\uff1aactiveQueries\uff08session \u2192 Query \u5be6\u4f8b\uff0c\u4f9b answer API \u547c\u53eb setPermissionMode\uff09\u3001pendingRequests\uff08Promise \u6682\u5b58\uff0c5 \u5206\u9418\u903e\u6642\uff09\u3001toolStats\uff08\u5de5\u5177\u4f7f\u7528\u6b21\u6578\u7d71\u8a08\uff09\u3002',
+          },
+          {
+            layer: 'Agent SDK',
+            file: 'node_modules/@anthropic-ai/claude-agent-sdk',
+            desc: '\u5e95\u5c64 binary\u3002SDK spawn \u4e00\u500b Claude Code \u5b50\u7a0b\u5e8f\uff0c\u900f\u904e --output-format stream-json --input-format stream-json \u9032\u884c JSON \u4e32\u6d41\u901a\u8a0a\u3002\u5b50\u7a0b\u5e8f\u8ca0\u8cac\u8207 Anthropic API \u5be6\u969b\u901a\u8a0a\u3001\u57f7\u884c\u5de5\u5177\u3001\u7ba1\u7406 thinking\u3002',
+            details: 'SDK \u81ea\u52d5\u5c07 Options \u4e2d\u7684 model / effort / maxThinkingTokens \u8f49\u63db\u70ba CLI \u53c3\u6578\uff08--model / --effort / --max-thinking-tokens\uff09\u3002\u5982\u679c\u50b3\u5165 thinking: { type: "adaptive" }\uff0c\u5247\u4f7f\u7528\u9810\u8a2d 32000 tokens \u7684 max thinking budget\u3002',
+          },
+        ].map(item => (
+          <div key={item.layer} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="flex items-center gap-3 px-4 py-3" style={{ backgroundColor: 'var(--background-secondary)' }}>
+              <code className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }}>{item.layer}</code>
+              <code className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{item.file}</code>
+            </div>
+            <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+              <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.desc}</div>
+              <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>{item.details}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Section 3: Adaptive Thinking */}
+      <ChatDocSectionHeader title="Adaptive Thinking" subtitle="Opus 4.6 / Sonnet 4.6 的思考機制" />
+      <div className="text-sm mb-4" style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+        Claude 4.6 引入了 <strong>Adaptive Thinking</strong> 取代舊版的固定 budget_tokens 模式。
+        在 Adaptive 模式下，Claude 會根據問題的複雜度自行決定是否啟動 extended thinking 以及使用多少 token 進行推理。
+        這代表簡單的任務（如「把變數改名」）可能完全不觸發 thinking，而複雜任務（如「重構整個認證系統」）會進行深度推理。
+      </div>
+      <div className="rounded-lg px-4 py-3 mb-4" style={{ backgroundColor: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.2)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <i className="fa-solid fa-circle-check text-xs" style={{ color: '#22c55e' }} />
+          <span className="text-sm font-medium" style={{ color: '#22c55e' }}>預設開啟</span>
+        </div>
+        <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          SDK <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>sdk.d.ts</code> 第 618 行明確註解：
+          <em style={{ color: 'var(--text-tertiary)' }}>{' "{ type: \'adaptive\' } — This is the default for models that support it."'}</em>
+          <br />
+          Opus 4.6 和 Sonnet 4.6 會自動以 Adaptive Thinking 模式運行，不需要額外設定。
+        </div>
+      </div>
+      <div className="text-sm mb-3 font-medium" style={{ color: 'var(--text-secondary)' }}>Effort 等級與思考行為</div>
+      <div className="text-sm mb-3" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+        effort 參數是 Adaptive Thinking 的控制桿，決定 Claude 投入多少思考資源。它不是開關（開/關），而是一個漸進的深度控制。
+      </div>
+      <ChatDocTable
+        headers={['Effort', '思考行為', '適用場景', '備註']}
+        rows={[
+          ['max', '永遠思考，無限制', '最困難的推理任務', '僅 Opus 4.6'],
+          ['high（預設）', '幾乎永遠思考', '複雜程式碼、架構決策', '不傳 effort 時的預設值'],
+          ['medium', '中等思考，簡單問題可能跳過', '日常開發、中等難度', '平衡速度與品質'],
+          ['low', '盡量跳過思考', '分類、查詢、高吞吐量場景', '速度優先'],
+        ]}
+      />
+      <div className="text-sm mb-3 font-medium" style={{ color: 'var(--text-secondary)' }}>Thinking 模式比較</div>
+      <ChatDocTable
+        headers={['模式', 'API 設定', '適用模型', '說明']}
+        rows={[
+          ['Adaptive', 'thinking: { type: "adaptive" }', 'Opus 4.6、Sonnet 4.6', 'Claude 自行決定是否思考（預設）'],
+          ['Manual', 'thinking: { type: "enabled", budgetTokens: N }', '所有模型', '固定 token 預算（4.6 已標記 deprecated）'],
+          ['Disabled', '省略 thinking 參數', '所有模型', '不思考，最低延遲'],
+        ]}
+      />
+      <div className="text-sm mb-4" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+        Adaptive 模式還自動啟用 <strong>Interleaved Thinking</strong>：Claude 可以在工具呼叫之間穿插思考（而非只在開頭思考一次），這對 agentic 工作流特別有效 — 每次收到工具結果後，Claude 會重新評估下一步策略。
+      </div>
+      <div className="rounded-lg px-4 py-3 mb-6" style={{ backgroundColor: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.2)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <i className="fa-solid fa-triangle-exclamation text-xs" style={{ color: '#fbbf24' }} />
+          <span className="text-sm font-medium" style={{ color: '#fbbf24' }}>我們系統的實際狀態</span>
+        </div>
+        <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          我們沒有明確傳入 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>thinking</code> 參數，SDK 會自動為 Opus 4.6 / Sonnet 4.6 啟用 Adaptive Thinking。
+          <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>effort</code> 參數由使用者在 UI 選擇（L/M/H 按鈕），未選時 CLI 預設為 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>high</code>。
+          <br />
+          Haiku 4.5 不支援 Adaptive Thinking，使用 Haiku 時 thinking 被完全略過。
+        </div>
+      </div>
+
+      {/* Section 4: 可傳入參數 */}
+      <ChatDocSectionHeader title="可傳入參數" subtitle="前端 UI → API Route → Session Manager → SDK CLI" />
+      <div className="text-sm mb-3" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+        使用者在 Chat UI 上的每個操作（選模型、選 effort、切模式）都會通過以下四層傳遞，最終轉換為 Claude Code CLI 的命令列參數。
+      </div>
+      <ChatDocTable
+        headers={['參數', '來源', '說明', '不傳時的預設']}
+        rows={[
+          ['model', 'UI 模型切換（H/S/O）', 'haiku / sonnet / opus', 'SDK 預設模型'],
+          ['effort', 'UI effort 切換（L/M/H）', 'low / medium / high', 'CLI 預設 high'],
+          ['mode', 'UI 模式切換（P/E）', 'plan / edit — 影響 permissionMode 和 MCP 載入', 'plan'],
+          ['sessionId', '自動管理', '傳入則 resume 舊 session（SDK --resume flag）', '建立新 session'],
+          ['systemPromptAppend', 'Skill / 特殊場景', '追加到 system prompt 的 append 欄位', '空字串'],
+        ]}
+      />
+      <ChatDocCodeBlock
+        label="buildQueryOptions() 產出的 Options 結構（lib/claude-session-manager.ts）"
+        code={`{
+  cwd: projectPath,                          // 專案根目錄
+  additionalDirectories: [projectPath],      // 允許存取的額外目錄
+  permissionMode: 'acceptEdits',             // 預設權限模式
+  settingSources: ['user', 'project'],       // 讀取 settings.json 的來源
+  systemPrompt: {
+    type: 'preset',
+    preset: 'claude_code',                   // 使用 Claude Code 內建 system prompt
+    append: '...',                           // 自訂追加指令 + systemPromptAppend
+  },
+  includePartialMessages: true,              // 啟用逐字串流（stream_event）
+  env: { ...process.env（排除 CLAUDECODE）},  // 傳遞環境變數，排除巢狀偵測 flag
+  model?: 'haiku' | 'sonnet' | 'opus',      // 依 UI 選擇
+  effort?: 'low' | 'medium' | 'high',       // 依 UI 選擇
+  resume?: sessionId,                        // 恢復既有 session
+  mcpServers?: {                             // edit mode 不載入
+    'arc-cdp': { command: 'npx', args: ['@playwright/mcp', '--cdp-endpoint', 'http://localhost:9222'] },
+    'bot-browser': { command: 'npx', args: ['@playwright/mcp'] },
+  },
+}`}
+      />
+      <div className="text-sm mb-6" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+        <strong style={{ color: 'var(--text-secondary)' }}>env 處理</strong>：SDK 會將 process.env 傳給子程序，但必須排除 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>CLAUDECODE</code> 環境變數，
+        否則 Claude Code binary 會偵測到巢狀執行並拒絕啟動（{'"Claude Code cannot be launched inside another Claude Code session"'}）。
+      </div>
+
+      {/* Section 5: 關鍵機制 */}
+      <ChatDocSectionHeader title="關鍵機制" subtitle="系統運作的核心邏輯" />
+      <div className="space-y-4 mb-6">
+        {/* SSE 串流 */}
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            <i className="fa-solid fa-bolt text-xs" style={{ color: '#3b82f6' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SSE 串流</span>
+          </div>
+          <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              設定 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>includePartialMessages: true</code> 啟用逐字串流。SDK 產出的四種訊息類型透過 ReadableStream 即時轉發給前端：
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {[
+                { type: 'system', desc: 'init 事件 — 模型名稱、可用工具、工作目錄' },
+                { type: 'assistant', desc: '完整回應訊息（BetaMessage 格式）' },
+                { type: 'stream_event', desc: '逐字串流片段（部分文字 / 工具呼叫）' },
+                { type: 'result', desc: '任務完成 — 耗時、花費、錯誤訊息' },
+              ].map(item => (
+                <div key={item.type} className="flex items-start gap-2 px-3 py-2 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                  <code className="text-xs px-1 py-0.5 rounded shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--primary-blue-light)' }}>{item.type}</code>
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</span>
+                </div>
+              ))}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              前端 readSSEStream 逐行解析 SSE（處理跨 chunk 的不完整行），再由 processStreamEvent 路由到對應的 state 更新。
+            </div>
+          </div>
+        </div>
+
+        {/* canUseTool 阻塞 */}
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            <i className="fa-solid fa-hand text-xs" style={{ color: '#f59e0b' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>canUseTool 阻塞機制</span>
+          </div>
+          <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              SDK 的 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>canUseTool</code> callback 在每個工具執行前被呼叫。我們利用它實現「暫停等待用戶」：
+            </div>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-tertiary)', lineHeight: 1.75 }}>
+              1. 一般工具（Read / Edit / Bash 等）→ 直接放行（<code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>{'{ behavior: "allow" }'}</code>）<br />
+              2. <strong>AskUserQuestion</strong> / <strong>ExitPlanMode</strong> → 建立 Promise，存入 pendingRequests Map<br />
+              3. SDK 暫停在 await 上，等待 Promise resolve<br />
+              4. 用戶在 UI 點擊回應 → 呼叫 /api/claude-chat/answer → resolve Promise → SDK 繼續<br />
+              5. 超過 5 分鐘無回應 → 自動 reject，SDK 收到 timeout 錯誤
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              同時，canUseTool 也負責工具統計（toolStats），計算每個工具的呼叫次數，最後在串流結束時作為 tool_stats 事件傳回前端。
+            </div>
+          </div>
+        </div>
+
+        {/* Answer API */}
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            <i className="fa-solid fa-reply text-xs" style={{ color: '#22c55e' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Answer API</span>
+            <code className="text-xs" style={{ color: 'var(--text-tertiary)' }}>/api/claude-chat/answer</code>
+          </div>
+          <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              處理兩種用戶回應類型：
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="px-3 py-2 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>question</div>
+                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  用戶回答 AskUserQuestion → resolve pending Promise，answers 傳回 SDK 作為工具結果
+                </div>
+              </div>
+              <div className="px-3 py-2 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>planApproval</div>
+                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  批准 → resolve + 自動 q.setPermissionMode({'"acceptEdits"'})<br />
+                  拒絕 → deny + feedback 訊息傳回 SDK
+                </div>
+              </div>
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--text-secondary)' }}>Timing Race 處理</strong>：前端從 SSE 偵測到 ExitPlanMode 可能早於 server 端 canUseTool callback 建立 pending Promise。
+              Answer API 內建輪詢機制（每 200ms 檢查一次，最多等 5 秒），確保 pending request 已就緒後才 resolve。
+            </div>
+          </div>
+        </div>
+
+        {/* MCP 伺服器 */}
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            <i className="fa-solid fa-puzzle-piece text-xs" style={{ color: '#a855f7' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>MCP 伺服器</span>
+          </div>
+          <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="px-3 py-2 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                <div className="text-xs font-medium mb-1" style={{ color: '#a855f7' }}>arc-cdp</div>
+                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  透過 @playwright/mcp 連接 Arc 瀏覽器的 CDP port 9222。可操作瀏覽器分頁、截圖、讀取 Console。
+                </div>
+              </div>
+              <div className="px-3 py-2 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+                <div className="text-xs font-medium mb-1" style={{ color: '#a855f7' }}>bot-browser</div>
+                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  獨立 Playwright 實例（無 CDP endpoint）。用於不需要 Arc 的自動化場景。
+                </div>
+              </div>
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--text-secondary)' }}>條件載入</strong>：<code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>mode === {"'edit'"}</code> 時不載入任何 MCP 伺服器，因為 Pack 流程只需要檔案操作，不需要瀏覽器。
+            </div>
+          </div>
+        </div>
+
+        {/* permissionMode */}
+        <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ backgroundColor: 'var(--background-secondary)' }}>
+            <i className="fa-solid fa-shield-halved text-xs" style={{ color: '#ef4444' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>permissionMode</span>
+          </div>
+          <div className="px-4 py-3" style={{ backgroundColor: 'var(--background-primary)' }}>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              預設使用 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>acceptEdits</code> — 允許檔案讀寫但需確認破壞性操作（如 git push --force）。
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--text-secondary)' }}>Plan mode 的權限流轉</strong>：SDK 啟動時使用 plan mode，Claude 只能讀取和規劃。
+              當用戶批准 ExitPlanMode 後，Answer API 呼叫 <code className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>q.setPermissionMode({'"acceptEdits"'})</code>，
+              SDK 切換到 acceptEdits mode，Claude 才能開始實際修改檔案。這確保了「先審批再執行」的工作流。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 6: 相關檔案索引 */}
+      <ChatDocSectionHeader title="相關檔案索引" />
+      <div className="space-y-1.5 mb-6">
+        {[
+          { path: 'lib/claude-session-manager.ts', desc: 'Session Manager — query 工廠、canUseTool 阻塞、activeQueries / pendingRequests Map 管理' },
+          { path: 'lib/claude-chat-types.ts', desc: '所有 Chat 相關 TypeScript 型別定義（ChatMessage、StreamingActivity、SessionMeta 等）' },
+          { path: 'app/api/claude-chat/route.ts', desc: '主要 SSE 串流 API 端點 — projectId 解析、SDK message 轉發、client 斷線偵測' },
+          { path: 'app/api/claude-chat/answer/route.ts', desc: '用戶回應 API — Plan 審批 / Question 回答、timing race 輪詢、permissionMode 切換' },
+          { path: 'hooks/useClaudeChat.ts', desc: '前端 Chat Hook — 訊息狀態管理、SSE 解析引擎、sendMessage 編排器' },
+          { path: 'components/ChatContent.tsx', desc: 'Chat UI 核心 — 訊息列表、textarea 輸入框、Plan/Question 互動覆蓋層' },
+          { path: 'components/ClaudeChatPanel.tsx', desc: 'Chat Panel 容器 — 專案選擇器、模式 / 模型 / effort 切換按鈕' },
+          { path: 'lib/chat-center-features.ts', desc: 'Chat 功能目錄資料 — CHAT_FEATURES 陣列 + 移植清單生成器' },
+        ].map(item => (
+          <div key={item.path} className="flex items-start gap-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--background-tertiary)' }}>
+            <code className="text-xs font-mono shrink-0 mt-0.5" style={{ color: 'var(--primary-blue-light)' }}>{item.path}</code>
+            <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -2972,7 +3412,7 @@ function BlogStatusBadge({ label, color }: { label: string; color: 'green' | 'bl
 function BlogTab() {
   const { copy, isCopied } = useCopyToClipboard(1000)
   return (
-    <div className="max-w-[820px]">
+    <div>
       <div className="flex items-center gap-5 mb-6">
         <div className="flex items-center gap-2">
           <div className="w-5 h-[2px]" style={{ backgroundColor: 'var(--text-tertiary)' }} />
@@ -3160,7 +3600,7 @@ function SdkDivider() {
 
 function SdkTab() {
   return (
-    <div className="max-w-2xl">
+    <div>
       {/* Overview */}
       <div className="rounded-xl px-5 py-4 mb-8" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-2 mb-3">
@@ -3347,7 +3787,7 @@ function ChangelogTab() {
   }, [])
 
   return (
-    <div className="max-w-2xl">
+    <div>
       {loading ? (
         <div className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>載入中...</div>
       ) : entries.length === 0 ? (
@@ -3476,44 +3916,55 @@ export default function DocsPage() {
         }}
       >
 
-        {/* Divider + label */}
-        <div style={{ padding: '4px 16px 8px', borderTop: '1px solid var(--border-color)', marginTop: 4 }}>
-          <p style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginTop: 10, marginBottom: 4, fontWeight: 600 }}>技術文件</p>
-        </div>
-
-        {/* Tab list */}
+        {/* Grouped tab list */}
         <div style={{ padding: '0 8px 16px', flex: 1 }}>
-          {TABS.map((tab, index) => {
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => navigate(tab.id)}
-                className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 mb-0.5"
-                style={{
-                  backgroundColor: isActive ? 'var(--background-primary)' : 'transparent',
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                  border: isActive ? '1px solid var(--border-color)' : '1px solid transparent',
-                  fontWeight: isActive ? 500 : 400,
-                }}
+          {TAB_GROUPS.map((group) => (
+            <div key={group.letter}>
+              {/* Group header */}
+              <div
+                className="flex items-center gap-2 px-3 mt-3 mb-1"
+                style={{ paddingTop: group.letter === 'A' ? 12 : 4 }}
               >
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    fontFamily: 'ui-monospace, monospace',
-                    color: isActive ? '#0184ff' : 'var(--text-tertiary)',
-                    width: 28,
-                    flexShrink: 0,
-                    letterSpacing: '0.02em',
-                  }}
-                >
-                  Ch{index + 1}
+                <i className={`fa-solid ${group.icon}`} style={{ fontSize: 9, color: 'var(--text-tertiary)', opacity: 0.7 }} />
+                <span style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>
+                  {group.letter}. {group.group}
                 </span>
-                <span>{tab.label}</span>
-              </button>
-            )
-          })}
+              </div>
+              {/* Tabs in group */}
+              {group.tabs.map((tab, i) => {
+                const isActive = activeTab === tab.id
+                const code = `${group.letter}${i + 1}`
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => navigate(tab.id)}
+                    className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150 mb-0.5"
+                    style={{
+                      backgroundColor: isActive ? 'var(--background-primary)' : 'transparent',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                      border: isActive ? '1px solid var(--border-color)' : '1px solid transparent',
+                      fontWeight: isActive ? 500 : 400,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        fontFamily: 'ui-monospace, monospace',
+                        color: isActive ? '#0184ff' : 'var(--text-tertiary)',
+                        width: 28,
+                        flexShrink: 0,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {code}
+                    </span>
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ))}
         </div>
       </nav>
 
@@ -3532,6 +3983,7 @@ export default function DocsPage() {
           {activeTab === 'arc-cdp'      && <ArcCdpTab />}
           {activeTab === 'gaps'         && <GapsTab />}
           {activeTab === 'chat'         && <ChatTab />}
+          {activeTab === 'chat-doc'     && <ChatDocTab />}
           {activeTab === 'blog'         && <BlogTab />}
           {activeTab === 'skills'       && <SkillsTab />}
           {activeTab === 'sdk'          && <SdkTab />}
