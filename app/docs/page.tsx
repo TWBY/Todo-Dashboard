@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import type { Highlighter } from 'shiki'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
@@ -14,6 +15,76 @@ import {
   type FeatureTier,
 } from '@/lib/chat-center-features'
 import versionConfig from '@/version.json'
+
+// ── Shiki highlighter (lazy-loaded once) ─────────────────────────
+let shikiHighlighterPromise: Promise<Highlighter> | null = null
+function getHighlighter() {
+  if (!shikiHighlighterPromise) {
+    shikiHighlighterPromise = import('shiki').then(({ createHighlighter }) =>
+      createHighlighter({
+        themes: ['github-dark'],
+        langs: ['typescript', 'javascript', 'bash', 'json', 'tsx', 'css'],
+      })
+    )
+  }
+  return shikiHighlighterPromise
+}
+
+function useShikiHighlighter() {
+  const [highlighter, setHighlighter] = useState<Highlighter | null>(null)
+  useEffect(() => {
+    getHighlighter().then(setHighlighter)
+  }, [])
+  return highlighter
+}
+
+// ── Shared CodeBlock ─────────────────────────────────────────────
+function CodeBlock({ code, lang = 'typescript', label, className: extraClass }: {
+  code: string
+  lang?: string
+  label?: string
+  className?: string
+}) {
+  const highlighter = useShikiHighlighter()
+  const html = useMemo(() => {
+    if (!highlighter) return null
+    try {
+      return highlighter.codeToHtml(code, {
+        lang,
+        theme: 'github-dark',
+      })
+    } catch {
+      return null
+    }
+  }, [highlighter, code, lang])
+
+  return (
+    <div className={`rounded-xl overflow-hidden ${extraClass ?? ''}`} style={{ border: '1px solid var(--border-color)' }}>
+      <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+        <i className="fa-solid fa-code text-xs" style={{ color: 'var(--text-tertiary)' }} />
+        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'ui-monospace, monospace' }}>
+          {label ?? lang}
+        </span>
+      </div>
+      {html ? (
+        <div
+          className="shiki-wrap overflow-x-auto"
+          dangerouslySetInnerHTML={{ __html: html }}
+          style={{ fontSize: '13px', lineHeight: '1.7' }}
+        />
+      ) : (
+        <pre className="px-5 py-4 text-sm overflow-x-auto" style={{
+          color: 'var(--text-secondary)',
+          backgroundColor: 'var(--background-primary)',
+          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+          whiteSpace: 'pre',
+          lineHeight: '1.7',
+          margin: 0,
+        }}>{code}</pre>
+      )}
+    </div>
+  )
+}
 
 interface DocSection {
   title: string
@@ -646,8 +717,11 @@ function CliVsSdkTab() {
         <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
           Claude Code CLI 與 Agent SDK 的關係
         </h2>
+        <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          讀完這頁，你會搞清楚：為什麼 Todo-Dashboard 用 AI 時不需要 API Key、它底層到底怎麼跑、以及哪些工具是 Claude 伸手能用的。
+        </p>
         <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-          兩者不是競爭關係——SDK 把 CLI binary 打包在裡面，呼叫 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>query()</code> 時在背景 spawn 一個 CLI subprocess 去執行。
+          先說結論：CLI 和 SDK 是同一個 Claude，只是使用方式不同。CLI 是你在終端機直接打字對話；SDK 是讓你的程式幫你打字——你只給任務，Claude 自己跑完回傳結果。
         </p>
       </div>
 
@@ -656,13 +730,33 @@ function CliVsSdkTab() {
           <p className="text-xs font-semibold mb-1.5" style={{ color: '#3b82f6' }}>
             <i className="fa-solid fa-terminal mr-1.5" />Claude Code CLI
           </p>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>終端機互動工具（<code style={{ fontSize: '11px' }}>claude</code> 指令）。你親自打字，Claude 即時回應，可中斷、可修改方向。</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>你親自打字的那個工具（<code style={{ fontSize: '11px' }}>claude</code> 指令）。你在終端機輸入，Claude 即時回應，你可以隨時修改方向。</p>
         </div>
         <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
           <p className="text-xs font-semibold mb-1.5" style={{ color: '#f97316' }}>
             <i className="fa-solid fa-cube mr-1.5" />claude-agent-sdk
           </p>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>程式碼呼叫的函式庫（<code style={{ fontSize: '11px' }}>query()</code>）。自動化、嵌入 app、背景執行，不需要人在場。</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>讓你在自己的程式裡呼叫 Claude 的函式庫（<code style={{ fontSize: '11px' }}>query()</code>）。不需要人在旁邊盯著，Claude 自動完成任務後回傳結果。</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl px-4 py-3.5 mb-5" style={{ backgroundColor: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)' }}>
+        <p className="text-xs font-semibold mb-2" style={{ color: '#a78bfa' }}>
+          <i className="fa-solid fa-link mr-1.5" />兩者不是二選一，通常會搭配使用
+        </p>
+        <div className="grid gap-2 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.65' }}>
+          <div className="flex gap-2">
+            <i className="fa-solid fa-chevron-right text-xs mt-1 shrink-0" style={{ color: '#a78bfa' }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>開發時用 CLI 驗證，上線後用 SDK 自動化</strong> — 先在終端機測好 prompt 邏輯，確認沒問題再搬進 SDK 讓程式自動跑。</span>
+          </div>
+          <div className="flex gap-2">
+            <i className="fa-solid fa-chevron-right text-xs mt-1 shrink-0" style={{ color: '#a78bfa' }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>CLI 負責臨時任務，SDK 負責固定流程</strong> — 你想到才做的事用 CLI；每次 Pack 自動 commit、自動判斷版本這種固定流程交給 SDK。</span>
+          </div>
+          <div className="flex gap-2">
+            <i className="fa-solid fa-chevron-right text-xs mt-1 shrink-0" style={{ color: '#a78bfa' }} />
+            <span><strong style={{ color: 'var(--text-primary)' }}>SDK 出問題時拿 CLI 除錯</strong> — SDK 跑出奇怪結果，把同樣的 prompt 丟進 CLI 試試，馬上知道是 prompt 寫錯還是程式邏輯的問題。</span>
+          </div>
         </div>
       </div>
 
@@ -692,9 +786,9 @@ function CliVsSdkTab() {
 
       <CalloutBox type="info">
         <div>
-          <strong style={{ color: 'var(--text-primary)' }}>SDK 如何運作</strong>
+          <strong style={{ color: 'var(--text-primary)' }}>SDK 底層怎麼跑？</strong>
           <div style={{ marginTop: '4px' }}>
-            SDK <strong>不是</strong>直接呼叫 Anthropic API。它把 Claude Code CLI binary 打包在套件裡，每次呼叫 <code style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px' }}>query()</code> 都會在背景 <strong>spawn 一個新的 subprocess</strong>，由那個 subprocess 去打 API 並把結果串流回來。
+            SDK <strong>不是</strong>直接呼叫 Anthropic API。它把 Claude Code CLI 程式打包在套件裡，每次呼叫 <code style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px' }}>query()</code>，就像在後台靜靜啟動一個新的 Claude 終端視窗、讓它跑完任務後回傳結果給你。
           </div>
         </div>
       </CalloutBox>
@@ -708,9 +802,12 @@ function CliVsSdkTab() {
         </div>
       </CalloutBox>
 
-      <div style={{ marginTop: '24px', marginBottom: '12px' }}>
+      <div style={{ marginTop: '24px', marginBottom: '8px' }}>
         <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>認證方式對照</h3>
       </div>
+      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+        同樣是用 SDK 呼叫 Claude，費用和認證方式會因為誰來「出示身分」而不同。Todo-Dashboard 是你本機登入的身分，所以走訂閱額度。
+      </p>
 
       <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
         <div className="grid grid-cols-3 text-sm" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -757,19 +854,244 @@ function CliVsSdkTab() {
         </div>
       </ExpandableBox>
 
-      <div className="rounded-xl px-5 py-4 mt-5" style={{ backgroundColor: 'rgba(1,132,255,0.06)', border: '1px solid rgba(1,132,255,0.2)' }}>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold mb-1" style={{ color: '#0184ff' }}>
-              <i className="fa-solid fa-book-open mr-2" />Agent SDK 入門指南
-            </p>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>從零開始了解 query()、內建工具（Read / Edit / Bash）與常見應用範例</p>
-          </div>
-          <a href="/agent-sdk" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shrink-0" style={{ backgroundColor: '#0184ff', color: '#fff', textDecoration: 'none' }}>
-            查看指南
-            <i className="fa-solid fa-arrow-right text-xs" />
-          </a>
+      {/* 在其他專案也想這樣做 */}
+      <div className="rounded-xl overflow-hidden mt-5 mb-5" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(167,139,250,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-arrows-turn-to-dots text-sm" style={{ color: '#a78bfa' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>在其他專案也想用這種方式整合 AI，要怎麼說？</span>
         </div>
+        <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <p className="mb-4">
+            你現在不一定需要這個——但如果有一天你想在其他專案也做類似的 AI 整合，你會需要知道「這套做法叫什麼」。用對詞，查文件和問人都會快很多。
+          </p>
+
+          {/* 正式說法 */}
+          <div className="rounded-lg px-4 py-3 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>正式說法</div>
+            <div className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>「透過 Claude Agent SDK，在 server side 以 process 方式執行 Claude」</div>
+            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              或簡短版：「用 Agent SDK 建立 AI Chat 功能」、「用 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 3px', borderRadius: '2px' }}>query()</code> 呼叫 Claude，不走 HTTP API」
+            </div>
+          </div>
+
+          {/* 和一般 API 的差異 */}
+          <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>和一般 Anthropic HTTP API 的差異</div>
+          <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '120px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+              <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
+              <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)', color: '#f97316' }}>Agent SDK（這套做法）</div>
+              <div className="px-3 py-2" style={{ color: '#3b82f6' }}>Anthropic HTTP API</div>
+            </div>
+            {[
+              { aspect: '套件名稱',   sdk: '@anthropic-ai/claude-code',  api: '@anthropic-ai/sdk' },
+              { aspect: '需要什麼',   sdk: '本機安裝 Claude CLI',          api: 'ANTHROPIC_API_KEY' },
+              { aspect: '呼叫方式',   sdk: 'query()，spawn process',      api: 'messages.create()，HTTP POST' },
+              { aspect: '費用來源',   sdk: 'Max 訂閱額度',                 api: '按 token 計費' },
+              { aspect: 'MCP / Tools', sdk: '內建支援',                   api: '需自行實作' },
+              { aspect: '適合誰',     sdk: '本機開發工具、個人 Dashboard', api: '任何 server、雲端部署' },
+            ].map((r, i, arr) => (
+              <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '120px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-3 py-2.5 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
+                <div className="px-3 py-2.5 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.sdk}</div>
+                <div className="px-3 py-2.5 font-mono" style={{ color: '#3b82f6' }}>{r.api}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 關鍵字清單 */}
+          <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>搜尋 / 溝通時的關鍵字</div>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+            {[
+              { scene: '查文件', keywords: ['@anthropic-ai/claude-code', 'claude-code npm', 'Agent SDK', 'query() Claude'] },
+              { scene: '跟別人說', keywords: ['Claude Agent SDK', '非 API 方式', 'local process', 'spawn Claude'] },
+              { scene: '問 AI', keywords: ['不用 API key，用 Agent SDK，透過 query() 呼叫 Claude', 'claude-code sdk server side'] },
+              { scene: '區別用途', keywords: ['CLI / Editor extension 背後的 SDK', '不是給一般 HTTP API 用的那個'] },
+            ].map((r, i, arr) => (
+              <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '80px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-3 py-2.5 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.scene}</div>
+                <div className="px-3 py-2.5 flex flex-wrap gap-1.5">
+                  {r.keywords.map(kw => (
+                    <span key={kw} className="font-mono px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--background-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{kw}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── SDK 能做什麼 ── */}
+      <div className="mt-8 mb-3 flex items-center gap-2">
+        <i className="fa-solid fa-robot text-sm" style={{ color: '#a78bfa' }} />
+        <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>SDK 能做什麼？工具清單</h3>
+      </div>
+
+      <div className="rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+          呼叫 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px' }}>query()</code> 時，Claude 不只是「回答問題」——它還有一套工具可以實際動手操作。以下的程式碼範例都是放在 <strong style={{ color: 'var(--text-primary)' }}>Next.js API Route 或 Node.js 環境</strong>裡跑的（server side），不是瀏覽器。
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: 'fa-file-lines', color: '#3b82f6', label: '讀寫檔案' },
+            { icon: 'fa-terminal', color: '#f97316', label: '執行指令' },
+            { icon: 'fa-globe', color: '#4ade80', label: '搜尋網路' },
+          ].map(({ icon, color, label }) => (
+            <div key={label} className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+              <i className={`fa-solid ${icon} text-xs`} style={{ color }} />
+              <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 認證機制 */}
+      <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border-color)' }}>
+        <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-key text-xs" style={{ color: '#fbbf24' }} />
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>認證機制：SDK 怎麼知道你是誰？</span>
+        </div>
+        <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          <p className="mb-3">SDK 本身<strong style={{ color: 'var(--text-primary)' }}>不管認證這件事</strong>。它每次呼叫時會在後台啟動一個 Claude 終端視窗，認證是那個終端視窗去做的——SDK 只是發指令。</p>
+          <div className="grid gap-3">
+            <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)' }}>
+              <p className="text-xs font-semibold mb-1.5" style={{ color: '#4ade80' }}>路徑 A：本機 CLI 登入（Max 訂閱）</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>先跑過 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>claude login</code>，登入 token 就存到 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>~/.claude/</code>。之後每次啟動後台 Claude 都會沿用這個登入狀態，不需要重新登入。費用走 Max 訂閱額度。</p>
+            </div>
+            <div className="rounded-lg px-4 py-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}>
+              <p className="text-xs font-semibold mb-1.5" style={{ color: '#3b82f6' }}>路徑 B：API Key（乾淨環境 / Server）</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>沒有本機登入狀態時，改用環境變數 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>ANTHROPIC_API_KEY</code> 認證。適合部署到遠端 Server、CI/CD、Docker 等沒有本機帳號的環境。費用按 token 計費，不走訂閱。</p>
+            </div>
+          </div>
+          <div className="rounded-lg px-4 py-3 mt-3" style={{ backgroundColor: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)' }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: '#fbbf24' }}>
+              <i className="fa-solid fa-triangle-exclamation mr-1.5" />乾淨環境的陷阱
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              如果兩個都沒有，後台的 Claude 視窗會嘗試打開瀏覽器要你登入——但 Server 環境根本沒有瀏覽器，所以 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>query()</code> 會卡住不動、沒有任何錯誤提示，就這樣靜靜等著。新環境上線前記得先確認兩個其中一個有設。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 六個功能 section */}
+      {[
+        {
+          icon: 'fa-magnifying-glass', color: '#3b82f6',
+          title: '1. 檔案讀取與搜尋',
+          subtitle: '讓 Claude 能看到專案裡的檔案內容，自動分析程式碼、文件、設定檔。最基礎的起手式。',
+          tools: [
+            { name: 'Read', desc: '讀取指定檔案全部或部分內容' },
+            { name: 'Glob', desc: '用模式匹配找檔案（例如 **/*.py 或 src/**/*.ts）' },
+            { name: 'Grep', desc: '用正則表達式在檔案內容中搜尋關鍵字' },
+          ],
+          code: `import { query } from '@anthropic-ai/claude-code'\n\nfor await (const msg of query({\n  prompt: '找出專案裡所有用到 deprecated API 的地方',\n  options: { allowedTools: ['Read', 'Glob', 'Grep'] }\n})) {\n  process.stdout.write(msg.type === 'text' ? msg.text : '')\n}`,
+          warning: null,
+        },
+        {
+          icon: 'fa-pen-to-square', color: '#f97316',
+          title: '2. 寫入與編輯檔案',
+          subtitle: '寫程式、修 bug、產生新檔案時最常用的功能。支援精準的行號級修改。',
+          tools: [
+            { name: 'Write', desc: '建立新檔案（包含完整內容）' },
+            { name: 'Edit', desc: '對現有檔案做精準修改（支援替換、插入，不覆蓋整個檔案）' },
+          ],
+          code: `for await (const msg of query({\n  prompt: '在 main.ts 裡新增一個 validateEmail() function，並加上 unit test',\n  options: { allowedTools: ['Read', 'Write', 'Edit'] }\n})) { /* handle stream */ }`,
+          warning: null,
+        },
+        {
+          icon: 'fa-terminal', color: '#fbbf24',
+          title: '3. 執行終端機指令',
+          subtitle: '給代理「完整電腦」的能力——git commit、安裝套件、跑測試、build 專案，全都行。',
+          tools: [
+            { name: 'Bash', desc: '執行任意 shell 指令，並取得輸出結果' },
+          ],
+          code: `for await (const msg of query({\n  prompt: '跑 npm test，找出失敗的測試並修復',\n  options: { allowedTools: ['Read', 'Edit', 'Bash'] }\n})) { /* handle stream */ }`,
+          warning: 'Bash 工具功能強大，建議搭配 allowedTools 明確限制可用工具範圍，避免代理執行非預期的系統指令。',
+        },
+        {
+          icon: 'fa-globe', color: '#4ade80',
+          title: '4. 網頁搜尋與內容擷取',
+          subtitle: '讓代理能查最新資料、讀文章、彙整報告。非 coding 任務超常用的功能組合。',
+          tools: [
+            { name: 'WebSearch', desc: '搜尋網路最新資訊（搜尋引擎結果）' },
+            { name: 'WebFetch', desc: '抓取並解析特定網頁的完整內容' },
+          ],
+          code: `for await (const msg of query({\n  prompt: 'React 19 有哪些新功能？幫我整理成 markdown 報告並存到 react19-notes.md',\n  options: { allowedTools: ['WebSearch', 'WebFetch', 'Write'] }\n})) { /* handle stream */ }`,
+          warning: null,
+        },
+        {
+          icon: 'fa-rotate', color: '#a78bfa',
+          title: '5. Agent Loop（核心執行機制）',
+          subtitle: 'query() 內建的自動循環：思考 → 用工具 → 看結果 → 再思考 → 直到完成。你只需要發 prompt。',
+          tools: [],
+          code: `import { query } from '@anthropic-ai/claude-code'\n\nfor await (const message of query({\n  prompt: '列出目前資料夾的所有 TypeScript 檔案，並統計行數',\n})) {\n  if (message.type === 'assistant') {\n    for (const block of message.message.content) {\n      if (block.type === 'text') process.stdout.write(block.text)\n    }\n  }\n}`,
+          warning: null,
+        },
+      ].map(({ icon, color, title, subtitle, tools, code, warning }) => (
+        <div key={title} className="mb-5">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}>
+              <i className={`fa-solid ${icon} text-xs`} style={{ color }} />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h4>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>{subtitle}</p>
+            </div>
+          </div>
+          {tools.length > 0 && (
+            <div className="grid gap-1.5 mb-2 ml-11">
+              {tools.map(({ name, desc }) => (
+                <div key={name} className="flex items-start gap-2">
+                  <i className="fa-solid fa-circle-check text-xs mt-0.5 shrink-0" style={{ color: '#4ade80' }} />
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 5px', borderRadius: '3px', fontSize: '12px', color: 'var(--text-primary)' }}>{name}</code>
+                    {' '}— {desc}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <CodeBlock code={code} lang="typescript" className="ml-11" />
+          {warning && (
+            <div className="rounded-xl px-4 py-3 mt-2 ml-11" style={{ backgroundColor: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                <i className="fa-solid fa-triangle-exclamation mr-1.5" style={{ color: '#fbbf24' }} />{warning}
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* 常見組合應用 */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(1,132,255,0.1)', border: '1px solid rgba(1,132,255,0.2)' }}>
+          <i className="fa-solid fa-layer-group text-xs" style={{ color: '#0184ff' }} />
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>6. 常見組合應用</h4>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>最高頻使用的代理模式，開箱即用，不需要自己寫 tool calling 邏輯。</p>
+        </div>
+      </div>
+      <div className="grid gap-3 ml-11 mb-2">
+        {[
+          { title: 'Bug 修復代理', icon: 'fa-bug', color: '#ef4444', desc: '讀取錯誤 log → 找相關檔案 → 提出修改 → 跑測試驗證', tools: 'Read, Glob, Edit, Bash' },
+          { title: '程式碼重構代理', icon: 'fa-arrows-rotate', color: '#f97316', desc: 'Glob 找所有相關檔案 → 逐一 Edit → 確保格式一致', tools: 'Read, Glob, Edit' },
+          { title: '研究 / 報告代理', icon: 'fa-file-lines', color: '#4ade80', desc: 'WebSearch + WebFetch → 總結成 markdown → Write 成檔案', tools: 'WebSearch, WebFetch, Write' },
+          { title: '自動 commit 代理', icon: 'fa-code-branch', color: '#a78bfa', desc: '讀取 git diff → 分析變更 → 產生 commit message → git commit', tools: 'Read, Bash' },
+        ].map(({ title, icon, color, desc, tools }) => (
+          <div key={title} className="rounded-xl px-4 py-3.5 flex gap-3 items-start" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+            <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}25` }}>
+              <i className={`fa-solid ${icon} text-xs`} style={{ color }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{title}</p>
+              <p className="text-sm mb-1.5" style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>{desc}</p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                <i className="fa-solid fa-wrench mr-1" />工具：<code style={{ fontSize: '11px' }}>{tools}</code>
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -1323,79 +1645,104 @@ function PermissionsTab() {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Claude Code 權限模型</h2>
-      <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
-        Claude Code 有三層獨立的權限控制，各管不同的事。理解這三層是設定 Claude 行為的關鍵。
-      </p>
 
-      {/* 辦公大樓比喻 */}
+      {/* 動機引入 */}
+      <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+        <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
+          你有沒有遇過這種情況：叫 Claude 改個小東西，它每動一個檔案就跳一次確認框，煩死了。
+          或者反過來——你擔心 Claude 會不小心刪掉重要資料，想要它所有操作都先問過你。
+        </p>
+        <p className="text-sm" style={{ color: 'var(--text-tertiary)', lineHeight: '1.75' }}>
+          這些行為都可以控制。Claude Code 有三層獨立的控制機制，分別管不同的事，搞清楚它們就能讓 Claude 用起來順手很多。
+        </p>
+      </div>
+
+      {/* 辦公大樓比喻 — 先說完三層 */}
       <CalloutBox type="info">
         <div>
           <strong style={{ color: 'var(--text-primary)' }}>比喻：一棟辦公大樓</strong>
-          <div style={{ marginTop: '8px' }}>
-            你是大樓老闆，Claude 是裡面的員工。整棟大樓有三套管理系統，各自獨立運作，缺一不可。
+          <div className="mt-2 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+            你是大樓老闆，Claude 是員工。這棟樓有三套管理系統，各管各的：
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-start gap-3 text-sm">
+              <span className="font-mono font-bold px-2 py-0.5 rounded text-xs mt-0.5 shrink-0" style={{ backgroundColor: 'rgba(59,130,246,0.15)', color: '#60a5fa' }}>Layer 1</span>
+              <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>P / E / A 按鈕</strong>（工作風格）— 貼在員工桌上的便利貼，今天要先規劃還是直接動手。<strong style={{ color: 'var(--text-primary)' }}>這是你最常調的東西。</strong>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 text-sm">
+              <span className="font-mono font-bold px-2 py-0.5 rounded text-xs mt-0.5 shrink-0" style={{ backgroundColor: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>Layer 2</span>
+              <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>settings.json / CLAUDE.md</strong>（保全規則）— 白紙黑字的大樓規定，哪些指令絕對不能跑、哪些習慣照做。設定一次長期生效。
+              </div>
+            </div>
+            <div className="flex items-start gap-3 text-sm">
+              <span className="font-mono font-bold px-2 py-0.5 rounded text-xs mt-0.5 shrink-0" style={{ backgroundColor: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>Layer 3</span>
+              <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>permissionMode</strong>（底層門禁）— 大樓最底層的硬體門禁，由程式碼決定，不是 UI 按鈕。一般使用者不需要直接碰，但理解它有助於除錯。
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            三層各自獨立，Layer 1 寬鬆不代表 Layer 2 也寬鬆。
           </div>
         </div>
       </CalloutBox>
 
-      {/* Layer 1 */}
+      {/* Layer 1 — P / E / A 按鈕（最常用，放最前面） */}
       <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
-        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(59,130,246,0.06)', borderBottom: '1px solid var(--border-color)' }}>
-          <i className="fa-solid fa-id-card text-sm" style={{ color: '#3b82f6' }} />
-          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 1 — permissionMode：工作證等級</span>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(249,115,22,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-note-sticky text-sm" style={{ color: '#f97316' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 1 — P / E / A 按鈕：工作風格</span>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(249,115,22,0.12)', color: '#f97316' }}>最常用</span>
         </div>
         <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
-          <p className="mb-3">員工進大樓時拿到的工作證，決定他能進哪些樓層。這張卡在進門時就決定了，<strong style={{ color: 'var(--text-primary)' }}>進去之後無法改變</strong>。共五種等級，限制程度由強到弱：</p>
-          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '150px 1fr 160px', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
-              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>工作證等級</div>
-              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>辦公室比喻</div>
-              <div className="px-4 py-2">實際行為</div>
+          <p className="mb-3">Chat 右上角的三個按鈕，決定 Claude 今天的工作節奏——是要先給你看計劃、還是直接動手。</p>
+          <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
+            <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '52px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>按鈕</div>
+              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>做什麼</div>
+              <div className="px-4 py-2">適合情境</div>
             </div>
             {[
-              { mode: 'plan',               color: '#f87171', metaphor: '訪客證 — 只能在大廳等',                    desc: '只能分析和提報告，完全不能執行任何操作' },
-              { mode: 'default',            color: '#fbbf24', metaphor: '一般員工卡 — 進機密室要刷卡確認',          desc: '讀取隨意，寫檔/執行指令需要你確認' },
-              { mode: 'acceptEdits',        color: '#4ade80', metaphor: '資深員工卡 — 大部分樓層自由進出',          desc: '自動接受檔案修改，危險操作仍需確認' },
-              { mode: 'dontAsk',            color: '#60a5fa', metaphor: '部門主管卡 — 幾乎不需要找你',              desc: '自動化場景用，極少中斷，不主動要求確認' },
-              { mode: 'bypassPermissions',  color: '#c084fc', metaphor: '大樓管理員萬用鑰匙 — 所有門全開',          desc: '跳過所有權限檢查，僅限隔離環境（容器/VM）使用' },
+              { btn: 'P', color: '#f97316', desc: '先提計劃，等你批准才動手', when: '不確定怎麼做的大任務（重構、新功能）' },
+              { btn: 'E', color: '#fbbf24', desc: '直接執行，有疑慮才暫停問你', when: '任務明確、範圍小（修 bug、加欄位）' },
+              { btn: 'A', color: '#4ade80', desc: '全自動跑完，不中途打斷你', when: '放手跑的長任務（/ship、/audit、批量更新）' },
             ].map((r, i, arr) => (
-              <div key={r.mode} className="grid text-xs" style={{ gridTemplateColumns: '150px 1fr 160px', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                <div className="px-4 py-2.5 font-mono font-semibold" style={{ color: r.color, borderRight: '1px solid var(--border-color)' }}>{r.mode}</div>
-                <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.metaphor}</div>
-                <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
+              <div key={r.btn} className="grid text-xs" style={{ gridTemplateColumns: '52px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div className="px-4 py-3 font-mono font-bold text-sm" style={{ color: r.color, borderRight: '1px solid var(--border-color)' }}>{r.btn}</div>
+                <div className="px-4 py-3" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.desc}</div>
+                <div className="px-4 py-3" style={{ color: 'var(--text-tertiary)' }}>{r.when}</div>
               </div>
             ))}
           </div>
-          <div className="mt-3 rounded-lg px-4 py-3 text-xs" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
-            <div className="mb-1"><strong style={{ color: 'var(--text-secondary)' }}>Dashboard Chat Panel</strong> 右上角的 P / E / A 按鈕對應：</div>
-            <div><span className="font-mono" style={{ color: '#f97316' }}>P</span> → <span className="font-mono">default</span>（注意：ChatMode 是 &apos;plan&apos;，但 permissionMode 是 &apos;default&apos;，不是 plan），<span className="font-mono" style={{ color: '#f97316' }}>E</span> → <span className="font-mono">acceptEdits</span>，<span className="font-mono" style={{ color: '#f97316' }}>A</span> → <span className="font-mono">acceptEdits</span> + ExitPlanMode 自動批准（不暫停等你確認）</div>
-            <div className="mt-1"><span className="font-mono" style={{ color: '#c084fc' }}>bypassPermissions</span> 只能在 SDK 啟動時設定，不對應任何 UI 按鈕，<strong style={{ color: '#f87171' }}>僅限容器或 VM 等隔離環境</strong>。</div>
-          </div>
+          <CalloutBox type="tip">
+            <div className="text-xs" style={{ lineHeight: '1.7' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>不知道選哪個？</strong> 從 <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>E</span> 開始就對了。任務大、不確定方向才用 <span className="font-mono font-bold" style={{ color: '#f97316' }}>P</span>；確定 Claude 可以放手跑才用 <span className="font-mono font-bold" style={{ color: '#4ade80' }}>A</span>。
+            </div>
+          </CalloutBox>
         </div>
       </div>
 
-      {/* Layer 2 */}
+      {/* Layer 2 — settings.json / CLAUDE.md */}
       <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
         <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(74,222,128,0.06)', borderBottom: '1px solid var(--border-color)' }}>
           <i className="fa-solid fa-book text-sm" style={{ color: '#4ade80' }} />
-          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 2 — settings.json / CLAUDE.md：保全規則手冊</span>
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 2 — settings.json / CLAUDE.md：規則與習慣</span>
         </div>
         <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
-          <p className="mb-3">保全室裡的規則手冊，上面寫著「幾樓不能去、哪些房間要登記」。這決定的是<strong style={{ color: 'var(--text-primary)' }}>到達某層後，哪些房間可以進</strong>。</p>
-          <CalloutBox type="warn">
-            <div>
-              <strong style={{ color: 'var(--text-primary)' }}>關鍵限制</strong>：保全規則手冊只有在員工能進門的情況下才有用。如果員工是訪客證（<code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 4px', borderRadius: '2px' }}>plan</code> mode），根本進不了電梯，手冊寫什麼都沒用。
-            </div>
-          </CalloutBox>
-          <div className="grid grid-cols-2 gap-3 mt-4">
+          <p className="mb-3">這層管的是「長期規定」——哪些指令絕對不能跑、Claude 工作時應該遵循哪些習慣。設定一次，之後每次對話都自動生效。</p>
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="rounded-lg p-4" style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>
               <div className="flex items-center gap-2 mb-2">
-                <i className="fa-solid fa-gear text-xs" style={{ color: '#3b82f6' }} />
+                <i className="fa-solid fa-shield-halved text-xs" style={{ color: '#3b82f6' }} />
                 <span className="text-xs font-semibold font-mono" style={{ color: '#3b82f6' }}>settings.json</span>
               </div>
-              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>大樓保全條例 — 阻止危險行為</div>
+              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>硬性規定 — 絕對不能違反</div>
               <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '14px' }}>
-                <li>白紙黑字貼在牆上：哪些指令<strong style={{ color: 'var(--text-primary)' }}>絕對不能執行</strong></li>
-                <li>保全看到就擋，Claude 無法說理由繞過</li>
+                <li>白名單（allow）：這些指令不用問直接跑</li>
+                <li>黑名單（deny）：這些指令永遠擋死，Claude 無法繞過</li>
                 <li>全域生效，影響所有專案</li>
               </ul>
             </div>
@@ -1404,28 +1751,28 @@ function PermissionsTab() {
                 <i className="fa-solid fa-file-lines text-xs" style={{ color: '#a78bfa' }} />
                 <span className="text-xs font-semibold font-mono" style={{ color: '#a78bfa' }}>CLAUDE.md</span>
               </div>
-              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>部門工作手冊 — 引導工作習慣</div>
+              <div className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>軟性指引 — 引導工作習慣</div>
               <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '14px' }}>
-                <li>主管給員工的指引：<strong style={{ color: 'var(--text-primary)' }}>這裡習慣怎麼做事</strong></li>
-                <li>員工會照做，但這是習慣，不是物理阻擋</li>
-                <li>全域或專案層級都可以設定</li>
+                <li>自然語言寫的工作手冊，Claude 照著做</li>
+                <li>但這是「習慣」，不是物理封鎖</li>
+                <li>可以設全域層或專案層，專案層蓋過全域</li>
               </ul>
             </div>
           </div>
 
-          {/* 關鍵問題：Bash 要寫在哪裡？ */}
-          <div className="rounded-lg mt-4 overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+          {/* 我應該把什麼寫在哪裡？ */}
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
             <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-              Bash 相關設定寫在哪裡？
+              我應該把什麼寫在哪裡？
             </div>
             <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
               {[
-                { need: '這個指令絕對不能執行', where: 'settings.json Deny list', reason: '硬性封鎖，Claude 無法繞過' },
-                { need: '這個指令通常可以，但要小心', where: 'CLAUDE.md', reason: '行為規範，影響 Claude 的判斷方式' },
-                { need: '這個專案有特殊工作流程', where: 'CLAUDE.md（專案層）', reason: '只對這個專案有效，不影響其他專案' },
-                { need: '所有專案都適用的限制', where: 'settings.json', reason: '全域生效，一次設定到位' },
+                { need: '這個指令絕對不能執行', where: 'settings.json deny', reason: '硬性封鎖，Claude 無法繞過' },
+                { need: '這個指令不用每次問我', where: 'settings.json allow', reason: '加入白名單，自動放行' },
+                { need: '這個專案有特殊工作流程', where: 'CLAUDE.md（專案層）', reason: '只對這個專案有效，不影響其他' },
+                { need: '所有專案都要遵守的習慣', where: '~/.claude/CLAUDE.md', reason: '全域生效，一次設定到位' },
               ].map((r, i, arr) => (
-                <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 140px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 150px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
                   <div className="px-4 py-2.5" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.need}</div>
                   <div className="px-4 py-2.5 font-mono font-semibold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.where}</div>
                   <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.reason}</div>
@@ -1434,76 +1781,72 @@ function PermissionsTab() {
             </div>
           </div>
 
-          {/* 命名陷阱：permissionMode vs permissions.defaultMode */}
-          <div className="mt-4 rounded-lg px-4 py-4" style={{ backgroundColor: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <i className="fa-solid fa-triangle-exclamation text-xs" style={{ color: '#fbbf24' }} />
-              <span className="text-xs font-semibold" style={{ color: '#fbbf24' }}>命名陷阱：permissionMode vs permissions.defaultMode</span>
-            </div>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-              settings.json 裡有個 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissions.defaultMode</code> 欄位，名字和 Layer 1 的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissionMode</code> 極度相似，但兩者是完全不同的東西：
-            </p>
-            <div className="rounded-lg overflow-hidden mb-3" style={{ border: '1px solid var(--border-color)' }}>
-              <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '100px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
-                <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
-                <div className="px-3 py-2 font-mono" style={{ borderRight: '1px solid var(--border-color)', color: '#60a5fa' }}>permissionMode</div>
-                <div className="px-3 py-2 font-mono" style={{ color: '#a78bfa' }}>permissions.defaultMode</div>
-              </div>
-              {[
-                { aspect: '屬於哪層', pm: 'Layer 1 — 工作證等級', pd: 'Layer 2 — settings.json 欄位' },
-                { aspect: '在哪設定', pm: 'SDK 啟動時動態傳入', pd: 'settings.json 檔案' },
-                { aspect: '誰會讀它', pm: 'SDK query() 直接使用', pd: 'Cursor extension 讀；SDK 不讀' },
-                { aspect: '能被覆蓋嗎', pm: 'SDK 每次啟動都覆蓋', pd: '專案層蓋過全域層' },
-              ].map((r, i, arr) => (
-                <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '100px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                  <div className="px-3 py-2 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
-                  <div className="px-3 py-2" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.pm}</div>
-                  <div className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{r.pd}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* 四層優先級 */}
-            <div className="mb-3">
-              <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>settings.json 的四層優先級（由高到低）</div>
+          {/* 命名陷阱（收進 ExpandableBox） */}
+          <ExpandableBox label="進階：permissionMode vs permissions.defaultMode 的命名陷阱">
+            <div className="text-xs space-y-3" style={{ color: 'var(--text-secondary)', lineHeight: '1.7' }}>
+              <p>
+                settings.json 裡有個 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissions.defaultMode</code> 欄位，名字和 Layer 3 的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>permissionMode</code> 極度相似，但兩者是完全不同的東西：
+              </p>
               <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '100px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
+                  <div className="px-3 py-2 font-mono" style={{ borderRight: '1px solid var(--border-color)', color: '#60a5fa' }}>permissionMode</div>
+                  <div className="px-3 py-2 font-mono" style={{ color: '#a78bfa' }}>permissions.defaultMode</div>
+                </div>
                 {[
-                  { file: 'managed-settings.json',        note: '系統管理員層（最高）' },
-                  { file: '.claude/settings.local.json',  note: '本機個人覆蓋（不進版本控制）' },
-                  { file: '.claude/settings.json',        note: '專案層（git 追蹤）← 蓋過全域' },
-                  { file: '~/.claude/settings.json',      note: '全域用戶層（最低）' },
+                  { aspect: '屬於哪層', pm: 'Layer 3 — SDK 底層參數', pd: 'Layer 2 — settings.json 欄位' },
+                  { aspect: '在哪設定', pm: 'SDK 啟動時動態傳入', pd: 'settings.json 檔案' },
+                  { aspect: '誰會讀它', pm: 'SDK query() 直接使用', pd: 'Cursor extension 讀；SDK 不讀' },
+                  { aspect: '能被覆蓋嗎', pm: 'SDK 每次啟動都覆蓋', pd: '專案層蓋過全域層' },
                 ].map((r, i, arr) => (
-                  <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '220px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                    <div className="px-3 py-2 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.file}</div>
-                    <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
+                  <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '100px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-3 py-2 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
+                    <div className="px-3 py-2" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.pm}</div>
+                    <div className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{r.pd}</div>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Cursor 常見困惑 */}
-            <ExpandableBox label="常見困惑：Cursor 裡 Bash 明明有 allow，為什麼還是被擋？">
-              <div className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
-                <p className="mb-2">情境：全域 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>~/.claude/settings.json</code> 設了 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;acceptEdits&quot;</code>，也有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>Bash(*)</code> allow，但 Cursor 裡大部分 Bash 指令還是跳確認框。</p>
-                <p className="mb-2"><strong style={{ color: '#f87171' }}>根因</strong>：專案的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>.claude/settings.json</code> 有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;plan&quot;</code>，<strong style={{ color: 'var(--text-primary)' }}>專案層優先於全域層</strong>，Cursor extension 讀到的是 plan，所以所有操作都跳確認。</p>
-                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
-                  <div className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>解法：把專案層的 defaultMode 改成 acceptEdits</div>
-                  <pre style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: '#4ade80', margin: 0 }}>{`// .claude/settings.json\n"defaultMode": "acceptEdits"`}</pre>
+              <div>
+                <div className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>settings.json 的四層優先級（由高到低）</div>
+                <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                  {[
+                    { file: 'managed-settings.json',        note: '系統管理員層（最高）' },
+                    { file: '.claude/settings.local.json',  note: '本機個人覆蓋（不進版本控制）' },
+                    { file: '.claude/settings.json',        note: '專案層（git 追蹤）← 蓋過全域' },
+                    { file: '~/.claude/settings.json',      note: '全域用戶層（最低）' },
+                  ].map((r, i, arr) => (
+                    <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '220px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                      <div className="px-3 py-2 font-mono" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.file}</div>
+                      <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.note}</div>
+                    </div>
+                  ))}
                 </div>
-                <p style={{ color: 'var(--text-tertiary)' }}>注意：CLI、Cursor extension、SDK 子代理三者共用同一套 settings.json，改了對全部生效。</p>
               </div>
-            </ExpandableBox>
-          </div>
+            </div>
+          </ExpandableBox>
+
+          {/* Cursor 常見困惑 */}
+          <ExpandableBox label="常見困惑：Cursor 裡 Bash 明明有 allow，為什麼還是被擋？">
+            <div className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+              <p className="mb-2">情境：全域 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>~/.claude/settings.json</code> 設了 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;acceptEdits&quot;</code>，也有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>Bash(*)</code> allow，但 Cursor 裡大部分 Bash 指令還是跳確認框。</p>
+              <p className="mb-2"><strong style={{ color: '#f87171' }}>根因</strong>：專案的 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>.claude/settings.json</code> 有 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>defaultMode: &quot;plan&quot;</code>，<strong style={{ color: 'var(--text-primary)' }}>專案層優先於全域層</strong>，Cursor extension 讀到的是 plan，所以所有操作都跳確認。</p>
+              <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: 'var(--background-tertiary)', border: '1px solid var(--border-color)' }}>
+                <div className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>解法：把專案層的 defaultMode 改成 acceptEdits</div>
+                <pre style={{ fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: '#4ade80', margin: 0 }}>{`// .claude/settings.json\n"defaultMode": "acceptEdits"`}</pre>
+              </div>
+              <p style={{ color: 'var(--text-tertiary)' }}>注意：CLI、Cursor extension、SDK 子代理三者共用同一套 settings.json，改了對全部生效。</p>
+            </div>
+          </ExpandableBox>
         </div>
       </div>
 
-      {/* CLAUDE.md vs Memory 比較 */}
+      {/* 三個「給 Claude 看的文字」比較 */}
       <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
         <div className="flex items-center gap-2 mb-1">
           <i className="fa-solid fa-code-compare text-xs" style={{ color: 'var(--text-tertiary)' }} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>這三個都是「給 Claude 看的文字」，差在哪？</span>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>settings.json、CLAUDE.md、Memory — 都是給 Claude 看的，差在哪？</span>
         </div>
-        <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>settings.json、CLAUDE.md、Memory 都會影響 Claude 的行為，但時機和目的完全不同。</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>三個都會影響 Claude 的行為，但時機和目的完全不同。</p>
         <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
           <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '110px 1fr 1fr 1fr', backgroundColor: 'var(--background-tertiary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
             <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }} />
@@ -1513,11 +1856,10 @@ function PermissionsTab() {
           </div>
           {[
             { aspect: '誰寫的', settings: '你（人類）', claude: '你（人類）', memory: 'Claude 自己寫' },
-            { aspect: '內容性質', settings: '結構化規則', claude: '自然語言指引', memory: '自然語言筆記' },
+            { aspect: '性質', settings: '結構化規則', claude: '自然語言指引', memory: '自然語言筆記' },
             { aspect: '用途', settings: '阻止危險行為', claude: '引導工作方式', memory: '記住跨對話的資訊' },
             { aspect: '硬性/軟性', settings: '硬性，無法繞過', claude: '軟性，影響判斷', memory: '軟性，背景參考' },
-            { aspect: '生效時機', settings: '每次工具呼叫時', claude: '對話開始時載入', memory: '對話開始時載入' },
-            { aspect: '適合放什麼', settings: 'Deny 危險指令', claude: '專案慣例、工作流程', memory: '修過的 bug、用戶偏好' },
+            { aspect: '適合放什麼', settings: 'deny 危險指令', claude: '專案慣例、工作流程', memory: '修過的 bug、用戶偏好' },
           ].map((r, i, arr) => (
             <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '110px 1fr 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
               <div className="px-3 py-2 font-semibold" style={{ color: 'var(--text-tertiary)', borderRight: '1px solid var(--border-color)' }}>{r.aspect}</div>
@@ -1528,184 +1870,215 @@ function PermissionsTab() {
           ))}
         </div>
         <p className="text-xs mt-3" style={{ color: 'var(--text-tertiary)' }}>
-          Memory 的詳細用法見 <span style={{ color: '#4ade80' }}>Ch6 Memory</span>，CLAUDE.md 見 <span style={{ color: '#a78bfa' }}>Ch5 CLAUDE.md</span>。
+          詳細用法：<span style={{ color: '#a78bfa' }}>B3 CLAUDE.md</span>、<span style={{ color: '#4ade80' }}>B4 Memory</span>。
         </p>
       </div>
 
-      {/* Layer 3 */}
+      {/* Layer 3 — permissionMode（技術底層，收進 ExpandableBox） */}
       <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
-        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(251,191,36,0.06)', borderBottom: '1px solid var(--border-color)' }}>
-          <i className="fa-solid fa-note-sticky text-sm" style={{ color: '#fbbf24' }} />
-          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 3 — P / E / A 按鈕：今天的工作清單</span>
+        <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(96,165,250,0.06)', borderBottom: '1px solid var(--border-color)' }}>
+          <i className="fa-solid fa-microchip text-sm" style={{ color: '#60a5fa' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Layer 3 — permissionMode：SDK 底層門禁</span>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded" style={{ backgroundColor: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}>進階</span>
         </div>
         <div className="px-5 py-4 text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
-          <p className="mb-3">貼在員工桌上的便利貼，上面寫「今天專注在規劃」或「今天可以直接動手」。這<strong style={{ color: 'var(--text-primary)' }}>只影響工作風格，不影響工作證等級</strong>。</p>
-          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="grid grid-cols-[60px_1fr] text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
-              <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>按鈕</div>
-              <div className="px-4 py-2">工作風格</div>
-            </div>
-            {[
-              { btn: 'P', desc: 'Plan — 先規劃、等你批准才動手' },
-              { btn: 'E', desc: 'Execute — 可以執行，但有疑慮會暫停確認' },
-              { btn: 'A', desc: 'Auto — 全自動、不中途打擾你' },
-            ].map((r, i, arr) => (
-              <div key={r.btn} className="grid grid-cols-[60px_1fr] text-sm" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                <div className="px-4 py-2.5 font-mono font-bold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.btn}</div>
-                <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
-              </div>
-            ))}
-          </div>
+          <p className="mb-3">這是最底層的硬體門禁，由程式碼傳給 SDK，不是 UI 按鈕直接控制的。一般使用 Dashboard 時不需要直接設定，但遇到奇怪的行為時理解它很有用。</p>
+          <p className="mb-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            Dashboard 的 P / E / A 按鈕底層都傳 <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '1px 4px', borderRadius: '3px' }}>acceptEdits</code> 給 SDK——「等批准才動手」是前台 UI 的行為，不是 SDK 的硬性封鎖。
+          </p>
 
-          {/* 適用情境 */}
-          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-              什麼情境用哪個模式？
-            </div>
-            <div className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
+          <ExpandableBox label="五種 permissionMode 等級說明">
+            <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+              <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '140px 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                <div className="px-4 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>等級</div>
+                <div className="px-4 py-2">實際行為</div>
+              </div>
               {[
-                {
-                  btn: 'P',
-                  when: '不確定怎麼做的大任務',
-                  desc: '讓 Claude 先提計劃，你審查方向對了再批准執行。',
-                  examples: ['重構 component', '設計 API 結構', '新增複雜功能'],
-                  participation: '高（審計計劃）',
-                  color: '#f97316',
-                },
-                {
-                  btn: 'E',
-                  when: '明確的小任務',
-                  desc: '任務清楚、範圍小，直接讓 Claude 動手，有疑慮的步驟它會暫停問你。',
-                  examples: ['修 bug', '改成 TypeScript', '加一個欄位'],
-                  participation: '中（偶爾確認）',
-                  color: '#fbbf24',
-                },
-                {
-                  btn: 'A',
-                  when: '放手跑的長任務',
-                  desc: 'Claude 自己規劃自己執行，全程不暫停，你不想被中途打斷。',
-                  examples: ['/audit', '/ship', '批量更新多個檔案', '執行 skill'],
-                  participation: '低（放手）',
-                  color: '#4ade80',
-                },
+                { mode: 'plan',               color: '#f87171', desc: '只能分析和提報告，完全不能執行任何操作' },
+                { mode: 'default',            color: '#fbbf24', desc: '讀取隨意，寫檔/執行指令需要你確認' },
+                { mode: 'acceptEdits',        color: '#4ade80', desc: '自動接受檔案修改，危險操作仍需確認（Dashboard P/E/A 都用這個）' },
+                { mode: 'dontAsk',            color: '#60a5fa', desc: '自動化場景用，極少中斷，不主動要求確認' },
+                { mode: 'bypassPermissions',  color: '#c084fc', desc: '跳過所有權限檢查，僅限隔離環境（容器/VM）使用' },
               ].map((r, i, arr) => (
-                <div key={r.btn} className="px-4 py-3 text-xs" style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono font-bold text-sm w-5" style={{ color: r.color }}>{r.btn}</span>
-                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.when}</span>
-                    <span className="ml-auto" style={{ color: 'var(--text-tertiary)' }}>參與度：{r.participation}</span>
-                  </div>
-                  <div className="mb-1.5 ml-7" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
-                  <div className="flex gap-1.5 ml-7 flex-wrap">
-                    {r.examples.map(ex => (
-                      <span key={ex} className="font-mono px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--background-tertiary)', color: 'var(--text-tertiary)' }}>{ex}</span>
-                    ))}
-                  </div>
+                <div key={r.mode} className="grid text-xs" style={{ gridTemplateColumns: '140px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                  <div className="px-4 py-2.5 font-mono font-semibold" style={{ color: r.color, borderRight: '1px solid var(--border-color)' }}>{r.mode}</div>
+                  <div className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>{r.desc}</div>
                 </div>
               ))}
             </div>
-          </div>
+          </ExpandableBox>
 
-          {/* 命名撞車說明 */}
-          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-              深入：P / E / A 與 permissionMode 的關係
-            </div>
-            <div className="px-4 py-3 text-xs space-y-3" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
-              <div>
-                <strong style={{ color: 'var(--text-primary)' }}>兩個完全獨立的維度</strong><br />
-                P / E / A 是前台的 <span className="font-mono" style={{ color: '#f97316' }}>ChatMode</span>，控制 UI 行為（要不要暫停等批准）。<br />
-                <span className="font-mono" style={{ color: '#3b82f6' }}>permissionMode</span> 是後台的 SDK 參數，控制 Claude 實際能做什麼。<br />
-                兩者是兩條獨立的線，中間的轉換邏輯由你的代碼決定。
-              </div>
+          <ExpandableBox label="完整判斷順序：一個操作怎麼決定要不要執行">
+            <div className="text-xs space-y-4" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
+              <p>SDK 判斷一個工具呼叫能不能執行，按這個順序走（先到先得，命中即停止）：</p>
+
+              {/* 六關總覽 */}
               <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-                <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '60px 1fr 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
-                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>按鈕</div>
-                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>ChatMode（前台）</div>
-                  <div className="px-3 py-2">permissionMode（後台）</div>
-                </div>
                 {[
-                  { btn: 'P', chat: 'plan → 暫停等批准', perm: 'acceptEdits' },
-                  { btn: 'E', chat: 'edit → 直接執行', perm: 'acceptEdits' },
-                  { btn: 'A', chat: 'auto → 自動批准計劃', perm: 'acceptEdits' },
+                  { step: '1', name: 'Hooks', desc: '自訂 hook 可強制 allow / deny，優先於一切', color: '#f87171' },
+                  { step: '2', name: 'deny rules', desc: 'settings.json deny 清單，命中即擋死，不看後面', color: '#f87171' },
+                  { step: '3', name: 'allow rules', desc: 'settings.json allow 清單，命中即放行，不看後面', color: '#4ade80' },
+                  { step: '4', name: 'ask rules', desc: 'settings.json ask 清單，命中則彈視窗', color: '#4ade80' },
+                  { step: '5', name: 'permissionMode', desc: '前面都沒命中，才輪到這裡決定預設行為（default / acceptEdits / dontAsk）', color: '#3b82f6' },
+                  { step: '6', name: 'canUseTool callback', desc: '代碼層的最後攔截，可做任意自訂邏輯（Dashboard 的 ZodError 也發生在這裡）', color: '#a78bfa' },
                 ].map((r, i, arr) => (
-                  <div key={r.btn} className="grid text-xs" style={{ gridTemplateColumns: '60px 1fr 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                    <div className="px-3 py-2 font-mono font-bold" style={{ color: '#f97316', borderRight: '1px solid var(--border-color)' }}>{r.btn}</div>
-                    <div className="px-3 py-2 font-mono" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.chat}</div>
-                    <div className="px-3 py-2 font-mono" style={{ color: '#3b82f6' }}>{r.perm}</div>
+                  <div key={r.step} className="grid text-xs" style={{ gridTemplateColumns: '28px 130px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-2 py-2 font-mono text-center" style={{ color: '#555', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>{r.step}</div>
+                    <div className="px-3 py-2 font-mono font-semibold" style={{ color: r.color, borderRight: '1px solid var(--border-color)' }}>{r.name}</div>
+                    <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.desc}</div>
                   </div>
                 ))}
               </div>
-              <div>
-                <strong style={{ color: '#fbbf24' }}>命名撞車陷阱</strong>：<span className="font-mono">plan</span> 這個詞在系統裡出現兩次，但指不同東西。<br />
-                <span className="font-mono" style={{ color: '#f97316' }}>ChatMode 的 plan</span> = 你自己定義的 UI 概念（按鈕 P）。<br />
-                <span className="font-mono" style={{ color: '#c084fc' }}>permissionMode 的 plan</span> = Claude SDK 原生的門禁等級（比 default 更嚴，幾乎什麼都不能做）。<br />
-                按下 P 按鈕，後台傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>acceptEdits</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>。
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-primary)' }}>這個對應是你自己寫的</strong>，不是 SDK 規定的。<br />
-                <code style={{ backgroundColor: 'var(--background-tertiary)', padding: '2px 6px', borderRadius: '3px', color: 'var(--text-secondary)' }}>lib/claude-session-manager.ts</code> 裡的一行轉換代碼決定了誰對應誰：
-                <pre style={{ backgroundColor: 'var(--background-tertiary)', padding: '8px 10px', borderRadius: '6px', marginTop: '6px', fontFamily: 'ui-monospace, monospace', color: 'var(--text-secondary)', fontSize: '11px' }}>{`const permissionMode = (mode === 'edit' || mode === 'auto') ? 'acceptEdits' : 'default'`}</pre>
-                SDK 那端只收到一個 permissionMode 字串，不知道前面有 P / E / A 的存在。理論上 P 也可以傳 <span className="font-mono">acceptEdits</span>，完全取決於你怎麼寫這行。
-              </div>
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-                <strong style={{ color: 'var(--text-primary)' }}>permissionMode 是倒數第二道關卡，不是第一道</strong><br />
-                SDK 官方文檔定義的完整判斷順序（先到先得，匹配即停止）：
-                <div className="rounded overflow-hidden mt-2" style={{ border: '1px solid var(--border-color)' }}>
-                  {[
-                    { step: '1', name: 'Hooks', desc: '自訂 hook 可強制 allow / deny，優先於一切' },
-                    { step: '2', name: 'deny rules', desc: 'settings.json deny 清單，命中即擋死，不看後面' },
-                    { step: '3', name: 'allow rules', desc: 'settings.json allow 清單，命中即放行，不看後面' },
-                    { step: '4', name: 'ask rules', desc: 'settings.json ask 清單，命中則彈視窗' },
-                    { step: '5', name: 'permissionMode', desc: '前面都沒命中，才輪到這裡決定預設行為' },
-                    { step: '6', name: 'canUseTool callback', desc: '代碼層的最後攔截，可做任意自訂邏輯' },
-                  ].map((r, i, arr) => (
-                    <div key={r.step} className="grid text-xs" style={{ gridTemplateColumns: '28px 110px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                      <div className="px-2 py-2 font-mono text-center" style={{ color: '#555', borderRight: '1px solid var(--border-color)', backgroundColor: 'var(--background-secondary)' }}>{r.step}</div>
-                      <div className="px-3 py-2 font-mono font-semibold" style={{ color: i < 2 ? '#f87171' : i < 4 ? '#4ade80' : i === 4 ? '#3b82f6' : '#a78bfa', borderRight: '1px solid var(--border-color)' }}>{r.name}</div>
-                      <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.desc}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-                  <div className="px-3 py-2 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>情境對照：各指令停在第幾關</div>
-                  <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '1fr 80px 60px 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
-                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>指令 / mode</div>
-                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>停在第幾關</div>
-                    <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>結果</div>
-                    <div className="px-3 py-2">原因</div>
-                  </div>
-                  {[
-                    { cmd: 'git commit，P mode', gate: '② allow', result: '放行', resultColor: '#4ade80', reason: 'Bash(git *) 在 allow 清單命中，permissionMode 沒被問到' },
-                    { cmd: 'rm -rf /*，任何 mode', gate: '② deny', result: '擋死', resultColor: '#f87171', reason: 'deny 清單命中，後面三關全跳過' },
-                    { cmd: 'sed ...，E mode', gate: '③ permissionMode', result: '彈視窗', resultColor: '#fbbf24', reason: 'sed 不在清單，acceptEdits 不含 Bash，交給 permissionMode' },
-                    { cmd: 'sed ...，P mode', gate: '③ permissionMode', result: '彈視窗', resultColor: '#fbbf24', reason: 'sed 不在清單，default 遇到未預批准工具一律彈視窗' },
-                    { cmd: 'Write（寫檔案），任何 mode', gate: '② allow', result: '放行', resultColor: '#4ade80', reason: '"Write" 在 allow 清單，P / E 按鈕對寫檔沒有差異' },
-                  ].map((r, i, arr) => (
-                    <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 80px 60px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
-                      <div className="px-3 py-2 font-mono" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.cmd}</div>
-                      <div className="px-3 py-2 font-mono font-semibold" style={{ color: '#3b82f6', borderRight: '1px solid var(--border-color)' }}>{r.gate}</div>
-                      <div className="px-3 py-2 font-semibold" style={{ color: r.resultColor, borderRight: '1px solid var(--border-color)' }}>{r.result}</div>
-                      <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.reason}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  <strong style={{ color: 'var(--text-secondary)' }}>結論</strong>：P / E 按鈕的差異，只對「不在 allow / deny 清單裡的指令」才有意義。清單裡的東西，按哪個按鈕都一樣。
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* 與 Claude Code Extension 對照 */}
-          <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
-            <div className="px-4 py-2.5 text-xs font-semibold" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-              與 Claude Code 官方 Extension 對照
-            </div>
-            <div className="px-4 py-3 text-xs space-y-3" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
-              <div>
-                Claude Code 官方 VS Code / Cursor Extension 也有三個 UI 模式，和你的 P / E / A 概念相似，但底層各自獨立實作。
+              {/* 六關各自的詳細說明與案例 */}
+              <div className="space-y-3">
+
+                {/* 關卡 1 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#f87171' }}>關卡 1 — Hooks</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(248,113,113,0.12)', color: '#f87171' }}>最高優先</span>
+                  </div>
+                  <p>設定在 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>~/.claude/settings.json</span> 的 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>hooks</span> 欄位。Hook 腳本可以輸出 <span className="font-mono">APPROVE</span> 或 <span className="font-mono">REJECT</span>，強制蓋過後面所有規則。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(248,113,113,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• Hook 腳本掃描指令包含 <span className="font-mono">--force</span>，輸出 REJECT → 直接擋死，deny 清單都沒機會跑</p>
+                    <p>• Hook 腳本確認目前時段是工作時間，否則輸出 REJECT → 任何指令夜間全擋</p>
+                    <p>• 沒有設定 hooks（最常見）→ 直接 pass，繼續往關卡 2</p>
+                  </div>
+                </div>
+
+                {/* 關卡 2 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#f87171' }}>關卡 2 — deny rules</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(248,113,113,0.12)', color: '#f87171' }}>命中即擋死</span>
+                  </div>
+                  <p>對照 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>permissions.deny</span> 清單，使用 glob 匹配。命中代表永遠封鎖，Claude 無法繞過。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(248,113,113,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• <span className="font-mono">Bash(rm -rf /*)</span> 命中 deny → 擋死，Claude 回報「無法執行」</p>
+                    <p>• <span className="font-mono">Bash(sudo *)</span> 命中 deny → 擋死，即使 A mode 也一樣</p>
+                    <p>• <span className="font-mono">Bash(eval *)</span> 命中 deny → 擋死，任何 eval 完全封鎖</p>
+                    <p>• <span className="font-mono">git push --force</span> 命中 deny → 擋死，force push 永遠不能跑</p>
+                  </div>
+                </div>
+
+                {/* 關卡 3 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#4ade80' }}>關卡 3 — allow rules</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>命中即放行</span>
+                  </div>
+                  <p>對照 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>permissions.allow</span> 清單，使用 glob 匹配。命中代表直接放行，不彈視窗，不管是 P 還是 E mode。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(74,222,128,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• <span className="font-mono">Bash(git *)</span> 在 allow 清單 → git commit / git log / git diff 全部自動放行</p>
+                    <p>• <span className="font-mono">Write</span> 在 allow 清單 → 任何寫檔操作，P mode 也不會彈視窗</p>
+                    <p>• <span className="font-mono">Bash(npm run *)</span> 在 allow 清單 → npm run dev / npm run build 全自動</p>
+                    <p>• <span className="font-mono">Read</span> 在 allow 清單 → 所有讀檔不需確認（通常預設放行）</p>
+                  </div>
+                </div>
+
+                {/* 關卡 4 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#4ade80' }}>關卡 4 — ask rules</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>命中則彈視窗</span>
+                  </div>
+                  <p>對照 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>permissions.ask</span> 清單。命中代表強制彈確認視窗，即使是 A mode（dontAsk）也無例外。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(74,222,128,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• <span className="font-mono">Bash(git push *)</span> 在 ask 清單 → 即使開 A mode，push 前一定彈確認</p>
+                    <p>• <span className="font-mono">Bash(npm publish *)</span> 在 ask 清單 → 發布前強制人工確認</p>
+                    <p>• 大多數設定沒有 ask 清單（欄位不存在）→ 直接 pass 到關卡 5</p>
+                  </div>
+                </div>
+
+                {/* 關卡 5 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#3b82f6' }}>關卡 5 — permissionMode</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>預設行為</span>
+                  </div>
+                  <p>前面四關都沒命中，才到這裡。由當前 permissionMode 決定：<span className="font-mono">default</span> 幾乎都彈、<span className="font-mono">acceptEdits</span> 檔案操作放行但 Bash 仍彈、<span className="font-mono">dontAsk</span> 幾乎全放行。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(59,130,246,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• <span className="font-mono">sed ... </span>不在任何清單，E mode（acceptEdits）→ Bash 仍需彈視窗</p>
+                    <p>• <span className="font-mono">curl ...</span> 不在任何清單，P mode（default）→ 彈視窗</p>
+                    <p>• <span className="font-mono">curl ...</span> 不在任何清單，A mode（dontAsk）→ 自動放行</p>
+                    <p>• <span className="font-mono">Edit</span>（改檔）不在清單，E mode（acceptEdits）→ 自動放行（acceptEdits 包含 Edit）</p>
+                  </div>
+                </div>
+
+                {/* 關卡 6 */}
+                <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold" style={{ color: '#a78bfa' }}>關卡 6 — canUseTool callback</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ backgroundColor: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}>程式碼層攔截</span>
+                  </div>
+                  <p>SDK 的程式碼層最後攔截，<span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>buildQueryOptions</span> 傳入的 callback。通常不會走到這裡，但 Dashboard Chat 的設計讓它成為關鍵關卡。</p>
+                  <div className="mt-2 space-y-1" style={{ borderLeft: '2px solid rgba(167,139,250,0.3)', paddingLeft: '10px' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>實際案例：</p>
+                    <p>• Dashboard 的 <span className="font-mono">canUseTool</span> 遇到 ExitPlanMode → 攔截，掛起 Promise 等待前端審核</p>
+                    <p>• Dashboard 的 <span className="font-mono">canUseTool</span> 遇到一般工具 → 直接回傳 allow，不攔截</p>
+                    <p>• <span className="font-mono">ZodError: expected record, received undefined</span>：這不是正常被擋，是 callback 回傳格式錯誤，屬於關卡 6 的程式碼 bug</p>
+                    <p>• CLI session（直接 claude 指令）→ 通常沒有自訂 callback，此關直接 pass</p>
+                  </div>
+                </div>
               </div>
+
+              <p><strong style={{ color: 'var(--text-secondary)' }}>結論</strong>：P / E 按鈕的差異，只對「不在 allow / deny / ask 清單裡的指令」才有意義。清單裡的東西，按哪個按鈕都一樣。</p>
+
+              {/* 情境對照表（擴充版） */}
+              <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
+                <div className="px-3 py-2 text-xs font-semibold flex items-center justify-between" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <span>情境對照（六關各一個真實案例）</span>
+                  <span className="px-2 py-0.5 rounded text-[10px]" style={{ backgroundColor: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}>
+                    <i className="fa-solid fa-magnifying-glass mr-1" />遇到問題可執行 <span className="font-mono">/permission-debug</span>
+                  </span>
+                </div>
+                <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '1fr 90px 60px 1fr', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>指令 / 情境</div>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>停在第幾關</div>
+                  <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>結果</div>
+                  <div className="px-3 py-2">原因</div>
+                </div>
+                {[
+                  { cmd: 'Bash(--force)，有掃描 hook', gate: '① Hooks', result: '擋死', resultColor: '#f87171', reason: 'Hook 腳本偵測到 --force 輸出 REJECT，後面六關全跳過' },
+                  { cmd: 'rm -rf /*，任何 mode', gate: '② deny', result: '擋死', resultColor: '#f87171', reason: 'deny 清單命中，Claude 完全無法執行，mode 無關' },
+                  { cmd: 'git commit，P mode', gate: '③ allow', result: '放行', resultColor: '#4ade80', reason: 'Bash(git *) 在 allow 清單，permissionMode 根本沒被問到' },
+                  { cmd: 'git push，有 ask 規則', gate: '④ ask', result: '彈視窗', resultColor: '#fbbf24', reason: 'ask 清單命中，即使 A mode 也強制彈確認' },
+                  { cmd: 'sed ...，E mode', gate: '⑤ permissionMode', result: '彈視窗', resultColor: '#fbbf24', reason: 'sed 不在任何清單，acceptEdits 不包含 Bash，輪到 permissionMode 決定' },
+                  { cmd: 'ExitPlanMode，Dashboard P mode', gate: '⑥ canUseTool', result: '攔截等待', resultColor: '#a78bfa', reason: 'Dashboard canUseTool callback 掛起 Promise，等前端用戶審核計畫' },
+                ].map((r, i, arr) => (
+                  <div key={i} className="grid text-xs" style={{ gridTemplateColumns: '1fr 90px 60px 1fr', borderBottom: i < arr.length - 1 ? '1px solid var(--border-color)' : undefined }}>
+                    <div className="px-3 py-2 font-mono" style={{ color: 'var(--text-secondary)', borderRight: '1px solid var(--border-color)' }}>{r.cmd}</div>
+                    <div className="px-3 py-2 font-mono font-semibold" style={{ color: '#3b82f6', borderRight: '1px solid var(--border-color)' }}>{r.gate}</div>
+                    <div className="px-3 py-2 font-semibold" style={{ color: r.resultColor, borderRight: '1px solid var(--border-color)' }}>{r.result}</div>
+                    <div className="px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>{r.reason}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* permission-debug skill 說明 */}
+              <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                <div className="flex items-start gap-2">
+                  <i className="fa-solid fa-stethoscope mt-0.5" style={{ color: '#a78bfa' }} />
+                  <div>
+                    <p className="font-semibold mb-1" style={{ color: '#a78bfa' }}>遇到權限問題？用 /permission-debug 自動診斷</p>
+                    <p>在 Chat Panel 輸入 <span className="font-mono px-1 rounded" style={{ backgroundColor: 'var(--background-tertiary)' }}>/permission-debug</span>，AI 會自動讀取你的 settings.json，逐關比對，找出指令卡在哪一關，並告訴你要去哪裡修。</p>
+                    <p className="mt-1">診斷報告固定列出六個關卡的狀態，命中的關卡標記「停止於此」，後面的關卡標記「未到達」，清楚明瞭。</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </ExpandableBox>
+
+          <ExpandableBox label="與 Claude Code 官方 Extension 的對照">
+            <div className="text-xs space-y-3" style={{ color: 'var(--text-tertiary)', lineHeight: '1.8' }}>
+              <p>官方 VS Code / Cursor Extension 也有三個 UI 模式，和 P / E / A 概念相似，但底層對應不同：</p>
               <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border-color)' }}>
                 <div className="grid text-xs font-semibold" style={{ gridTemplateColumns: '1fr 1fr 100px', backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-tertiary)' }}>
                   <div className="px-3 py-2" style={{ borderRight: '1px solid var(--border-color)' }}>Extension UI</div>
@@ -1724,35 +2097,29 @@ function PermissionsTab() {
                   </div>
                 ))}
               </div>
-              <div>
-                <strong style={{ color: '#fbbf24' }}>關鍵差異</strong>：Extension 的 Plan mode 使用 SDK 原生的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span> permissionMode（Claude 完全不能動任何東西）。Dashboard 的 P 按鈕底層傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>acceptEdits</span>，不是 SDK 的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>——「等批准」是 ChatMode 層的 UI 行為，不是 SDK 層的硬性封鎖。
-              </div>
-              <div>
-                兩者都用同一個 Claude Agent SDK，只是各自在上面包了自己的 UI 和轉換邏輯，互不影響。
-              </div>
+              <p><strong style={{ color: '#fbbf24' }}>關鍵差異</strong>：Extension 的 Plan mode 使用 SDK 原生的 <span className="font-mono" style={{ color: '#c084fc' }}>plan</span>（Claude 完全不能動任何東西）。Dashboard 的 P 按鈕底層傳的是 <span className="font-mono" style={{ color: '#3b82f6' }}>acceptEdits</span>——「等批准」是前台 UI 行為，不是 SDK 的硬性封鎖。</p>
             </div>
-          </div>
+          </ExpandableBox>
         </div>
       </div>
 
-      {/* 三層關係圖 */}
+      {/* 三層總結 */}
       <div className="rounded-xl px-5 py-4 mb-4" style={{ backgroundColor: 'var(--background-secondary)', border: '1px solid var(--border-color)' }}>
         <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>三層關係：各管各的，互不衝突</h3>
         <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: '1.75' }}>
           <div className="mb-2">
-            <span style={{ color: '#3b82f6' }}>● Layer 1（工作證）</span> — 管「能不能進電梯、到達那一層」
+            <span style={{ color: '#f97316' }}>● Layer 1（P/E/A 按鈕）</span> — 管「今天工作節奏」，每次對話可以換
           </div>
           <div className="mb-2">
-            <span style={{ color: '#4ade80' }}>● Layer 2（保全手冊）</span> — 管「到了那層之後，哪些房間可以進」
+            <span style={{ color: '#4ade80' }}>● Layer 2（settings.json / CLAUDE.md）</span> — 管「長期規定和習慣」，設定一次持續生效
           </div>
           <div className="mb-3">
-            <span style={{ color: '#fbbf24' }}>● Layer 3（便利貼）</span> — 管「進去之後，員工怎麼工作」
+            <span style={{ color: '#60a5fa' }}>● Layer 3（permissionMode）</span> — 管「SDK 底層門禁」，一般不需要直接碰
           </div>
           <CalloutBox type="tip">
             <div>
-              <strong style={{ color: 'var(--text-primary)' }}>所以 permissionMode 寬鬆 + settings.json 嚴格並不矛盾</strong>：
-              Layer 1 決定員工能到每一層，Layer 2 決定到了之後很多房間還是鎖著。
-              兩個都存在，各管各的。
+              <strong style={{ color: 'var(--text-primary)' }}>Layer 1 調鬆 ≠ Layer 2 也鬆</strong>：
+              按了 A（全自動）不代表 settings.json 的 deny 清單失效。三層各自獨立，deny 清單永遠優先。
             </div>
           </CalloutBox>
         </div>
@@ -2927,18 +3294,7 @@ function ChatDocTable({ headers, rows }: { headers: string[]; rows: string[][] }
 }
 
 function ChatDocCodeBlock({ code, label }: { code: string; label?: string }) {
-  return (
-    <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border-color)' }}>
-      {label && (
-        <div className="px-4 py-2 text-xs font-medium" style={{ backgroundColor: 'var(--background-secondary)', color: 'var(--text-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-          {label}
-        </div>
-      )}
-      <pre className="px-4 py-3 text-sm font-mono overflow-x-auto" style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-        {code}
-      </pre>
-    </div>
-  )
+  return <CodeBlock code={code} lang="typescript" label={label} className="mb-4" />
 }
 
 function ChatDocTab() {
@@ -3551,17 +3907,7 @@ function SdkToolBadge({ name, desc }: { name: string; desc: string }) {
 }
 
 function SdkCodeBlock({ code, lang = 'typescript' }: { code: string; lang?: string }) {
-  return (
-    <div className="rounded-xl overflow-hidden mt-3 mb-1" style={{ border: '1px solid var(--border-color)' }}>
-      <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--background-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-        <i className="fa-solid fa-code text-xs" style={{ color: 'var(--text-tertiary)' }} />
-        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'ui-monospace, monospace' }}>{lang}</span>
-      </div>
-      <pre className="px-5 py-4 text-sm overflow-x-auto" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--background-primary)', fontFamily: 'ui-monospace, SFMono-Regular, monospace', whiteSpace: 'pre', lineHeight: '1.7', margin: 0 }}>
-        {code}
-      </pre>
-    </div>
-  )
+  return <CodeBlock code={code} lang={lang} className="mt-3 mb-1" />
 }
 
 function SdkUsageList({ items }: { items: string[] }) {
@@ -3882,8 +4228,128 @@ export default function DocsPage() {
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // ── Selection copy tooltip ────────────────────────────────────
+  const [selectionTooltip, setSelectionTooltip] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [copied, setCopied] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleMouseUp = (e: MouseEvent) => {
+      // Ignore clicks inside the tooltip itself
+      if (tooltipRef.current?.contains(e.target as Node)) return
+
+      setTimeout(() => {
+        const sel = window.getSelection()
+        const text = sel?.toString().trim() ?? ''
+        if (!text || text.length < 2) {
+          setSelectionTooltip(null)
+          return
+        }
+        const range = sel!.getRangeAt(0)
+        const rect = range.getBoundingClientRect()
+        setSelectionTooltip({
+          x: rect.left + rect.width / 2,
+          y: rect.top - 8,
+          text,
+        })
+        setCopied(false)
+      }, 10)
+    }
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (tooltipRef.current?.contains(e.target as Node)) return
+      setSelectionTooltip(null)
+    }
+
+    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('mousedown', handleMouseDown)
+    }
+  }, [])
+
+  const handleCopySelection = useCallback(() => {
+    if (!selectionTooltip) return
+    // Find current tab info
+    const tabGroup = TAB_GROUPS.find(g => g.tabs.some(t => t.id === activeTab))
+    const tabInfo = TABS.find(t => t.id === activeTab)
+    const groupLetter = tabGroup?.letter ?? ''
+    const tabIndex = tabGroup ? tabGroup.tabs.findIndex(t => t.id === activeTab) + 1 : 0
+    const tabCode = `${groupLetter}${tabIndex}`
+    const tabLabel = tabInfo?.label ?? activeTab
+
+    const copyText = `[技術文件 ${tabCode} ${tabLabel}]\n\n${selectionTooltip.text}`
+    navigator.clipboard.writeText(copyText).then(() => {
+      setCopied(true)
+      setTimeout(() => setSelectionTooltip(null), 800)
+    })
+  }, [selectionTooltip, activeTab])
+
   return (
     <div style={{ backgroundColor: 'var(--background-primary)', color: 'var(--text-primary)', height: '100vh', display: 'flex' }}>
+
+      {/* Shiki code block styles */}
+      <style>{`
+        .shiki-wrap pre {
+          margin: 0;
+          padding: 20px 20px;
+          overflow-x: auto;
+          background: var(--background-primary) !important;
+        }
+        .shiki-wrap pre code {
+          font-family: ui-monospace, SFMono-Regular, monospace;
+          font-size: 13px;
+          line-height: 1.7;
+          background: transparent !important;
+        }
+        .shiki-wrap .shiki {
+          background: var(--background-primary) !important;
+        }
+      `}</style>
+
+      {/* Selection copy tooltip */}
+      {selectionTooltip && (
+        <div
+          ref={tooltipRef}
+          style={{
+            position: 'fixed',
+            left: selectionTooltip.x,
+            top: selectionTooltip.y,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999,
+            pointerEvents: 'auto',
+          }}
+        >
+          <button
+            onMouseDown={e => e.preventDefault()}
+            onClick={handleCopySelection}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg transition-colors"
+            style={{
+              backgroundColor: copied ? '#4ade80' : '#0184ff',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'} text-xs`} />
+            {copied ? '已複製' : 'Copy + 頁面資訊'}
+          </button>
+          {/* Arrow */}
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: -5,
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '5px solid transparent',
+            borderRight: '5px solid transparent',
+            borderTop: `5px solid ${copied ? '#4ade80' : '#0184ff'}`,
+          }} />
+        </div>
+      )}
 
       {/* Left: fixed nav sidebar */}
       <nav

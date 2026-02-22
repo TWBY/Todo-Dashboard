@@ -1171,14 +1171,14 @@
     "sessionId": "cad0d198-b43c-4596-8d86-11f0397ea4bd",
     "projectId": "dashboard",
     "title": "現在的 changelog 內容都是英文，我在想之前有中文，能不能有一些設計可以讓它強制使用中文的內容？",
-    "messageCount": 5,
+    "messageCount": 9,
     "createdAt": 1771686345651,
-    "lastActiveAt": 1771765556158,
-    "totalCostUsd": 2.2707332499999997,
-    "totalDurationMs": 146256,
+    "lastActiveAt": 1771767257554,
+    "totalCostUsd": 7.39629425,
+    "totalDurationMs": 554918,
     "model": "claude-sonnet-4-6",
-    "totalInputTokens": 43,
-    "totalOutputTokens": 339
+    "totalInputTokens": 240,
+    "totalOutputTokens": 1083
   },
   {
     "sessionId": "11665826-eefe-4210-8815-cf26f6b75027",
@@ -1216,5 +1216,65 @@
     "model": "claude-sonnet-4-6",
     "totalInputTokens": 88,
     "totalOutputTokens": 478
+  },
+  {
+    "sessionId": "a118f092-4ed7-48fb-9c3f-5ca691ae8ac2",
+    "projectId": "dashboard",
+    "title": "以小白視角看看\n\nCOMPONENT: DocsPage\nCHAIN: LayoutRouterContext > Ho",
+    "messageCount": 14,
+    "createdAt": 1771766923697,
+    "lastActiveAt": 1771771733697,
+    "totalCostUsd": 16.405336000000002,
+    "totalDurationMs": 1793315,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 356,
+    "totalOutputTokens": 2394
+  },
+  {
+    "sessionId": "275aa8a2-1e45-45e1-8c15-7ba9532d9087",
+    "projectId": "dashboard",
+    "title": "現在我這個專案有冗餘的檔案跟垃圾嗎？",
+    "messageCount": 2,
+    "createdAt": 1771771788577,
+    "lastActiveAt": 1771771850782,
+    "totalCostUsd": 0.3620666,
+    "totalDurationMs": 36938,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 105,
+    "totalOutputTokens": 99
+  },
+  {
+    "sessionId": "d857b3fe-c279-4e99-a8fc-c8a313218cfa",
+    "projectId": "dashboard",
+    "title": "[技術文件 B1 權限模型]\n\n完整判斷順序：一個操作怎麼決定要不要執行\nSDK 判斷一個工具呼叫能不能執行，按這個順序",
+    "messageCount": 1,
+    "createdAt": 1771773123529,
+    "lastActiveAt": 1771773323245,
+    "totalCostUsd": 0.90626825,
+    "totalDurationMs": 187787,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 31,
+    "totalOutputTokens": 132
+  },
+  {
+    "sessionId": "479d9afb-7dc5-413e-8b10-4ee98319edab",
+    "projectId": "dashboard",
+    "title": "要在 COMPONENT: ResizableLayout\nCHAIN: GlobalLayoutRouterConte",
+    "messageCount": 1,
+    "createdAt": 1771773456534,
+    "lastActiveAt": 1771773532140,
+    "totalCostUsd": 0.6281765,
+    "totalDurationMs": 67803,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 31,
+    "totalOutputTokens": 65
+  },
+  {
+    "sessionId": "a445242c-5d96-4356-a89c-1b27fc10ba38",
+    "projectId": "dashboard",
+    "title": "/ship",
+    "messageCount": 1,
+    "createdAt": 1771773941275,
+    "lastActiveAt": 1771773941275
   }
 ]

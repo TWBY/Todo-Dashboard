@@ -9,6 +9,7 @@ import { useBuildPanel } from '@/contexts/BuildPanelContext'
 import { useTodoPanel } from '@/contexts/TodoPanelContext'
 import { useDocsPanel } from '@/contexts/DocsPanelContext'
 import { usePortsPanel } from '@/contexts/PortsPanelContext'
+import type { ClaudeUsageLimits } from '@/lib/types'
 import ClaudeChatPanel from '@/components/ClaudeChatPanel'
 import TeamMonitorPanel from '@/components/TeamMonitorPanel'
 import BuildPanel from '@/components/BuildPanel'
@@ -50,6 +51,134 @@ interface ResizableLayoutProps {
 
 const MIN_LEFT_PX = 360
 const MIN_CHAT_PX = 360
+
+/** 計算「已過時間比」：根據 resets_at 和週期總長推算 */
+function calcElapsedPct(resetsAt: string | null, periodHours: number): number | null {
+  if (!resetsAt) return null
+  const resetMs = new Date(resetsAt).getTime()
+  const nowMs = Date.now()
+  const remainingMs = resetMs - nowMs
+  if (remainingMs <= 0) return 100
+  const periodMs = periodHours * 60 * 60 * 1000
+  const elapsedMs = periodMs - remainingMs
+  return Math.max(0, Math.min(100, Math.round((elapsedMs / periodMs) * 100)))
+}
+
+function formatCountdown(resetsAt: string | null): string {
+  if (!resetsAt) return ''
+  const diffMs = new Date(resetsAt).getTime() - Date.now()
+  if (diffMs <= 0) return 'resetting'
+  const totalMin = Math.floor(diffMs / 60000)
+  const hours = Math.floor(totalMin / 60)
+  const min = totalMin % 60
+  if (hours < 24) return `${hours}h${min}m`
+  const days = Math.floor(hours / 24)
+  return `${days}d${hours % 24}h`
+}
+
+interface SingleBarProps {
+  label: string
+  pct: number
+  resetsAt: string | null
+  periodHours: number
+}
+
+function SingleUsageBar({ label, pct, resetsAt, periodHours }: SingleBarProps) {
+  const barColor = pct >= 80 ? '#f87171' : pct >= 60 ? '#fb923c' : pct >= 40 ? '#facc15' : '#60a5fa'
+  const elapsed = calcElapsedPct(resetsAt, periodHours)
+  const delta = elapsed !== null ? pct - elapsed : null
+  const countdown = formatCountdown(resetsAt)
+
+  return (
+    <div className="px-1 pb-0.5">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
+            {label}
+          </span>
+          {countdown && (
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontFamily: 'monospace', opacity: 0.6 }}>
+              {countdown}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {delta !== null && (
+            <span style={{
+              fontSize: '0.65rem',
+              fontFamily: 'monospace',
+              color: delta > 5 ? '#f87171' : delta < -5 ? '#4ade80' : 'var(--text-tertiary)',
+              opacity: 0.85,
+            }}>
+              {delta > 0 ? `+${delta}%` : `${delta}%`}
+            </span>
+          )}
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'monospace', fontWeight: 600 }}>
+            {pct}%
+          </span>
+        </div>
+      </div>
+      <div className="rounded-full overflow-hidden" style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.08)' }}>
+        {/* 正常速率刻度線 */}
+        <div className="relative h-full">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, backgroundColor: barColor }}
+          />
+          {elapsed !== null && (
+            <div
+              className="absolute top-0 h-full"
+              style={{
+                left: `${elapsed}%`,
+                width: 1,
+                backgroundColor: 'rgba(255,255,255,0.35)',
+                transform: 'translateX(-50%)',
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ClaudeUsageBars() {
+  const [data, setData] = useState<ClaudeUsageLimits | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/claude-usage', { signal: controller.signal })
+        if (!res.ok) return
+        const json = await res.json()
+        setData(json.data)
+      } catch { /* silent */ }
+    }
+    fetchData()
+    const interval = setInterval(fetchData, 60000)
+    return () => { controller.abort(); clearInterval(interval) }
+  }, [])
+
+  if (!data) return null
+
+  return (
+    <div className="flex flex-col gap-1 pb-1">
+      <SingleUsageBar
+        label="session"
+        pct={data.five_hour.utilization}
+        resetsAt={data.five_hour.resets_at}
+        periodHours={5}
+      />
+      <SingleUsageBar
+        label="weekly"
+        pct={data.seven_day.utilization}
+        resetsAt={data.seven_day.resets_at}
+        periodHours={168}
+      />
+    </div>
+  )
+}
 
 function Divider({ dividerRef, onHoverClose }: { dividerRef: React.RefObject<HTMLDivElement | null>; onHoverClose: () => void }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -427,6 +556,8 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
         </div>
         {/* 底部導覽按鈕 */}
         <div className="flex flex-col gap-2 p-3">
+          {/* Claude Usage（Session + Weekly） */}
+          <ClaudeUsageBars />
           {/* 上排：Todo, Email */}
           <div className="flex gap-2">
             <button
@@ -647,7 +778,10 @@ export default function ResizableLayout({ left }: ResizableLayoutProps) {
           ref={overlayRef}
           style={{ position: 'absolute', inset: 0, zIndex: 10, backgroundColor: 'var(--background-primary)' }}
         >
-          {activeOverlay === 'build' && <BuildPanel />}
+          {/* BuildPanel 永久掛載，靠 display 控制可見性，確保打包流程在切換頁面時繼續執行 */}
+          <div style={{ display: activeOverlay === 'build' ? 'block' : 'none', height: '100%' }}>
+            <BuildPanel />
+          </div>
           {activeOverlay === 'todo' && <TodoPanel />}
           {activeOverlay === 'docs' && <DocsPanel />}
           {activeOverlay === 'ports' && <PortsPanel />}

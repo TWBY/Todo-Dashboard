@@ -3,13 +3,39 @@
     "sessionId": "060542c7-074d-41a7-8e89-7b471a8f9bea",
     "projectId": "disk-sense",
     "title": "因為我現在常常會有管理系統儲存空間已滿的問題，這是我最大的痛點。我覺得 CleanMyMac 這個軟體（你可以上網查一下",
-    "messageCount": 1,
+    "messageCount": 22,
     "createdAt": 1771766072934,
-    "lastActiveAt": 1771766145789,
-    "totalCostUsd": 0.3066202,
-    "totalDurationMs": 64110,
+    "lastActiveAt": 1771773209239,
+    "totalCostUsd": 20.546989,
+    "totalDurationMs": 4355903,
     "model": "claude-sonnet-4-6",
-    "totalInputTokens": 1688,
-    "totalOutputTokens": 69
+    "totalInputTokens": 2247,
+    "totalOutputTokens": 20685
+  },
+  {
+    "sessionId": "00180f4a-34f4-4423-bdca-fd6ac287a2ad",
+    "projectId": "disk-sense",
+    "title": "為什麼這個專案在執行的時候，都會一直跳出 Cursor 想要讀取我的專案？\n\n我不太理解我現在這個專案跟 Cursor ",
+    "messageCount": 3,
+    "createdAt": 1771771000378,
+    "lastActiveAt": 1771771159614,
+    "totalCostUsd": 0.40647249999999996,
+    "totalDurationMs": 65708,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 21,
+    "totalOutputTokens": 101
+  },
+  {
+    "sessionId": "b55862cf-e84d-4612-b813-bdbf77487c7b",
+    "projectId": "disk-sense",
+    "title": "有在做文件掃描，跑現在這個，是不是會很燒 cpu",
+    "messageCount": 3,
+    "createdAt": 1771771550748,
+    "lastActiveAt": 1771771822834,
+    "totalCostUsd": 0.60584375,
+    "totalDurationMs": 118362,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 111,
+    "totalOutputTokens": 204
   }
 ]

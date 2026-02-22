@@ -7,7 +7,7 @@ import { useChatPanels } from '@/contexts/ChatPanelsContext';
 import { useDevServer } from '@/contexts/DevServerContext';
 import { useLeftPanel } from '@/contexts/LeftPanelContext';
 import { usePortsPanel } from '@/contexts/PortsPanelContext';
-import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useBuildPanel, PHASES } from '@/contexts/BuildPanelContext';
 import { useTodoPanel } from '@/contexts/TodoPanelContext';
 import { useDocsPanel } from '@/contexts/DocsPanelContext';
 import { formatPort } from '@/lib/format';
@@ -26,7 +26,7 @@ export default function DevServerPanel() {
   const { addPanel } = useChatPanels();
   const { collapsed: leftCollapsed, toggle: toggleLeft } = useLeftPanel();
   const { open: portsPanelOpen, toggle: togglePortsPanel, close: closePortsPanel } = usePortsPanel();
-  const { open: buildPanelOpen, toggle: toggleBuildPanel, close: closeBuildPanel } = useBuildPanel();
+  const { open: buildPanelOpen, toggle: toggleBuildPanel, close: closeBuildPanel, buildState, currentPhase } = useBuildPanel();
   const { close: closeTodoPanel } = useTodoPanel();
   const { close: closeDocsPanel } = useDocsPanel();
   const [compact, setCompact] = useState(false);
@@ -497,6 +497,36 @@ export default function DevServerPanel() {
             P
           </button>
         </div>
+
+        {/* Pack 背景執行狀態小部件 — 只在打包進行中且面板未開啟時顯示 */}
+        {(buildState === 'running' || buildState === 'done' || buildState === 'error') && !buildPanelOpen && (
+          <button
+            onClick={() => {
+              closeTodoPanel()
+              closeDocsPanel()
+              closePortsPanel()
+              if (!leftCollapsed) toggleLeft()
+              toggleBuildPanel()
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-200 hover:brightness-110"
+            style={{
+              backgroundColor: buildState === 'done' ? 'rgba(34,197,94,0.1)' : buildState === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+              border: `1px solid ${buildState === 'done' ? 'rgba(34,197,94,0.25)' : buildState === 'error' ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
+            }}
+          >
+            {buildState === 'running' ? (
+              <i className="fa-solid fa-spinner fa-spin text-xs shrink-0" style={{ color: '#f59e0b' }} />
+            ) : buildState === 'done' ? (
+              <i className="fa-solid fa-circle-check text-xs shrink-0" style={{ color: '#22c55e' }} />
+            ) : (
+              <i className="fa-solid fa-circle-xmark text-xs shrink-0" style={{ color: '#ef4444' }} />
+            )}
+            <span className="text-xs font-mono flex-1 text-left truncate" style={{ color: buildState === 'done' ? '#4ade80' : buildState === 'error' ? '#f87171' : '#f59e0b' }}>
+              {buildState === 'done' ? '打包完成' : buildState === 'error' ? '打包失敗' : currentPhase > 0 ? `${PHASES[currentPhase - 1]?.phase} — ${PHASES[currentPhase - 1]?.title}` : '啟動中...'}
+            </span>
+            <i className="fa-solid fa-arrow-up-right-from-square text-xs shrink-0" style={{ color: 'var(--text-tertiary)', opacity: 0.5 }} />
+          </button>
+        )}
       </div>
 
       {isInitialLoad ? (

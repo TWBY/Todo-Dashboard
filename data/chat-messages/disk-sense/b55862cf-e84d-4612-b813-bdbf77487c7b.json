@@ -1,0 +1,281 @@
+[
+  {
+    "id": "68beac64-7a24-4681-9516-0be1e45e34b4",
+    "role": "user",
+    "content": "有在做文件掃描，跑現在這個，是不是會很燒 cpu",
+    "timestamp": 1771771550715
+  },
+  {
+    "id": "93c128b3-6cbb-4108-9b07-9810b875213d",
+    "role": "tool",
+    "content": "{\n  \"description\": \"Explore scan implementation\",\n  \"subagent_type\": \"Explore\",\n  \"prompt\": \"Look at the scan implementation in /Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/scan/ and /Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/ directories. I need to understand how the file scanning works - specifically look for any CPU-intensive operations like recursive directory traversal, file reading, hashing, etc. Also check src/lib/ for any utility functions related to scanning. Return a summary of the scanning approach and any potential CPU bottlenecks.\"\n}",
+    "toolName": "Task",
+    "toolDescription": "Explore scan implementation",
+    "timestamp": 1771771560465
+  },
+  {
+    "id": "f2244a0a-6336-4e84-8537-cf37ad9b7350",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/scan/**/*\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "/Users/ruanbaiye/Documents/Bri…",
+    "timestamp": 1771771562309
+  },
+  {
+    "id": "1068a064-0ad9-4159-b405-7d2472ff50f0",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/**/*\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "/Users/ruanbaiye/Documents/Bri…",
+    "timestamp": 1771771562311
+  },
+  {
+    "id": "44673459-670f-4ae1-a0eb-7c2f82dcbe3a",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/**/*\"\n}",
+    "toolName": "Glob",
+    "toolDescription": "/Users/ruanbaiye/Documents/Bri…",
+    "timestamp": 1771771562362
+  },
+  {
+    "id": "d4416f9a-735d-4d95-ba36-dbb3f56ac325",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/scan/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771565437
+  },
+  {
+    "id": "3babbbbf-a104-4b0b-9d41-734a6d9dc67c",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/file-scanner.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "file-scanner.ts",
+    "timestamp": 1771771565576
+  },
+  {
+    "id": "ac2ae1a9-c1a9-402e-abe1-b66a40dc115f",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/hash-calculator.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "hash-calculator.ts",
+    "timestamp": 1771771565805
+  },
+  {
+    "id": "ce551259-4e67-4023-bed9-680d677a7685",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/scan/page.tsx\"\n}",
+    "toolName": "Read",
+    "toolDescription": "page.tsx",
+    "timestamp": 1771771566235
+  },
+  {
+    "id": "fcf33e79-2b7e-41ad-bf84-302ce72882fe",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/file-classifier.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "file-classifier.ts",
+    "timestamp": 1771771569763
+  },
+  {
+    "id": "b4f5f59f-6bb2-4805-a449-131d321786ff",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/disk-utils.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "disk-utils.ts",
+    "timestamp": 1771771570423
+  },
+  {
+    "id": "51379d45-6da8-425d-91d9-831273318a74",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/duplicates/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771570776
+  },
+  {
+    "id": "1f8c38c4-f746-4f2c-b148-2084d4b01df6",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/ai-analysis/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771573062
+  },
+  {
+    "id": "e8a61c66-18ea-41fc-a7d8-8821bf848a63",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/file-operations.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "file-operations.ts",
+    "timestamp": 1771771573340
+  },
+  {
+    "id": "2b988349-b2b2-4ee5-b778-6f55cee68dde",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/space-distribution/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771573671
+  },
+  {
+    "id": "1cc4e2ca-9d05-4fea-ab75-eb4a0edd8223",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/file-action/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771576832
+  },
+  {
+    "id": "9cd6a55a-e17d-47ba-8326-b14f339dfffc",
+    "role": "assistant",
+    "content": "會，而且有幾個明顯的燒法：\n\n**最燒的：重複檔案偵測 (Duplicate Hashing)**\n- `src/lib/hash-calculator.ts` — 對每個同 size 的檔案做 MD5 partial hash（前 1MB + 後 1MB）\n- 完全序列化，沒有並行化\n- 大型目錄會一直鎖 I/O + CPU\n\n**次之：目錄遞迴掃描**\n- `src/lib/file-scanner.ts` — 每個目錄 `readdir` + `stat` 都是序列 await\n- 沒有並行化子目錄，遇到深層目錄樹（如 `/Library`）會很慢\n\n**另外幾個問題：**\n- 沒有排除 `node_modules`、`.git` 這類大型目錄（duplicate 那邊有排，但主掃描沒有）\n- 沒有 symlink 偵測，理論上可能跑進無限迴圈\n- SSE 每 100 個檔案才 emit 一次 progress（這個反而還好）\n\n---\n\n**如果你要掃的是整個磁碟或大目錄，目前這樣跑確實會讓 CPU 維持高載一段時間。**\n\n要優化的話優先級：\n1. hashing 改成並行（`Promise.all` + 限制最多 4–8 concurrent）\n2. 主掃描加上 `node_modules`、`.git` 的排除清單\n3. 目錄遞迴可以用 worker threads 或 `Promise.all` 並行\n\n要我幫你優化哪一塊？",
+    "timestamp": 1771771594871,
+    "costUsd": 0.17737099999999997,
+    "durationMs": 49419
+  },
+  {
+    "id": "d19200b0-5639-416a-b197-1bd545834bb2",
+    "role": "user",
+    "content": "給我建議，幫我優化",
+    "timestamp": 1771771734754
+  },
+  {
+    "id": "2624ca19-e93a-4a31-9228-7d2a6bb79671",
+    "role": "assistant",
+    "content": "讓我先看一下相關的程式碼，再給你具體建議。",
+    "timestamp": 1771771740387
+  },
+  {
+    "id": "b87eae94-89b7-4b0a-a806-812ce8dbbd6b",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/file-scanner.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "file-scanner.ts",
+    "timestamp": 1771771742039
+  },
+  {
+    "id": "65c93776-6b8e-422b-96b0-7107a6ac2db6",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/hash-calculator.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "hash-calculator.ts",
+    "timestamp": 1771771742515
+  },
+  {
+    "id": "09c4c680-138e-420b-bb9d-6c2d8ccf0f4d",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/duplicates/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771745634
+  },
+  {
+    "id": "cea56319-926c-44c6-8f63-9901b91d95dc",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/scan/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771746201
+  },
+  {
+    "id": "ddd2caab-1996-4374-8935-5a01299e3877",
+    "role": "assistant",
+    "content": "看完了，以下是針對你現有程式碼的具體優化建議：\n\n---\n\n## 問題分析\n\n### 問題 1：`file-scanner.ts` — 掃描完全序列化\n```ts\n// 現在：每個目錄等上一個跑完才進去\nyield* scanDirectory(fullPath, options, depth + 1)\n```\n遇到有 100 個子目錄時，就是一個等一個，沒有任何並行。\n\n### 問題 2：`duplicates/route.ts` — hashing 完全序列化\n```ts\n// 現在：一個 hash 完才做下一個\nfor (const file of files) {\n  const hash = await partialHashFile(file.path, file.size)\n}\n```\n10 個同大小的檔案就要跑 10 次序列 I/O。\n\n### 問題 3：`file-scanner.ts` — 沒有排除常見黑洞目錄\n```ts\n// duplicates 有排除，但主掃描沒有\nif (entry.name === 'node_modules' || entry.name === '.git') continue // ← 只在 duplicates 裡\n```\n\n---\n\n## 優化方案\n\n### 修復 1：`file-scanner.ts` — 加上排除清單 + 並行子目錄掃描\n\n**改動點：**\n- 加 `SKIP_DIRS` 排除 `node_modules`、`.git`、`Library/Caches` 等\n- 子目錄改為 `Promise.all` 並行，同時限制最大並發數避免開太多 fd\n\n### 修復 2：`duplicates/route.ts` — hashing 改並行（限制 concurrency）\n\n**改動點：**\n- 同 size group 內的 hash 改成批次並行（最多 8 concurrent）\n- 避免 1000 個同大小檔案全部同時 hash 把 I/O 炸掉\n\n---\n\n你要我直接幫你改這兩個檔案嗎？改動範圍：\n1. `src/lib/file-scanner.ts` — 約 20 行改動\n2. `src/app/api/duplicates/route.ts` — 約 15 行改動",
+    "timestamp": 1771771747431,
+    "costUsd": 0.1580445,
+    "durationMs": 21480
+  },
+  {
+    "id": "ad5af5d8-a96c-450c-8e8a-73dd3df9ad85",
+    "role": "user",
+    "content": "好，幫我改",
+    "timestamp": 1771771770781
+  },
+  {
+    "id": "1e4d5dd1-7e02-4c75-9cba-158a6fdc0ce6",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "優化 file-scanner.ts：加排除清單 + 並行子目錄掃描",
+        "status": "in_progress",
+        "activeForm": "優化 file-scanner.ts"
+      },
+      {
+        "content": "優化 duplicates/route.ts：hashing 改並行（限制 concurrency）",
+        "status": "pending",
+        "activeForm": "優化 duplicates/route.ts hashing 並行化"
+      }
+    ],
+    "timestamp": 1771771778076
+  },
+  {
+    "id": "614dea8a-494b-48ec-8d20-e1c9814a4cdd",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/lib/file-scanner.ts\",\n  \"old_string\": \"import fs from 'fs/promises'\\nimport path from 'path'\\nimport { FileInfo } from '@/types'\\nimport { getExtension } from './format-utils'\\nimport { classifyFile } from './file-classifier'\\n\\nexport interface ScanOptions {\\n  minSize: number\\n  includeHidden: boolean\\n  maxDepth: number\\n}\\n\\nexport async function* scanDirectory(\\n  dir: string,\\n  options: ScanOptions,\\n  depth = 0\\n): AsyncGenerator<{ type: 'file'; file: FileInfo } | { type: 'progress'; scanned: number; currentPath: string }> {\\n  if (depth > options.maxDepth) return\\n\\n  let entries\\n  try {\\n    entries = await fs.readdir(dir, { withFileTypes: true })\\n  } catch {\\n    return\\n  }\\n\\n  let scannedCount = 0\\n\\n  for (const entry of entries) {\\n    if (!options.includeHidden && entry.name.startsWith('.')) continue\\n\\n    const fullPath = path.join(dir, entry.name)\\n    scannedCount++\\n\\n    if (scannedCount % 100 === 0) {\\n      yield { type: 'progress', scanned: scannedCount, currentPath: dir }\\n    }\\n\\n    try {\\n      if (entry.isDirectory()) {\\n        yield* scanDirectory(fullPath, options, depth + 1)\\n      } else if (entry.isFile()) {\\n        const stats = await fs.stat(fullPath)\\n        if (stats.size >= options.minSize) {\\n          const ext = getExtension(entry.name)\\n          yield {\\n            type: 'file',\\n            file: {\\n              name: entry.name,\\n              path: fullPath,\\n              size: stats.size,\\n              modified: stats.mtime.toISOString(),\\n              accessed: stats.atime.toISOString(),\\n              isDirectory: false,\\n              extension: ext,\\n              classification: classifyFile(fullPath, ext),\\n            },\\n          }\\n        }\\n      }\\n    } catch {\\n      // Skip files we can't access\\n    }\\n  }\\n}\",\n  \"new_string\": \"import fs from 'fs/promises'\\nimport path from 'path'\\nimport { FileInfo } from '@/types'\\nimport { getExtension } from './format-utils'\\nimport { classifyFile } from './file-classifier'\\n\\nexport interface ScanOptions {\\n  minSize: number\\n  includeHidden: boolean\\n  maxDepth: number\\n}\\n\\n// 排除常見高檔案數、無意義掃描的目錄\\nconst SKIP_DIRS = new Set([\\n  'node_modules',\\n  '.git',\\n  '.svn',\\n  '.hg',\\n  'Caches',\\n  'Cache',\\n  'cache',\\n  '.cache',\\n  '.npm',\\n  '.yarn',\\n  '.pnpm-store',\\n  '__pycache__',\\n  '.mypy_cache',\\n  '.pytest_cache',\\n  'venv',\\n  '.venv',\\n  'env',\\n  '.tox',\\n  'dist',\\n  '.next',\\n  '.nuxt',\\n  '.output',\\n  'build',\\n  '.gradle',\\n  '.m2',\\n])\\n\\n// 限制同時開啟的子目錄並發數，避免 fd 耗盡\\nconst DIR_CONCURRENCY = 8\\n\\nexport async function* scanDirectory(\\n  dir: string,\\n  options: ScanOptions,\\n  depth = 0\\n): AsyncGenerator<{ type: 'file'; file: FileInfo } | { type: 'progress'; scanned: number; currentPath: string }> {\\n  if (depth > options.maxDepth) return\\n\\n  let entries\\n  try {\\n    entries = await fs.readdir(dir, { withFileTypes: true })\\n  } catch {\\n    return\\n  }\\n\\n  let scannedCount = 0\\n  const subdirs: string[] = []\\n  const fileResults: FileInfo[] = []\\n\\n  // 先並行處理所有檔案 stat，同時收集子目錄清單\\n  const fileEntries = entries.filter(e => {\\n    if (!options.includeHidden && e.name.startsWith('.')) return false\\n    if (e.isDirectory()) {\\n      if (!SKIP_DIRS.has(e.name)) {\\n        subdirs.push(path.join(dir, e.name))\\n      }\\n      return false\\n    }\\n    return e.isFile()\\n  })\\n\\n  scannedCount += fileEntries.length + subdirs.length\\n\\n  // 並行 stat 所有檔案\\n  await Promise.all(\\n    fileEntries.map(async (entry) => {\\n      try {\\n        const fullPath = path.join(dir, entry.name)\\n        const stats = await fs.stat(fullPath)\\n        if (stats.size >= options.minSize) {\\n          const ext = getExtension(entry.name)\\n          fileResults.push({\\n            name: entry.name,\\n            path: fullPath,\\n            size: stats.size,\\n            modified: stats.mtime.toISOString(),\\n            accessed: stats.atime.toISOString(),\\n            isDirectory: false,\\n            extension: ext,\\n            classification: classifyFile(fullPath, ext),\\n          })\\n        }\\n      } catch {\\n        // Skip inaccessible files\\n      }\\n    })\\n  )\\n\\n  if (scannedCount > 0) {\\n    yield { type: 'progress', scanned: scannedCount, currentPath: dir }\\n  }\\n\\n  for (const file of fileResults) {\\n    yield { type: 'file', file }\\n  }\\n\\n  // 並行掃描子目錄，限制 DIR_CONCURRENCY 個同時進行\\n  for (let i = 0; i < subdirs.length; i += DIR_CONCURRENCY) {\\n    const batch = subdirs.slice(i, i + DIR_CONCURRENCY)\\n    const generators = batch.map(subdir => scanDirectory(subdir, options, depth + 1))\\n\\n    // 逐一 yield 每個 generator 的結果（保持 streaming 特性）\\n    for (const gen of generators) {\\n      yield* gen\\n    }\\n  }\\n}\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "file-scanner.ts",
+    "timestamp": 1771771797444
+  },
+  {
+    "id": "34830f19-6406-4117-9303-e994b9b1b237",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "優化 file-scanner.ts：加排除清單 + 並行子目錄掃描",
+        "status": "completed",
+        "activeForm": "優化 file-scanner.ts"
+      },
+      {
+        "content": "優化 duplicates/route.ts：hashing 改並行（限制 concurrency）",
+        "status": "in_progress",
+        "activeForm": "優化 duplicates/route.ts hashing 並行化"
+      }
+    ],
+    "timestamp": 1771771800623
+  },
+  {
+    "id": "efe9a5ed-b51c-43ec-9cdc-4d01a2f92afb",
+    "role": "assistant",
+    "content": "現在改 duplicates 的 hashing：",
+    "timestamp": 1771771802191
+  },
+  {
+    "id": "aaf2b8ae-fd61-41de-ace8-ca2f136d4d2a",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/UtilityTools/DiskSense/src/app/api/duplicates/route.ts\",\n  \"old_string\": \"    // Phase 2: Hash only files with matching sizes\\n    const duplicates: { hash: string; files: FileInfo[]; fileSize: number; wastedSpace: number }[] = []\\n\\n    for (const [size, files] of filesBySize) {\\n      if (files.length < 2) continue\\n\\n      const hashGroups = new Map<string, FileInfo[]>()\\n\\n      for (const file of files) {\\n        try {\\n          const hash = await partialHashFile(file.path, file.size)\\n          if (!hashGroups.has(hash)) {\\n            hashGroups.set(hash, [])\\n          }\\n          hashGroups.get(hash)!.push(file)\\n        } catch {\\n          // Skip unhashable files\\n        }\\n      }\\n\\n      for (const [hash, groupFiles] of hashGroups) {\\n        if (groupFiles.length >= 2) {\\n          duplicates.push({\\n            hash,\\n            files: groupFiles,\\n            fileSize: size,\\n            wastedSpace: (groupFiles.length - 1) * size,\\n          })\\n        }\\n      }\\n    }\",\n  \"new_string\": \"    // Phase 2: Hash only files with matching sizes (並行，限制最多 8 concurrent)\\n    const HASH_CONCURRENCY = 8\\n    const duplicates: { hash: string; files: FileInfo[]; fileSize: number; wastedSpace: number }[] = []\\n\\n    async function hashBatch(files: FileInfo[]): Promise<Map<string, FileInfo[]>> {\\n      const hashGroups = new Map<string, FileInfo[]>()\\n      for (let i = 0; i < files.length; i += HASH_CONCURRENCY) {\\n        const batch = files.slice(i, i + HASH_CONCURRENCY)\\n        const results = await Promise.allSettled(\\n          batch.map(file => partialHashFile(file.path, file.size).then(hash => ({ hash, file })))\\n        )\\n        for (const result of results) {\\n          if (result.status === 'fulfilled') {\\n            const { hash, file } = result.value\\n            if (!hashGroups.has(hash)) hashGroups.set(hash, [])\\n            hashGroups.get(hash)!.push(file)\\n          }\\n        }\\n      }\\n      return hashGroups\\n    }\\n\\n    for (const [size, files] of filesBySize) {\\n      if (files.length < 2) continue\\n\\n      const hashGroups = await hashBatch(files)\\n\\n      for (const [hash, groupFiles] of hashGroups) {\\n        if (groupFiles.length >= 2) {\\n          duplicates.push({\\n            hash,\\n            files: groupFiles,\\n            fileSize: size,\\n            wastedSpace: (groupFiles.length - 1) * size,\\n          })\\n        }\\n      }\\n    }\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "route.ts",
+    "timestamp": 1771771810246
+  },
+  {
+    "id": "a7b61b62-dee4-4f2f-8301-53f3ddb5616c",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "優化 file-scanner.ts：加排除清單 + 並行子目錄掃描",
+        "status": "completed",
+        "activeForm": "優化 file-scanner.ts"
+      },
+      {
+        "content": "優化 duplicates/route.ts：hashing 改並行（限制 concurrency）",
+        "status": "completed",
+        "activeForm": "優化 duplicates/route.ts hashing 並行化"
+      }
+    ],
+    "timestamp": 1771771813179
+  },
+  {
+    "id": "82f262df-25f7-4839-a693-b7a01d9bcc5a",
+    "role": "assistant",
+    "content": "改完了，總結變動：\n\n---\n\n### `file-scanner.ts`\n\n**加了 `SKIP_DIRS` 排除清單（21 個目錄）**\n- `node_modules`、`.git`、`Caches`、`.next`、`dist`、`build`、`venv` 等\n- 這些目錄通常有幾萬個小檔案，掃完也沒用\n\n**檔案 `stat` 改並行**\n- 同一目錄內所有檔案改成 `Promise.all` 同時 stat，不再一個等一個\n\n**子目錄改批次並行**（`DIR_CONCURRENCY = 8`）\n- 每次最多 8 個子目錄同時進去掃，不會把 fd 耗盡\n\n---\n\n### `duplicates/route.ts`\n\n**hashing 改批次並行**（`HASH_CONCURRENCY = 8`）\n- 同 size group 內最多 8 個檔案同時 hash\n- 用 `Promise.allSettled` 確保單個失敗不影響其他\n\n---\n\n**預期效果：** 掃描速度快很多，CPU 因為 I/O 等待少了所以峰值也會降低，整體感覺會更流暢。",
+    "timestamp": 1771771814419,
+    "costUsd": 0.27042825,
+    "durationMs": 47463
+  }
+]

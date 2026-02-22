@@ -1,39 +1,74 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useBuildPanel } from '@/contexts/BuildPanelContext';
+import { useBuildPanel, PHASES as PHASES_FROM_CTX } from '@/contexts/BuildPanelContext';
 import { useChatPanels } from '@/contexts/ChatPanelsContext';
-import { useClaudeChat } from '@/hooks/useClaudeChat';
 import PulsingDots from '@/components/PulsingDots';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ChatMessage, StreamingActivity } from '@/lib/claude-chat-types';
 
 // --- Build Prompt ---
 
 const BUILD_PROMPT = `直接依序執行以下打包流程，不要詢問確認：
 
+## 執行紀錄要求（全程遵守）
+- 每個 Phase 開始前輸出：「▶ Phase X 開始」
+- 每個 Phase 完成後輸出：「✓ Phase X 完成」
+- 每次 git commit 後輸出完整 commit hash 和訊息
+- 如遇錯誤，完整輸出錯誤訊息，不要截斷
+
+---
+
 Phase 1 — 偵察（機械執行）
-1. git status 查看未提交的變更（modified + untracked）
-2. git log --oneline --grep="^release:" -1 找到上次 release commit hash
+1. git status：完整列出所有 modified + untracked 檔案
+2. git log --oneline --grep="^release:" -1：找出上次 release commit hash，記錄備用
 
 Phase 2 — 智能 Commit（AI 介入）
-3. 查看 git diff + untracked files，判斷哪些文件該 commit
-4. 按功能/模組將變更智能分組成多次 commit（同一功能放一個 commit，資料更新另一個，UI 調整又一個）
-5. 逐組執行 git add <files> + git commit -m "描述"（commit message 必須使用繁體中文，格式：「類型：說明」，類型用中文，例如「新增：聊天面板背景執行功能」「修復：版本比較邏輯錯誤」「重構：簡化 ResizableLayout 狀態管理」）
+3. git diff HEAD 查看所有已追蹤檔案的變更，逐檔分析變更性質（UI / 邏輯 / 資料 / 設定）
+4. 按功能/模組分組，說明每組的分組依據
+5. 逐組執行 git add <files> + git commit
+   → commit message 必須使用繁體中文，格式：「類型：說明」
+   → 類型：新增 / 修復 / 改善 / 重構 / 資料 / 設定
+   → 例如：「新增：打包流程背景執行支援」「修復：BuildPanel 切換頁面中斷問題」
+   → 每次 commit 後輸出：「Commit [hash] — [訊息]」
 
 Phase 3 — 版本判斷（AI 介入）
-6. git log <上次release>..HEAD --oneline 列出所有新 commit
-7. 根據 commit 內容決定版本升級幅度（嚴格遵守 SemVer 語意：patch/minor/major）
+6. git log <上次release hash>..HEAD --oneline 列出所有新 commit（含 hash）
+7. 逐條分析每個 commit 對 SemVer 的影響，說明最終升級幅度判斷依據
+   → patch：僅修復 bug 或更新資料
+   → minor：新增功能但向後相容
+   → major：破壞性變更
 
 Phase 4 — 版本升級與打包（機械執行）
-8. 讀取 version.json 的 development 版本，根據步驟 7 的判斷升級版本號（例如 1.15.7-dev patch→1.15.7, minor→1.16.0, major→2.0.0），去掉 -dev 後綴，然後寫入 production 欄位
-9. npm run build
+8. 讀取 version.json，記錄當前 development 版本
+   根據步驟 7 升級版本號（例如 1.15.7-dev + patch → production: 1.15.7），寫入 version.json
+9. npm run build，輸出完整 build log
 
 Phase 5 — Release Commit（機械執行）
 10. git add version.json
-11. git commit -m "release: vX.Y.Z — 一行功能摘要"（使用 production 版本號，不加前綴；摘要必須使用繁體中文，例如「新增 Agent Team 監控面板與背景執行支援」）
-12. 將 development 版本升級為下一個 patch-dev（例如 production 是 1.15.7，則 development 改為 1.15.8-dev）
+11. git commit -m "release: vX.Y.Z — 一行功能摘要"
+    → 摘要使用繁體中文，概括本次最重要的變更，例如「打包背景執行、工具輸出顯示優化」
+12. 將 development 版本升級為下一個 patch-dev（production 1.15.7 → development 1.15.8-dev）
 13. git add version.json && git commit -m "chore: bump dev version to X.Y.Z-dev"
-14. 回報新版本號和本次變更摘要（所有中文標點使用全形，例如冒號用「：」不用「:」）`;
+
+---
+
+完成後輸出完整摘要（使用 Markdown 格式）：
+
+## vX.Y.Z 發布摘要
+
+**版本升級**：\`前版本\` → \`新版本\`（升級幅度：patch / minor / major）
+**下一個開發版本**：\`X.Y.Z-dev\`
+
+### 本次變更
+
+| 類型 | Commit | 說明 |
+|------|--------|------|
+| 新增 | \`hash\` | 說明 |
+| 修復 | \`hash\` | 說明 |
+
+（所有中文標點使用全形，例如冒號用「：」不用「:」）`;
 
 // --- Types & Data ---
 
@@ -104,109 +139,6 @@ const PHASES: PhaseData[] = [
     ],
   },
 ];
-
-// --- Phase detection logic ---
-
-interface StepProgress {
-  phase: number;
-  step: number; // 0-indexed
-}
-
-/** Detect current phase and step based on messages from AI */
-function detectProgress(messages: ChatMessage[]): StepProgress {
-  let currentPhase = 0;
-  let currentStep = -1;
-
-  const completedSteps = new Map<number, Set<number>>(); // phase -> Set of completed step indices
-
-  for (const msg of messages) {
-    if (msg.role !== 'tool' || !msg.toolName) continue;
-    const desc = (msg.toolDescription || '').toLowerCase();
-    const content = (msg.content || '').toLowerCase();
-
-    if (msg.toolName === 'Bash') {
-      // Phase 1
-      if (desc.includes('git status') || content.includes('git status')) {
-        currentPhase = 1;
-        if (!completedSteps.has(1)) completedSteps.set(1, new Set());
-        completedSteps.get(1)!.add(0);
-        currentStep = 0;
-      }
-      if (desc.includes('git log') && (desc.includes('release:') || desc.includes('--grep'))) {
-        currentPhase = 1;
-        if (!completedSteps.has(1)) completedSteps.set(1, new Set());
-        completedSteps.get(1)!.add(1);
-        currentStep = 1;
-      }
-
-      // Phase 2
-      if (desc.includes('git diff') || content.includes('git diff')) {
-        currentPhase = 2;
-        if (!completedSteps.has(2)) completedSteps.set(2, new Set());
-        completedSteps.get(2)!.add(0);
-        currentStep = 0;
-      }
-      if ((desc.includes('git add') || desc.includes('git commit')) && !desc.includes('release:') && !content.includes('release:')) {
-        if (currentPhase < 4) { // Distinguish Phase 2 commits from Phase 5
-          currentPhase = 2;
-          if (!completedSteps.has(2)) completedSteps.set(2, new Set());
-          completedSteps.get(2)!.add(2);
-          currentStep = 2;
-        }
-      }
-
-      // Phase 3
-      if (desc.includes('..head') || content.includes('..head')) {
-        currentPhase = 3;
-        if (!completedSteps.has(3)) completedSteps.set(3, new Set());
-        completedSteps.get(3)!.add(0);
-        currentStep = 0;
-      }
-
-      // Phase 4
-      if ((desc.includes('version.json') || content.includes('version.json')) && !desc.includes('git add')) {
-        currentPhase = 4;
-        if (!completedSteps.has(4)) completedSteps.set(4, new Set());
-        completedSteps.get(4)!.add(0);
-        currentStep = 0;
-      }
-      if (desc.includes('npm run build') || content.includes('npm run build')) {
-        currentPhase = 4;
-        if (!completedSteps.has(4)) completedSteps.set(4, new Set());
-        completedSteps.get(4)!.add(1);
-        currentStep = 1;
-      }
-
-      // Phase 5
-      if (desc.includes('git add') && (desc.includes('version.json') || content.includes('version.json'))) {
-        currentPhase = 5;
-        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
-        completedSteps.get(5)!.add(0);
-        currentStep = 0;
-      }
-      if ((desc.includes('release:') || content.includes('release:')) && (desc.includes('git commit') || content.includes('git commit'))) {
-        currentPhase = 5;
-        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
-        completedSteps.get(5)!.add(1);
-        currentStep = 1;
-      }
-      if (desc.includes('bump dev') || content.includes('bump dev')) {
-        currentPhase = 5;
-        if (!completedSteps.has(5)) completedSteps.set(5, new Set());
-        completedSteps.get(5)!.add(2);
-        completedSteps.get(5)!.add(3);
-        currentStep = 3;
-      }
-    }
-  }
-
-  return { phase: currentPhase, step: currentStep };
-}
-
-/** Legacy: Detect which phase is currently active (for backward compat) */
-function detectPhase(messages: ChatMessage[]): number {
-  return detectProgress(messages).phase;
-}
 
 // --- Utility functions ---
 
@@ -484,18 +416,18 @@ function AiOutputArea({ messages, isStreaming, streamingActivity }: {
       {visibleMessages.map(msg => (
         <div key={msg.id}>
           {msg.role === 'assistant' ? (
-            // Assistant text — subtle left border, no markdown rendering
             msg.content.trim() && (
               <div
-                className="pl-3 py-0.5 text-sm"
+                className="pl-3 py-0.5 text-sm build-ai-output"
                 style={{
                   borderLeft: '2px solid rgba(168,85,247,0.35)',
-                  color: 'var(--text-tertiary)',
+                  color: 'var(--text-secondary)',
                   lineHeight: '1.7',
-                  whiteSpace: 'pre-wrap',
                 }}
               >
-                {msg.content.trim()}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.content.trim()}
+                </ReactMarkdown>
               </div>
             )
           ) : (
@@ -556,55 +488,9 @@ ${BUILD_PROMPT}`;
 // --- Main Panel ---
 
 export default function BuildPanel() {
-  const { close, buildState, setBuildState, resetBuild } = useBuildPanel();
+  const { close, buildState, setBuildState, resetBuild, messages, isStreaming, streamingActivity, sendMessage, stopStreaming, error, currentPhase, currentStep } = useBuildPanel();
   const { addPanel } = useChatPanels();
-  const {
-    messages,
-    isStreaming,
-    streamingActivity,
-    streamStatus,
-    sendMessage,
-    stopStreaming,
-    error,
-  } = useClaudeChat('dashboard', { ephemeral: true });
-
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [currentPhase, setCurrentPhase] = useState(0); // 0 = idle, 1-5 = phase number
-  const [currentStep, setCurrentStep] = useState(-1); // current step index within phase
-
-  // Detect phase and step from messages
-  useEffect(() => {
-    if (buildState !== 'running') return;
-    const progress = detectProgress(messages);
-    setCurrentPhase(progress.phase);
-    setCurrentStep(progress.step);
-  }, [messages, buildState]);
-
-  // Detect completion or error
-  useEffect(() => {
-    if (buildState !== 'running') return;
-
-    if (streamStatus === 'completed' && !isStreaming) {
-      // Check if we reached Phase 5 (success) or if there was an error
-      const phase = detectPhase(messages);
-      if (phase >= 5) {
-        setBuildState('done');
-        setCurrentPhase(5);
-      } else {
-        // Stream completed but didn't finish all phases — could be partial or error
-        const hasError = messages.some(m => m.isError);
-        if (hasError) {
-          setBuildState('error');
-        } else {
-          setBuildState('done');
-        }
-      }
-    }
-
-    if (streamStatus === 'error') {
-      setBuildState('error');
-    }
-  }, [streamStatus, isStreaming, messages, buildState, setBuildState]);
 
   // Compute phase statuses
   const phaseStatuses: StepStatus[] = useMemo(() => {
@@ -637,13 +523,11 @@ export default function BuildPanel() {
 
   const handleStartBuild = async () => {
     setBuildState('running');
-    setCurrentPhase(0);
     await sendMessage(BUILD_PROMPT, 'edit', undefined, 'sonnet');
   };
 
   const handleReset = () => {
     resetBuild();
-    setCurrentPhase(0);
   };
 
   const handleRescue = () => {
