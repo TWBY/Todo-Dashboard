@@ -230,6 +230,24 @@ function processStreamEvent(
     return
   }
 
+  // tool_result 事件 — 填入對應 tool message 的 output content
+  if (event.type === 'tool_result') {
+    const toolUseId = event.tool_use_id as string
+    const resultContent = event.content as string
+    if (toolUseId && resultContent) {
+      actions.setMessages(prev => {
+        // 從尾端找最近的、toolUseId 匹配的 tool message，更新其 content
+        const idx = [...prev].reverse().findIndex(m => m.role === 'tool' && m.toolUseId === toolUseId)
+        if (idx === -1) return prev
+        const realIdx = prev.length - 1 - idx
+        const updated = [...prev]
+        updated[realIdx] = { ...updated[realIdx], content: resultContent }
+        return updated
+      })
+    }
+    return
+  }
+
   // 工具統計事件
   if (event.type === 'tool_stats') {
     const stats = event.stats as Record<string, { count: number }>
@@ -389,12 +407,13 @@ function processStreamEvent(
           return
         }
 
-        // 其他工具
+        // 其他工具 — 用 block.id 作為 toolUseId，等待 tool_result 填入 content
         actions.setMessages(prev => [...prev, {
           id: crypto.randomUUID(),
           role: 'tool',
-          content: JSON.stringify(block.input, null, 2),
+          content: '',
           toolName: block.name,
+          toolUseId: block.id,
           toolDescription: extractToolDescription(block.name, block.input as Record<string, unknown>),
           timestamp: Date.now(),
         }])

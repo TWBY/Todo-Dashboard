@@ -113,6 +113,42 @@ export async function POST(request: Request) {
               continue
             }
 
+            // user — 包含 tool_result blocks（工具執行結果）
+            if (sdkMsg.type === 'user') {
+              const uMsg = sdkMsg as {
+                type: 'user'
+                message: { role: string; content: unknown }
+                session_id: string
+              }
+              const content = uMsg.message?.content
+              if (Array.isArray(content)) {
+                for (const block of content) {
+                  const b = block as Record<string, unknown>
+                  if (b.type === 'tool_result') {
+                    // tool_result block: { type, tool_use_id, content: string | Array }
+                    const toolUseId = b.tool_use_id as string
+                    let resultText = ''
+                    if (typeof b.content === 'string') {
+                      resultText = b.content
+                    } else if (Array.isArray(b.content)) {
+                      resultText = (b.content as Array<{ type: string; text?: string }>)
+                        .filter(c => c.type === 'text' && c.text)
+                        .map(c => c.text!)
+                        .join('\n')
+                    }
+                    if (toolUseId && resultText) {
+                      safeEnqueue(`data: ${JSON.stringify({
+                        type: 'tool_result',
+                        tool_use_id: toolUseId,
+                        content: resultText,
+                      })}\n\n`)
+                    }
+                  }
+                }
+              }
+              continue
+            }
+
             // result — 映射欄位
             if (sdkMsg.type === 'result') {
               hasResult = true

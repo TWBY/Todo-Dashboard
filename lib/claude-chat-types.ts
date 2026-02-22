@@ -66,6 +66,7 @@ export interface ChatMessage {
   content: string
   toolName?: string
   toolDescription?: string // Short description extracted from tool input
+  toolUseId?: string // tool_use block id, used to match tool_result
   images?: string[] // Object URLs for preview (user messages)
   todos?: TodoItem[] // TodoWrite tool data
   questions?: UserQuestion[] // AskUserQuestion tool data
