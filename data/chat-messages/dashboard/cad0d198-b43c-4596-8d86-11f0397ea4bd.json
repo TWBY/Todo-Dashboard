@@ -286,5 +286,355 @@
     "role": "assistant",
     "content": "乾淨。改動摘要：\n\n**新設計重點：**\n\n1. **ToolCard 元件** — 每個 tool call 獨立一張卡片，header 顯示圖示 + 工具名 + 描述，output 區塊分開\n2. **依 tool 類型配色**：\n   - `Bash` — 綠色\n   - `Read` — 藍色\n   - `Write` — 橙色\n   - `Edit` — 黃色\n   - `Glob`/`Grep` — 紫色\n   - `TodoWrite` — 翠綠\n3. **ToolOutput 可摺疊** — 超過 5 行自動截斷，點「展開全部（N 行）」可展開，解決 git log 輸出淹版問題\n4. **Assistant 文字** — 改成左側紫色細線 + 細字排版，純文字不過 markdown，更輕量\n5. **Live 活動指示器** — 固定在訊息最底部，thinking/replying 用 PulsingDots，tool 執行時顯示對應配色的 spinner",
     "timestamp": 1771686565951
+  },
+  {
+    "id": "e345dc99-7bc3-4e7d-84a7-a4be9f3ba250",
+    "role": "user",
+    "content": "我覺得方向上還不錯，但是有一個小細節需要調整：我想要看到原生的 JSON 格式，這部分應該可以再稍微調整一下下。",
+    "timestamp": 1771765364073
+  },
+  {
+    "id": "9bd61be5-da48-4fed-9f9c-3dfc1dab99e3",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/tmp/claude-chat-images/1771765364069-a0tjia.png\"\n}",
+    "toolName": "Read",
+    "toolDescription": "1771765364069-a0tjia.png",
+    "timestamp": 1771765369966
+  },
+  {
+    "id": "1f1263f8-2680-4fd6-a072-c4b58881a54e",
+    "role": "assistant",
+    "content": "看到問題了。output 區塊顯示的是 Claude 的 **tool input JSON**（`{\"command\": \"git diff ...\"}` / `{\"file_path\": \"...\"}`），而不是指令執行後的 **實際輸出結果**。\n\n這代表 `msg.content` 在這幾個 tool card 裡存的是 input JSON，不是 output。讓我確認一下資料結構是怎麼來的：",
+    "timestamp": 1771765372402
+  },
+  {
+    "id": "f7c28b08-8350-445d-981c-8710bf865fd5",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"toolDescription|tool.*content|role.*tool\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/hooks/useClaudeChat.ts\",\n  \"output_mode\": \"content\",\n  \"context\": 3\n}",
+    "toolName": "Grep",
+    "toolDescription": "toolDescription|tool.*content|…",
+    "timestamp": 1771765377341
+  },
+  {
+    "id": "2434a894-fa8a-4053-a193-d1d8aaf3d4a2",
+    "role": "assistant",
+    "content": "清楚了。問題在 `useClaudeChat.ts:396`：\n\n```ts\ncontent: JSON.stringify(block.input, null, 2),\n```\n\n**tool message 的 content 存的是 tool input（呼叫參數），而不是執行結果。** 執行結果是在 server 端處理的，沒有傳回 client。\n\n所以目前架構下，tool card 能顯示的只有：**工具名稱 + toolDescription（從 input 提取的描述）**，沒有實際 output。\n\n解決方案有兩個：\n\n**方案 A（快，現在做）**：把 input JSON 隱藏，只顯示 toolDescription，讓 card 更乾淨  \n**方案 B（完整，但需要改後端）**：讓 server 把工具的執行結果也 stream 回來，顯示真實 output\n\n你想要哪個？我傾向 A 先做讓視覺乾淨，B 是更大的改動。如果是 A，tool card 就會變成純粹的「這個工具被呼叫了，描述是 XXX」的 badge 樣式，不顯示任何 JSON 內容。",
+    "timestamp": 1771765380334,
+    "costUsd": 0.46844625,
+    "durationMs": 21245
+  },
+  {
+    "id": "19b7275a-fcd1-4b86-b872-9915c5d177a7",
+    "role": "user",
+    "content": "方案 B",
+    "timestamp": 1771765428352
+  },
+  {
+    "id": "d7e3a7b0-e668-4bdc-9e47-16f701a75e9c",
+    "role": "assistant",
+    "content": "了解，要把工具的實際執行結果 stream 回來顯示。先看清楚 server 端如何處理 tool result：",
+    "timestamp": 1771765434093
+  },
+  {
+    "id": "cf988981-28e8-45f6-aa2a-33e9730b0f39",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/api/claude-chat/route.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "route.ts",
+    "timestamp": 1771765437383
+  },
+  {
+    "id": "2d4cc35a-4c0f-4652-be1a-76a1b9f65a79",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/lib/claude-session-manager.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "claude-session-manager.ts",
+    "timestamp": 1771765440883
+  },
+  {
+    "id": "a57be885-dd5e-4667-8068-3480cb9da414",
+    "role": "assistant",
+    "content": "現在來看 `useClaudeChat.ts` 裡處理 `tool_result` 的部分：",
+    "timestamp": 1771765442478
+  },
+  {
+    "id": "1ddf3ab4-9881-4e7d-afd5-2d67febbbfb7",
+    "role": "tool",
+    "content": "{\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/hooks/useClaudeChat.ts\"\n}",
+    "toolName": "Read",
+    "toolDescription": "useClaudeChat.ts",
+    "timestamp": 1771765444355
+  },
+  {
+    "id": "fa058b7c-0886-499b-bcec-4750f411a871",
+    "role": "assistant",
+    "content": "完全看清楚了架構。問題根源在：\n\n- **`useClaudeChat.ts:396`**：tool message 的 `content` = `JSON.stringify(block.input, null, 2)`（工具的輸入參數）\n- SDK 的 `assistant` event 裡有 `tool_use` block（input），但**沒有 tool result**（output）\n- Tool result 在 SDK 裡是 `user` 型別的 `tool_result` block，包含在下一輪對話中，並不會透過 stream 傳出來\n\n看一下 SDK 到底有沒有 tool_result 可以攔截：",
+    "timestamp": 1771765446469
+  },
+  {
+    "id": "146f2ca7-cb21-4c72-b6e5-a8204865c7b3",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -r \\\"tool_result\\\\|toolResult\\\\|ToolResult\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/dist/ 2>/dev/null | head -30\",\n  \"description\": \"查看 SDK 是否有 tool_result 事件\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -r \"tool_result\\|toolResult\\|ToolRe…",
+    "timestamp": 1771765452523
+  },
+  {
+    "id": "6101fa7b-c660-4cc5-b358-01f365dc9959",
+    "role": "tool",
+    "content": "{\n  \"command\": \"ls /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/dist/ 2>/dev/null || ls /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/ 2>/dev/null | head -20\",\n  \"description\": \"找 SDK 主要檔案\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "ls /Users/ruanbaiye/Documents/Brickverse…",
+    "timestamp": 1771765456194
+  },
+  {
+    "id": "4b09ae87-4975-4d19-9b40-5d45441e6034",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n \\\"tool_result\\\\|SDKMessage\\\\|type.*user\\\\|message.*type\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts | head -40\",\n  \"description\": \"查看 SDK 型別定義，找 tool_result\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n \"tool_result\\|SDKMessage\\|type.*…",
+    "timestamp": 1771765459504
+  },
+  {
+    "id": "29b2b3fb-6633-4e31-a6c8-343d3d45cf2e",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n \\\"SDKUserMessage\\\\|SDKToolProgressMessage\\\\|tool_result\\\\|toolresult\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts | head -30\",\n  \"description\": \"查看 SDKUserMessage 和 SDKToolProgressMessage 型別\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n \"SDKUserMessage\\|SDKToolProgress…",
+    "timestamp": 1771765462735
+  },
+  {
+    "id": "72b63358-5e4a-4aa6-ae1b-bf44e9f503a3",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n -A 10 \\\"SDKToolProgressMessage\\\\|SDKUserMessage\\\\b\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts | head -50\",\n  \"description\": \"查看 SDKToolProgressMessage 和 SDKUserMessage 的完整型別\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n -A 10 \"SDKToolProgressMessage\\|S…",
+    "timestamp": 1771765466055
+  },
+  {
+    "id": "da68e414-db53-4728-8ad5-48a635771a05",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n -A 15 \\\"^export declare type SDKToolProgressMessage\\\\|^export declare type SDKUserMessage\\\\b\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts\",\n  \"description\": \"查看 SDKToolProgressMessage 完整定義\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n -A 15 \"^export declare type SDKT…",
+    "timestamp": 1771765469259
+  },
+  {
+    "id": "bcddac2a-2092-44d0-b17c-880a49e6bcf5",
+    "role": "assistant",
+    "content": "找到了！`SDKUserMessage` 有 `tool_use_result` 欄位，而且 `type: 'user'`，也就是說 **SDK 確實會 emit `user` 型別的訊息，裡面包含 tool result**。目前 `route.ts` 只處理了 `assistant`、`result`、`stream_event`，完全忽略了 `user` 訊息。\n\n讓我也確認 `MessageParam` 的 tool_result 結構：",
+    "timestamp": 1771765471036
+  },
+  {
+    "id": "9dfc7bec-ce88-4f9d-b11d-907b6e3aea28",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n -A 20 \\\"^export declare type MessageParam\\\\|ToolResultBlockParam\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts | head -50\",\n  \"description\": \"確認 tool_result block 結構\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n -A 20 \"^export declare type Mess…",
+    "timestamp": 1771765474978
+  },
+  {
+    "id": "a2ad65e2-0b1d-47dd-a87d-e6d18d23a431",
+    "role": "tool",
+    "content": "{\n  \"command\": \"grep -n \\\"ToolResultBlockParam\\\\|tool_result\\\" /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai/sdk/dist/index.d.ts 2>/dev/null | head -20\",\n  \"description\": \"在 anthropic SDK 型別裡找 tool_result\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "grep -n \"ToolResultBlockParam\\|tool_resu…",
+    "timestamp": 1771765478390
+  },
+  {
+    "id": "f496495e-a0b5-4bf5-9d97-a653ce865f48",
+    "role": "tool",
+    "content": "{\n  \"command\": \"find /Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/node_modules/@anthropic-ai -name \\\"*.d.ts\\\" | xargs grep -l \\\"ToolResultBlock\\\" 2>/dev/null | head -5\",\n  \"description\": \"找 ToolResultBlock 型別定義\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "find /Users/ruanbaiye/Documents/Brickver…",
+    "timestamp": 1771765481626
+  },
+  {
+    "id": "2e4d7a5b-d083-422e-bc95-ee453b9c2609",
+    "role": "assistant",
+    "content": "型別定義都在 SDK 裡，不需要額外查。策略確定了：\n\n**在 `route.ts` 攔截 `user` 型別 SDK 訊息，提取 `tool_result` block 的 content，透過新的 `tool_result` SSE 事件傳給前端。然後在 `useClaudeChat.ts` 接收並更新對應 tool message 的 content。**\n\n匹配邏輯：`tool_result` block 的 `tool_use_id` 對應到 `tool_use` block 的 `id`。",
+    "timestamp": 1771765483619
+  },
+  {
+    "id": "15a78023-f5cb-4334-988b-045e96de145d",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "route.ts 攔截 user 訊息，發送 tool_result SSE 事件",
+        "activeForm": "修改 route.ts",
+        "status": "in_progress"
+      },
+      {
+        "content": "useClaudeChat.ts 接收 tool_result 事件，更新 tool message content",
+        "activeForm": "修改 useClaudeChat.ts",
+        "status": "pending"
+      },
+      {
+        "content": "BuildPanel 的 ToolCard 不再顯示 input JSON，改顯示 output",
+        "activeForm": "修改 BuildPanel.tsx",
+        "status": "pending"
+      }
+    ],
+    "timestamp": 1771765489473
+  },
+  {
+    "id": "4ce35096-c2db-4652-b7ee-5093027c985f",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/app/api/claude-chat/route.ts\",\n  \"old_string\": \"            // result — 映射欄位\",\n  \"new_string\": \"            // user — 包含 tool_result blocks（工具執行結果）\\n            if (sdkMsg.type === 'user') {\\n              const uMsg = sdkMsg as {\\n                type: 'user'\\n                message: { role: string; content: unknown }\\n                session_id: string\\n              }\\n              const content = uMsg.message?.content\\n              if (Array.isArray(content)) {\\n                for (const block of content) {\\n                  const b = block as Record<string, unknown>\\n                  if (b.type === 'tool_result') {\\n                    // tool_result block: { type, tool_use_id, content: string | Array }\\n                    const toolUseId = b.tool_use_id as string\\n                    let resultText = ''\\n                    if (typeof b.content === 'string') {\\n                      resultText = b.content\\n                    } else if (Array.isArray(b.content)) {\\n                      resultText = (b.content as Array<{ type: string; text?: string }>)\\n                        .filter(c => c.type === 'text' && c.text)\\n                        .map(c => c.text!)\\n                        .join('\\\\n')\\n                    }\\n                    if (toolUseId && resultText) {\\n                      safeEnqueue(`data: ${JSON.stringify({\\n                        type: 'tool_result',\\n                        tool_use_id: toolUseId,\\n                        content: resultText,\\n                      })}\\\\n\\\\n`)\\n                    }\\n                  }\\n                }\\n              }\\n              continue\\n            }\\n\\n            // result — 映射欄位\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "route.ts",
+    "timestamp": 1771765497586
+  },
+  {
+    "id": "5946d13f-70ae-483c-be3a-cf166508e5f7",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "route.ts 攔截 user 訊息，發送 tool_result SSE 事件",
+        "activeForm": "修改 route.ts",
+        "status": "completed"
+      },
+      {
+        "content": "useClaudeChat.ts 接收 tool_result 事件，更新 tool message content",
+        "activeForm": "修改 useClaudeChat.ts",
+        "status": "in_progress"
+      },
+      {
+        "content": "BuildPanel 的 ToolCard 不再顯示 input JSON，改顯示 output",
+        "activeForm": "修改 BuildPanel.tsx",
+        "status": "pending"
+      }
+    ],
+    "timestamp": 1771765502752
+  },
+  {
+    "id": "1ea133e0-b415-4afd-8b79-218b834c82ef",
+    "role": "assistant",
+    "content": "現在在 `useClaudeChat.ts` 的 `processStreamEvent` 裡處理新的 `tool_result` 事件。tool message 是按 `toolName` 建立的，要用 `tool_use_id` 來對應，所以需要在 tool message 上加上 `toolUseId` 欄位。\n\n先看 `ChatMessage` 型別裡有沒有 `toolUseId`：",
+    "timestamp": 1771765504557
+  },
+  {
+    "id": "6bb14d53-eb77-499b-80c7-a2ae99391ebe",
+    "role": "tool",
+    "content": "{\n  \"pattern\": \"toolUseId\",\n  \"path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/lib/claude-chat-types.ts\",\n  \"output_mode\": \"content\"\n}",
+    "toolName": "Grep",
+    "toolDescription": "toolUseId",
+    "timestamp": 1771765507870
+  },
+  {
+    "id": "f9ec6e63-36ce-4274-8d8e-82ba1ecac614",
+    "role": "assistant",
+    "content": "需要在 `ChatMessage` 加 `toolUseId`，然後在建立 tool message 時存入，最後用來 match tool_result。",
+    "timestamp": 1771765509605
+  },
+  {
+    "id": "4fec9d77-ecab-45a0-9f9f-34e1f26925bd",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/lib/claude-chat-types.ts\",\n  \"old_string\": \"  toolDescription?: string // Short description extracted from tool input\",\n  \"new_string\": \"  toolDescription?: string // Short description extracted from tool input\\n  toolUseId?: string // tool_use block id, used to match tool_result\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "claude-chat-types.ts",
+    "timestamp": 1771765512197
+  },
+  {
+    "id": "cdb7c355-ceb0-433c-9b0f-d6a03202fca0",
+    "role": "assistant",
+    "content": "現在在 `useClaudeChat.ts` 的「其他工具」部分加上 `toolUseId`，並新增處理 `tool_result` 事件的邏輯：",
+    "timestamp": 1771765517431
+  },
+  {
+    "id": "11604a82-2f86-467a-b524-d908a49ddf62",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/hooks/useClaudeChat.ts\",\n  \"old_string\": \"        // 其他工具\\n        actions.setMessages(prev => [...prev, {\\n          id: crypto.randomUUID(),\\n          role: 'tool',\\n          content: JSON.stringify(block.input, null, 2),\\n          toolName: block.name,\\n          toolDescription: extractToolDescription(block.name, block.input as Record<string, unknown>),\\n          timestamp: Date.now(),\\n        }])\",\n  \"new_string\": \"        // 其他工具 — 用 block.id 作為 toolUseId，等待 tool_result 填入 content\\n        actions.setMessages(prev => [...prev, {\\n          id: crypto.randomUUID(),\\n          role: 'tool',\\n          content: '',\\n          toolName: block.name,\\n          toolUseId: block.id,\\n          toolDescription: extractToolDescription(block.name, block.input as Record<string, unknown>),\\n          timestamp: Date.now(),\\n        }])\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "useClaudeChat.ts",
+    "timestamp": 1771765521702
+  },
+  {
+    "id": "c55f8888-2ac6-459f-940b-b5f1cfdfbd23",
+    "role": "assistant",
+    "content": "現在在 `processStreamEvent` 加 `tool_result` 事件的處理，放在工具統計事件之前：",
+    "timestamp": 1771765526251
+  },
+  {
+    "id": "19b7abc3-a77d-43a5-ade0-84dd79c49875",
+    "role": "tool",
+    "content": "{\n  \"replace_all\": false,\n  \"file_path\": \"/Users/ruanbaiye/Documents/Brickverse/Todo-Dashboard/hooks/useClaudeChat.ts\",\n  \"old_string\": \"  // 工具統計事件\\n  if (event.type === 'tool_stats') {\",\n  \"new_string\": \"  // tool_result 事件 — 填入對應 tool message 的 output content\\n  if (event.type === 'tool_result') {\\n    const toolUseId = event.tool_use_id as string\\n    const resultContent = event.content as string\\n    if (toolUseId && resultContent) {\\n      actions.setMessages(prev => {\\n        // 從尾端找最近的、toolUseId 匹配的 tool message，更新其 content\\n        const idx = [...prev].reverse().findIndex(m => m.role === 'tool' && m.toolUseId === toolUseId)\\n        if (idx === -1) return prev\\n        const realIdx = prev.length - 1 - idx\\n        const updated = [...prev]\\n        updated[realIdx] = { ...updated[realIdx], content: resultContent }\\n        return updated\\n      })\\n    }\\n    return\\n  }\\n\\n  // 工具統計事件\\n  if (event.type === 'tool_stats') {\"\n}",
+    "toolName": "Edit",
+    "toolDescription": "useClaudeChat.ts",
+    "timestamp": 1771765531348
+  },
+  {
+    "id": "a5244876-3d3e-4338-94e8-31a1af7cb7cd",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "route.ts 攔截 user 訊息，發送 tool_result SSE 事件",
+        "activeForm": "修改 route.ts",
+        "status": "completed"
+      },
+      {
+        "content": "useClaudeChat.ts 接收 tool_result 事件，更新 tool message content",
+        "activeForm": "修改 useClaudeChat.ts",
+        "status": "completed"
+      },
+      {
+        "content": "BuildPanel 的 ToolCard 不再顯示 input JSON，改顯示 output",
+        "activeForm": "修改 BuildPanel.tsx",
+        "status": "in_progress"
+      }
+    ],
+    "timestamp": 1771765537716
+  },
+  {
+    "id": "f99070c4-da59-407f-a9c4-0125993e18dc",
+    "role": "assistant",
+    "content": "現在 `ToolCard` 的 `content` 已經不再是 input JSON，而是真實 output，不需要改 UI 邏輯，只要確認 `hasOutput` 判斷仍然正確（空字串時不顯示 output 區塊）。現在做 TypeScript 驗證：",
+    "timestamp": 1771765539977
+  },
+  {
+    "id": "235eb6ea-f61a-4863-8b47-d341b882a2ca",
+    "role": "tool",
+    "content": "{\n  \"command\": \"npx tsc --noEmit 2>&1 | head -30\",\n  \"description\": \"TypeScript 型別檢查\"\n}",
+    "toolName": "Bash",
+    "toolDescription": "npx tsc --noEmit 2>&1 | head -30",
+    "timestamp": 1771765542985
+  },
+  {
+    "id": "79022e8b-4d63-4be2-a9cc-e62427fae83a",
+    "role": "tool",
+    "content": "",
+    "toolName": "TodoWrite",
+    "todos": [
+      {
+        "content": "route.ts 攔截 user 訊息，發送 tool_result SSE 事件",
+        "activeForm": "修改 route.ts",
+        "status": "completed"
+      },
+      {
+        "content": "useClaudeChat.ts 接收 tool_result 事件，更新 tool message content",
+        "activeForm": "修改 useClaudeChat.ts",
+        "status": "completed"
+      },
+      {
+        "content": "BuildPanel 的 ToolCard 不再顯示 input JSON，改顯示 output",
+        "activeForm": "修改 BuildPanel.tsx",
+        "status": "completed"
+      }
+    ],
+    "timestamp": 1771765548488
+  },
+  {
+    "id": "f1adb3dd-00a5-4bad-9423-757908664783",
+    "role": "assistant",
+    "content": "完成。修改了三個地方：\n\n1. **`app/api/claude-chat/route.ts`** — 攔截 SDK 的 `user` 型別訊息，提取 `tool_result` block，透過新的 `tool_result` SSE 事件傳給前端（帶 `tool_use_id` + `content`）\n\n2. **`lib/claude-chat-types.ts`** — `ChatMessage` 加 `toolUseId?: string` 欄位，作為 input↔output 的橋梁\n\n3. **`hooks/useClaudeChat.ts`** — 兩處修改：\n   - 建立 tool message 時改存 `toolUseId: block.id`，`content` 初始為空字串\n   - 新增 `tool_result` 事件處理器，用 `tool_use_id` 找到對應 tool message，反填 `content`\n\n現在 `ToolCard` 顯示的 output 區塊會是真正的執行結果（Bash 輸出、Read 檔案內容等），不再是 input JSON。",
+    "timestamp": 1771765550154,
+    "costUsd": 1.8022869999999998,
+    "durationMs": 125011
   }
 ]

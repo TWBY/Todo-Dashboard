@@ -1171,9 +1171,14 @@
     "sessionId": "cad0d198-b43c-4596-8d86-11f0397ea4bd",
     "projectId": "dashboard",
     "title": "現在的 changelog 內容都是英文，我在想之前有中文，能不能有一些設計可以讓它強制使用中文的內容？",
-    "messageCount": 3,
+    "messageCount": 5,
     "createdAt": 1771686345651,
-    "lastActiveAt": 1771686573480
+    "lastActiveAt": 1771765556158,
+    "totalCostUsd": 2.2707332499999997,
+    "totalDurationMs": 146256,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 43,
+    "totalOutputTokens": 339
   },
   {
     "sessionId": "11665826-eefe-4210-8815-cf26f6b75027",
@@ -1198,5 +1203,18 @@
     "messageCount": 11,
     "createdAt": 1771688348215,
     "lastActiveAt": 1771688894573
+  },
+  {
+    "sessionId": "5082a47e-e4ef-488f-8838-d062316d7a00",
+    "projectId": "dashboard",
+    "title": "我要重新設定專案級以及全域級別的 claude.md\n\n首先第一個，我先講全域的部分。關於原本瀏覽器預覽的 CDP，我想",
+    "messageCount": 8,
+    "createdAt": 1771765557609,
+    "lastActiveAt": 1771766484242,
+    "totalCostUsd": 4.0871175,
+    "totalDurationMs": 433020,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 88,
+    "totalOutputTokens": 478
   }
 ]

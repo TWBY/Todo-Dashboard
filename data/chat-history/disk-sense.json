@@ -1,0 +1,15 @@
+[
+  {
+    "sessionId": "060542c7-074d-41a7-8e89-7b471a8f9bea",
+    "projectId": "disk-sense",
+    "title": "因為我現在常常會有管理系統儲存空間已滿的問題，這是我最大的痛點。我覺得 CleanMyMac 這個軟體（你可以上網查一下",
+    "messageCount": 1,
+    "createdAt": 1771766072934,
+    "lastActiveAt": 1771766145789,
+    "totalCostUsd": 0.3066202,
+    "totalDurationMs": 64110,
+    "model": "claude-sonnet-4-6",
+    "totalInputTokens": 1688,
+    "totalOutputTokens": 69
+  }
+]
