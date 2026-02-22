@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { ModelBadge } from '@/components/SkillArchitecture'
 import SkillArchitecture from '@/components/SkillArchitecture'
@@ -100,43 +102,32 @@ const projectClaudeMdContent = `# Todo-Dashboard 專案級設定
 **Pack 按鈕**（DevServerPanel 的橙色 Pack 按鈕）執行 Todo-Dashboard 內置的
 5 Phase 打包流程，包括智能 commit、版本判斷和發布。
 
-注意：Ship skill 是全域發布工具，與 Pack 功能分開。`
+注意：Ship skill 是全域發布工具，與 Pack 功能分開。
+
+---
+
+## Dev Server Port 管理（Station 報戶口制度）
+
+VIP 座位：3001（Prod）、3002（Dev）— 固定保留
+Station 座位：3003–3010（8 個，先到先得）
+
+| Tier | 狀態 | 條件 |
+|------|------|------|
+| 居民 | 城市居民 | 在 JSON 裡，無 devPort |
+| Station | 已進駐 | 有 devPort（3003–3010） |
+| 在崗 | 運行中 | dev server 正在跑 |
+
+Source of Truth：JSON 的 devPort 欄位（projects.json / coursefiles.json / utility-tools.json）
+進駐：/api/projects PATCH \`add-to-dev\` — 分配座位 + 寫 devPort + 更新 package.json -p
+離開：/api/projects PATCH \`remove-from-dev\` — 移除 devPort + 移除 -p flag，座位釋出
+查看：/ports 頁面`
 
 const globalClaudeMdContent = `# 全局用戶偏好設定
 
 - **上網查詢**: 需要上網搜尋資料時直接執行，不需要詢問確認
-- **MCP 瀏覽器工具**：不需要詢問確認，直接執行。但必須遵守以下規則：
-  1. **arc-cdp MCP 優先**：透過 CDP port 9222 連接 Arc 瀏覽器
-  2. **arc-cdp 連線失敗時**：回報連線失敗，嚴禁自行重啟 Arc，由使用者決定是否重啟
-  3. **嚴禁繞道用 chrome-devtools MCP 作為替代方案**
-  4. **必須新開分頁再導航**：多個 session 共用同一個 Arc 瀏覽器，直接
-     browser_navigate 會覆蓋別人正在使用的分頁。正確流程：
-       ① browser_tabs(action: "new") → 建立自己的新分頁
-       ② browser_navigate(url: "...") → 在新分頁中導航
-     嚴禁未建立新分頁就直接對現有分頁執行 browser_navigate
-  5. **Arc 啟動指令**（由使用者手動執行）：
-     - 正確啟動（含 CDP）：pkill -a Arc; open -a Arc --args --remote-debugging-port=9222
-     - Arc UI 設定裡的 Remote Debugging 開關無效，必須用上面的 flag 重啟
-     - 每次從 Dock/Spotlight 開啟 Arc 都不會帶 CDP，遇到 ECONNREFUSED 請使用者執行上方指令
+- **MCP 瀏覽器工具（Bot Browser）**：不需要詢問確認，直接執行。連線失敗時自動重試即可。
 
-## Claude Code 安全政策
-
-### Bash 命令（寬鬆模式）
-允許幾乎所有 Bash 命令執行，只保留極危險操作的黑名單。
-
-允許：Bash(*) — git、npm、npx、node、lsof、ps、ls、find、cat、head、tail、
-      grep、mkdir、rm、cp、mv、chmod、tar、curl、wget、sed、awk 等
-
-嚴禁（Deny）：
-  Bash(rm -rf /*)   # 系統毀滅
-  Bash(sudo *)      # 提升權限
-  Bash(eval *)      # 任意代碼執行
-  Bash(exec *)      # 進程替換
-  Bash(source *)    # 加載外部腳本
-  Bash(mv /etc/*)   # 修改系統配置
-  Bash(mv ~/.ssh/*) # 竊取 SSH 密鑰
-  Bash(mv ~/.aws/*) # 竊取 AWS 憑證
-  Bash(mv ~/.claude/*) # 修改 Claude 配置
+---
 
 ## 部署注意事項
 
@@ -153,20 +144,6 @@ const globalClaudeMdContent = `# 全局用戶偏好設定
 - **設計中心**：/Users/ruanbaiye/Documents/Brickverse/brickverse-design
 - **圖示**：統一使用 Font Awesome，嚴禁 Unicode emoji 做 UI 設計
 - **匹配既有慣例**：使用相同圖示庫、捲軸樣式、CSS 模式和動畫方式
-
-## Dev Server Port 管理（Station 報戶口制度）
-
-Tier 1 — 國外：不在任何 JSON 裡
-Tier 2 — 城市居民：在 JSON 裡，無 devPort
-Tier 3 — Station 進駐：有 devPort，完成雙重登記
-Tier 4 — 在崗工作中：dev server 正在運行
-
-Source of Truth：JSON 的 devPort 欄位（projects.json / coursefiles.json / utility-tools.json）
-雙重登記：JSON devPort + package.json 的 -p <port>
-
-進駐：呼叫 /api/projects add-to-dev action
-離開：呼叫 /api/projects remove-from-dev action
-查看：Dashboard /ports 頁面
 
 ## Insforge 使用經驗
 
@@ -395,20 +372,26 @@ function ClaudeMdViewer({ title, path, content }: { title: string; path: string;
           {path}
         </code>
       </div>
-      <pre
-        className="px-5 py-4 text-sm"
-        style={{
-          color: 'var(--text-secondary)',
-          backgroundColor: 'var(--background-primary)',
-          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          lineHeight: '1.7',
-          margin: 0,
-        }}
+      <div
+        className="px-5 py-4 text-sm prose prose-invert max-w-none
+          [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2
+          [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h2]:text-[var(--text-primary)]
+          [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1
+          [&_p]:my-1.5 [&_p]:leading-[1.7]
+          [&_ul]:my-1.5 [&_ul]:pl-4 [&_li]:my-0.5
+          [&_ol]:my-1.5 [&_ol]:pl-4
+          [&_strong]:font-semibold [&_strong]:text-[var(--text-primary)]
+          [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:bg-[var(--background-tertiary)] [&_code]:text-[var(--text-secondary)]
+          [&_pre]:bg-[var(--background-tertiary)] [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_pre]:overflow-x-auto
+          [&_pre_code]:bg-transparent [&_pre_code]:p-0
+          [&_table]:w-full [&_table]:text-xs [&_table]:border-collapse [&_table]:my-2
+          [&_th]:px-3 [&_th]:py-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-[var(--border-color)] [&_th]:bg-[var(--background-secondary)]
+          [&_td]:px-3 [&_td]:py-1.5 [&_td]:border [&_td]:border-[var(--border-color)]
+          [&_hr]:border-[var(--border-color)] [&_hr]:my-3"
+        style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--background-primary)' }}
       >
-        {content}
-      </pre>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      </div>
     </div>
   )
 }
